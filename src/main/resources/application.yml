@@ -1,0 +1,30 @@
+spring:
+  profiles:
+    active: local
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: a9c904cd4923d8c17f94a35bad2afad3
+            client-secret: LBBIftHi71V4OSTHi0AFQ6pJMydeENn6
+            client-authentication-method: post
+            authorization-grant-type: authorization_code
+            redirect-uri: http://localhost/oauth/kakao/redirect
+            scope:
+              - profile_nickname
+              - profile_image
+              - account_email
+              - name
+              - gender
+              - age_range
+              - birthday
+              - birthyear
+        provider:
+          kakao:
+            authorization-uri:
+            token-uri:
+            user-info-uri:
+            user-name-attribute: id
+server:
+  port: 9000

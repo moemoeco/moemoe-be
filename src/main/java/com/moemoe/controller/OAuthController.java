@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
-@RestController("/auth")
+@RestController("/oauth")
 @RequiredArgsConstructor
 public class OAuthController {
     private final KakaoOAuthService kakaoOAuthService;

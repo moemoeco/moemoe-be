@@ -16,7 +16,7 @@ class KakaoURLBuilderTest {
 
     @Test
     void authorize() {
-        String expectedUrl = "https://kauth.kakao.com/oauth/authorize?client_id=client-id&redirect_uri=redirect-uri&scope=profile_nickname,name";
+        String expectedUrl = "https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=client-id&redirect_uri=redirect-uri&scope=profile_nickname,name";
         String actualUrl = kakaoURLBuilder.authorize();
 
         assertThat(actualUrl)

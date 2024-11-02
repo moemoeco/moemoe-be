@@ -26,6 +26,7 @@ public class KakaoURLBuilder {
 
     public String authorize() {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.put("response_type", List.of("code"));
         params.put("client_id", List.of(clientId));
         params.put("redirect_uri", List.of(redirectUri));
         params.put("scope", List.of(scopes));

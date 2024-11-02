@@ -6,11 +6,11 @@ spring:
       client:
         registration:
           kakao:
-            client-id: a9c904cd4923d8c17f94a35bad2afad3
+            client-id: fa991cfca3acd11dfe5c5fbae4e4e777
             client-secret: LBBIftHi71V4OSTHi0AFQ6pJMydeENn6
-            client-authentication-method: post
+            client-authentication-method: client_secret_post
             authorization-grant-type: authorization_code
-            redirect-uri: http://localhost:9000/oauth/kakao/redirect
+            redirect-uri: http://localhost:9000/oauth/login
             scope: profile_nickname,profile_image,account_email,name,gender,age_range,birthday,birthyear
         provider:
           kakao:

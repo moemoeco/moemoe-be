@@ -10,21 +10,13 @@ spring:
             client-secret: LBBIftHi71V4OSTHi0AFQ6pJMydeENn6
             client-authentication-method: post
             authorization-grant-type: authorization_code
-            redirect-uri: http://localhost/oauth/kakao/redirect
-            scope:
-              - profile_nickname
-              - profile_image
-              - account_email
-              - name
-              - gender
-              - age_range
-              - birthday
-              - birthyear
+            redirect-uri: http://localhost:9000/oauth/kakao/redirect
+            scope: profile_nickname,profile_image,account_email,name,gender,age_range,birthday,birthyear
         provider:
           kakao:
-            authorization-uri:
-            token-uri:
-            user-info-uri:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
 server:
   port: 9000

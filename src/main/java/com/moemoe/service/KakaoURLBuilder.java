@@ -36,4 +36,18 @@ public class KakaoURLBuilder {
                 .build()
                 .toString();
     }
+
+    public String getToken(String code) {
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.put("grant_type", List.of("authorization_code"));
+        params.put("client_id", List.of(clientId));
+        params.put("redirect_uri", List.of(redirectUri));
+        params.put("code", List.of(code));
+        params.put("client_secret", List.of(clientSecret));
+
+        return UriComponentsBuilder.fromHttpUrl(tokenUri)
+                .queryParams(params)
+                .build()
+                .toString();
+    }
 }

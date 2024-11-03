@@ -19,6 +19,8 @@ public class KakaoTokenResponse {
     private String refreshToken;
     @JsonProperty("refresh_token_expires_in")
     private int refreshTokenExpiresIn;
-    @JsonProperty("scope")
-    private String scope;
+
+    public String getAuthorizationToken() {
+        return this.tokenType + " " + this.accessToken;
+    }
 }

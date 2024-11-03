@@ -40,4 +40,15 @@ class KakaoURLBuilderTest {
         assertThat(actualUrl)
                 .isEqualTo(expectedUrl);
     }
+
+    @Test
+    void getUserInfo() {
+        String expectedUrl = "https://kapi.kakao.com/v2/user/me" +
+                "?secure_resource=true";
+
+        String actualUrl = kakaoURLBuilder.getUserInfo();
+
+        assertThat(actualUrl)
+                .isEqualTo(expectedUrl);
+    }
 }

@@ -14,6 +14,8 @@ public class KakaoURLBuilder {
     private String authorizationUri;
     @Value("${spring.security.oauth2.client.provider.kakao.token-uri}")
     private String tokenUri;
+    @Value("${spring.security.oauth2.client.provider.kakao.user-info-uri}")
+    private String userInfoUri;
     @Value("${spring.security.oauth2.client.registration.kakao.client-id}")
     private String clientId;
     @Value("${spring.security.oauth2.client.registration.kakao.client-secret}")
@@ -46,6 +48,15 @@ public class KakaoURLBuilder {
         params.put("client_secret", List.of(clientSecret));
 
         return UriComponentsBuilder.fromHttpUrl(tokenUri)
+                .queryParams(params)
+                .build()
+                .toString();
+    }
+
+    public String getUserInfo() {
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.put("secure_resource", List.of("true"));
+        return UriComponentsBuilder.fromHttpUrl(userInfoUri)
                 .queryParams(params)
                 .build()
                 .toString();

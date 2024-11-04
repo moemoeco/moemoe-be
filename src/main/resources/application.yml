@@ -11,7 +11,7 @@ spring:
             client-authentication-method: client_secret_post
             authorization-grant-type: authorization_code
             redirect-uri: http://localhost:9000/oauth/login
-            scope: profile_nickname,profile_image,account_email,name,gender,age_range,birthday,birthyear
+            scope: profile_nickname,profile_image,account_email,name,gender,birthday,birthyear
         provider:
           kakao:
             authorization-uri: https://kauth.kakao.com/oauth/authorize

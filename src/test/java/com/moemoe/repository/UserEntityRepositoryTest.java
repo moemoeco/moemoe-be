@@ -13,13 +13,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 
 @DataMongoTest
-class UserRepositoryTest {
+class UserEntityRepositoryTest {
     @Autowired
-    UserRepository userRepository;
+    UserEntityRepository userEntityRepository;
 
     @AfterEach
     void deleteAll(){
-        userRepository.deleteAll();
+        userEntityRepository.deleteAll();
     }
 
     @Test
@@ -28,10 +28,10 @@ class UserRepositoryTest {
         User user = User.builder().name("test").build();
 
         // when
-        userRepository.save(user);
+        userEntityRepository.save(user);
 
         // then
-        List<User> all = userRepository.findAll();
+        List<User> all = userEntityRepository.findAll();
         assertThat(all)
                 .isNotEmpty()
                 .extracting(User::getId, User::getName)

@@ -20,3 +20,16 @@ spring:
             user-name-attribute: id
 server:
   port: 9000
+service:
+  jwt:
+    issuer: "test-issuer"
+    access-expiration: 1800000 # 30분 (30 * 60 * 1000 밀리초)
+    refresh-expiration: 108000000 # 30일 (30 * 60 * 60 * 1000 밀리초)
+    secret-key: "3v6Gc1yQ_wQD9pbV1vCj3E2qE8-RLdljM2xU6yWg7ZI"
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: alpha
+    tags-sorter: alpha
+  api-docs:
+    path: /api-docs

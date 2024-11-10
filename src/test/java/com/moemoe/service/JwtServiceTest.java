@@ -1,5 +1,7 @@
 package com.moemoe.service;
 
+import com.moemoe.domain.User;
+import com.moemoe.domain.UserRole;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -10,6 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 
 import javax.crypto.SecretKey;
+import java.util.Map;
 
 import static com.nimbusds.jose.JWSAlgorithm.HS256;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -36,9 +39,12 @@ class JwtServiceTest {
     void createAccessToken() {
         // given
         String email = "test@example.com";
+        String role = UserRole.USER.name();
+        Map<String, String> claims = Map.of("email", email, "role", role);
+        User user = User.builder().email(email).build();
 
         // when
-        String accessToken = jwtService.createAccessToken(email);
+        String accessToken = jwtService.createAccessToken(claims, user);
 
         // then
         assertThat(accessToken)
@@ -60,15 +66,22 @@ class JwtServiceTest {
                 .isEqualTo("test-issuer");
         assertThat(payload.getExpiration().getTime() - payload.getIssuedAt().getTime())
                 .isEqualTo(accessExpiration);
+        assertThat(payload.get("email", String.class))
+                .isEqualTo(email);
+        assertThat(payload.get("role", String.class))
+                .isEqualTo(role);
     }
 
     @Test
     void createRefreshToken() {
         // given
         String email = "test@example.com";
+        String role = UserRole.USER.name();
+        Map<String, String> claims = Map.of("email", email, "role", role);
+        User user = User.builder().email(email).build();
 
         // when
-        String refreshToken = jwtService.createRefreshToken(email);
+        String refreshToken = jwtService.createRefreshToken(claims, user);
 
         // then
         assertThat(refreshToken)
@@ -90,5 +103,9 @@ class JwtServiceTest {
                 .isEqualTo("test-issuer");
         assertThat(payload.getExpiration().getTime() - payload.getIssuedAt().getTime())
                 .isEqualTo(refreshExpiration);
+        assertThat(payload.get("email", String.class))
+                .isEqualTo(email);
+        assertThat(payload.get("role", String.class))
+                .isEqualTo(role);
     }
 }

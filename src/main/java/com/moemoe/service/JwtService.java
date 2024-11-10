@@ -1,5 +1,6 @@
 package com.moemoe.service;
 
+import com.moemoe.domain.UserRole;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -57,11 +58,26 @@ public class JwtService {
     }
 
     public String getEmail(String token) {
-        return extractClaims(token)
-                .getSubject();
+        return extractClaims(token).get("email", String.class);
     }
 
-    public boolean isExpired(String token) {
+    public String getRole(String token) {
+        return extractClaims(token).get("role", String.class);
+    }
+
+    public boolean isValidToken(String token, String userName) {
+        Claims claims = extractClaims(token);
+        if (!claims.containsKey("role")) {
+            UserRole.valueOf(claims.get("role", String.class));
+            return false;
+        }
+        if (!claims.containsKey("email")) return false;
+
+        String subject = claims.getSubject();
+        return userName.equals(subject) && !isExpiredToken(token);
+    }
+
+    private boolean isExpiredToken(String token) {
         Date expiration = extractClaims(token)
                 .getExpiration();
         return expiration.before(new Date());

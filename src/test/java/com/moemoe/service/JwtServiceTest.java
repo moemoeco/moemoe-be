@@ -10,12 +10,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.util.ReflectionUtils;
 
 import javax.crypto.SecretKey;
+import java.lang.reflect.Field;
 import java.util.Map;
 
 import static com.nimbusds.jose.JWSAlgorithm.HS256;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 
 @SpringBootTest
@@ -107,5 +110,28 @@ class JwtServiceTest {
                 .isEqualTo(email);
         assertThat(payload.get("role", String.class))
                 .isEqualTo(role);
+    }
+
+    @Test
+    void isValidToken() throws IllegalAccessException {
+        // given
+        String email = "test@example.com";
+        String role = UserRole.USER.name();
+        Map<String, String> claims = Map.of("email", email, "role", role);
+        User user = User.builder().email(email).build();
+
+        Field accessExpirationField = ReflectionUtils.findField(jwtService.getClass(), "accessExpiration");
+        assert accessExpirationField != null;
+        accessExpirationField.setAccessible(true);
+        long beforeFieldValue = accessExpirationField.getLong(jwtService);
+        ReflectionUtils.setField(accessExpirationField, jwtService, 0L);
+
+        // when
+        String accessToken = jwtService.createAccessToken(claims, user);
+        assertThatThrownBy(() -> jwtService.isValidToken(accessToken, email))
+                .isInstanceOf(ExpiredJwtException.class);
+
+        ReflectionUtils.setField(accessExpirationField, jwtService, beforeFieldValue);
+        accessExpirationField.setAccessible(false);
     }
 }

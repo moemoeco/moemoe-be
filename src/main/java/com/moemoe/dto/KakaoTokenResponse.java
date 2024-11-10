@@ -1,25 +1,15 @@
 package com.moemoe.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
-import lombok.ToString;
 
-@Getter
-@ToString
-public class KakaoTokenResponse {
-    @JsonProperty("token_type")
-    private String tokenType;
-    @JsonProperty("access_token")
-    private String accessToken;
-    @JsonProperty("id_token")
-    private String idToken;
-    @JsonProperty("expires_in")
-    private int expiresIn;
-    @JsonProperty("refresh_token")
-    private String refreshToken;
-    @JsonProperty("refresh_token_expires_in")
-    private int refreshTokenExpiresIn;
-
+public record KakaoTokenResponse(
+        @JsonProperty("token_type") String tokenType,
+        @JsonProperty("access_token") String accessToken,
+        @JsonProperty("id_token") String idToken,
+        @JsonProperty("expires_in") int expiresIn,
+        @JsonProperty("refresh_token") String refreshToken,
+        @JsonProperty("refresh_token_expires_in") int refreshTokenExpiresIn
+) {
     public String getAuthorizationToken() {
         return this.tokenType + " " + this.accessToken;
     }

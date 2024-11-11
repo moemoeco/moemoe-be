@@ -12,12 +12,21 @@ spring:
             authorization-grant-type: authorization_code
             redirect-uri: http://localhost:9000/oauth/login
             scope: profile_nickname,profile_image,account_email,name,gender,birthday,birthyear
+          naver:
+            client-id: LUVKeegdX1kEF7mH5sXM
+            client-secret: UNNaRySITw
+            client-name: Naver
+            redirect-uri: http://localhost:9000/oauth/login
+            authorization-grant-type: authorization_code
         provider:
           kakao:
             authorization-uri: https://kauth.kakao.com/oauth/authorize
             token-uri: https://kauth.kakao.com/oauth/token
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
+          naver:
+            authorization-uri: https://nid.naver.com/oauth2.0/authorize
+            token-uri: https://nid.naver.com/oauth2.0/token
 server:
   port: 9000
 service:

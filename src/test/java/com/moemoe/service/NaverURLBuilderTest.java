@@ -14,6 +14,7 @@ import static org.assertj.core.api.InstanceOfAssertFactories.stream;
 @TestPropertySource(properties = {
         "spring.security.oauth2.client.provider.naver.authorization-uri=http://authorization-uri",
         "spring.security.oauth2.client.provider.naver.token-uri=http://token-uri",
+        "spring.security.oauth2.client.provider.naver.user-info-uri=http://user-info-uri",
         "spring.security.oauth2.client.registration.naver.client-id=client-id",
         "spring.security.oauth2.client.registration.naver.client-secret=client-secret",
         "spring.security.oauth2.client.registration.naver.redirect-uri=redirect-uri",
@@ -48,6 +49,14 @@ class NaverURLBuilderTest {
                 "&code=" + expectedCode +
                 "&state=" + expectedState;
         String actualUrl = naverURLBuilder.getToken(expectedCode, expectedState);
+
+        assertThat(actualUrl).isEqualTo(expectedUrl);
+    }
+
+    @Test
+    void getUserInfo() {
+        String expectedUrl = "http://user-info-uri";
+        String actualUrl = naverURLBuilder.getUserInfo();
 
         assertThat(actualUrl).isEqualTo(expectedUrl);
     }

@@ -15,6 +15,8 @@ public class NaverURLBuilder {
     private String authorizationUri;
     @Value("${spring.security.oauth2.client.provider.naver.token-uri}")
     private String tokenUri;
+    @Value("${spring.security.oauth2.client.provider.naver.user-info-uri}")
+    private String userInfoUri;
     @Value("${spring.security.oauth2.client.registration.naver.client-id}")
     private String clientId;
     @Value("${spring.security.oauth2.client.registration.naver.client-secret}")
@@ -47,6 +49,12 @@ public class NaverURLBuilder {
 
         return UriComponentsBuilder.fromHttpUrl(tokenUri)
                 .queryParams(params)
+                .build()
+                .toString();
+    }
+
+    public String getUserInfo() {
+        return UriComponentsBuilder.fromHttpUrl(userInfoUri)
                 .build()
                 .toString();
     }

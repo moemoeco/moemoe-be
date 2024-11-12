@@ -10,13 +10,13 @@ spring:
             client-secret: vlDelx5LPpLIGuJjImconvk1FU2GVVLB
             client-authentication-method: client_secret_post
             authorization-grant-type: authorization_code
-            redirect-uri: http://localhost:9000/oauth/login
+            redirect-uri: http://localhost:9000/oauth/kakao/login
             scope: profile_nickname,profile_image,account_email,name,gender,birthday,birthyear
           naver:
             client-id: LUVKeegdX1kEF7mH5sXM
             client-secret: UNNaRySITw
             client-name: Naver
-            redirect-uri: http://localhost:9000/oauth/login
+            redirect-uri: http://localhost:9000/oauth/naver/login
             authorization-grant-type: authorization_code
         provider:
           kakao:

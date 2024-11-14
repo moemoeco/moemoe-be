@@ -1,16 +1,16 @@
 package com.moemoe.service;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.InstanceOfAssertFactories.stream;
 
-@SpringBootTest
-@ActiveProfiles("test")
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes = {NaverURLBuilder.class})
 @TestPropertySource(properties = {
         "spring.security.oauth2.client.provider.naver.authorization-uri=http://authorization-uri",
         "spring.security.oauth2.client.provider.naver.token-uri=http://token-uri",

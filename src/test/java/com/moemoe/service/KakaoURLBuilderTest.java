@@ -1,14 +1,25 @@
 package com.moemoe.service;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
-@ActiveProfiles("test")
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes = {KakaoURLBuilder.class})
+@TestPropertySource(properties = {
+        "spring.security.oauth2.client.provider.kakao.authorization-uri=http://authorization-uri",
+        "spring.security.oauth2.client.provider.kakao.token-uri=http://token-uri",
+        "spring.security.oauth2.client.provider.kakao.user-info-uri=http://user-info-uri",
+        "spring.security.oauth2.client.registration.kakao.client-id=client-id",
+        "spring.security.oauth2.client.registration.kakao.client-secret=client-secret",
+        "spring.security.oauth2.client.registration.kakao.redirect-uri=redirect-uri",
+        "spring.security.oauth2.client.registration.kakao.scope=profile_nickname,name"
+})
 class KakaoURLBuilderTest {
     @Autowired
     private KakaoURLBuilder kakaoURLBuilder;

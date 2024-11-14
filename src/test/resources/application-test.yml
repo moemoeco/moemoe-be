@@ -3,22 +3,5 @@ spring:
     redis:
       host: localhost
       port: 6379
-  security:
-    oauth2:
-      client:
-        registration:
-          kakao:
-            client-id: client-id
-            client-secret: client-secret
-            client-authentication-method: post
-            authorization-grant-type: authorization_code
-            redirect-uri: redirect-uri
-            scope: profile_nickname,name
-        provider:
-          kakao:
-            authorization-uri: https://kauth.kakao.com/oauth/authorize
-            token-uri: https://kauth.kakao.com/oauth/token
-            user-info-uri: https://kapi.kakao.com/v2/user/me
-            user-name-attribute: id
 server:
   port: 9000

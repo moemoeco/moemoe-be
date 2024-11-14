@@ -1,8 +1,10 @@
 package com.moemoe.controller;
 
 
+import com.moemoe.constant.OAuthPlatform;
 import com.moemoe.dto.LoginTokenResponse;
 import com.moemoe.service.KakaoOAuthService;
+import com.moemoe.service.NaverOAuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -14,17 +16,33 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin(origins = "*", methods = RequestMethod.GET)
 public class OAuthController {
     private final KakaoOAuthService kakaoOAuthService;
+    private final NaverOAuthService naverOAuthService;
 
-    @GetMapping("/login-page")
-    public String loginPage() {
+    @GetMapping("/{platformType}/login-page")
+    public String loginPage(
+            @PathVariable OAuthPlatform platformType) {
         log.info("Login page");
-        return kakaoOAuthService.authorize();
+        if (platformType.equals(OAuthPlatform.KAKAO)) {
+            return kakaoOAuthService.authorize();
+        } else if (platformType.equals(OAuthPlatform.NAVER)) {
+            return naverOAuthService.authorize("");
+        } else {
+            throw new IllegalArgumentException("Unknown platform type: " + platformType);
+        }
     }
 
-    @GetMapping("/login")
+    @GetMapping("/{platformType}/login")
     public LoginTokenResponse login(
-            @RequestParam("code") String code) {
+            @PathVariable OAuthPlatform platformType,
+            @RequestParam("code") String code,
+            @RequestParam(value = "state", required = false) String state) {
         log.info("Login");
-        return kakaoOAuthService.login(code);
+        if (platformType.equals(OAuthPlatform.KAKAO)) {
+            return kakaoOAuthService.login(code);
+        } else if (platformType.equals(OAuthPlatform.NAVER)) {
+            return naverOAuthService.login(code, state);
+        } else {
+            throw new IllegalArgumentException("Unknown platform type: " + platformType);
+        }
     }
 }

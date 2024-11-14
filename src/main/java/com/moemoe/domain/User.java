@@ -21,7 +21,7 @@ public class User implements UserDetails {
     @Id
     private String id;
     private UserRole role;
-    private long socialId;
+    private String socialId;
     private String name;
     @Indexed(unique = true)
     private String email;
@@ -32,7 +32,7 @@ public class User implements UserDetails {
     private String profileImageUrl;
 
     @Builder
-    public User(long socialId,
+    public User(String socialId,
                 String name,
                 UserRole role,
                 String email,

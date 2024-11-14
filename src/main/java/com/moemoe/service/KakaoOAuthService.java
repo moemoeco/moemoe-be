@@ -8,6 +8,7 @@ import com.moemoe.dto.KakaoUserInfoResponse;
 import com.moemoe.dto.LoginTokenResponse;
 import com.moemoe.http.KakaoTokenClient;
 import com.moemoe.http.KakaoUserInfoClient;
+import com.moemoe.http.builder.UrlBuilder;
 import com.moemoe.repository.RefreshTokenEntityRepository;
 import com.moemoe.repository.UserEntityRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,7 @@ import java.util.Map;
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class KakaoOAuthService {
-    private final KakaoURLBuilder kakaoURLBuilder;
+    private final UrlBuilder kakaoUrlBuilder;
     private final KakaoTokenClient kakaoTokenClient;
     private final KakaoUserInfoClient kakaoUserInfoClient;
     private final UserEntityRepository userEntityRepository;
@@ -32,7 +33,7 @@ public class KakaoOAuthService {
     private final JwtService jwtService;
 
     public String authorize(String state) {
-        return kakaoURLBuilder.authorize(state);
+        return kakaoUrlBuilder.getAuthorizeUrl(state);
     }
 
     @Transactional
@@ -72,12 +73,12 @@ public class KakaoOAuthService {
     }
 
     private KakaoUserInfoResponse getKakaoUserInfoResponse(KakaoTokenResponse token) {
-        String userInfoUrl = kakaoURLBuilder.getUserInfo();
+        String userInfoUrl = kakaoUrlBuilder.getUserInfoUrl();
         return kakaoUserInfoClient.getUserInfo(URI.create(userInfoUrl), token.getAuthorizationToken());
     }
 
     private KakaoTokenResponse getToken(String code, String state) {
-        String tokenUrl = kakaoURLBuilder.getToken(code, state);
+        String tokenUrl = kakaoUrlBuilder.getTokenUrl(code, state);
         return kakaoTokenClient.getToken(URI.create(tokenUrl));
     }
 }

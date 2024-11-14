@@ -8,6 +8,7 @@ import com.moemoe.dto.NaverTokenResponse;
 import com.moemoe.dto.NaverUserInfoResponse;
 import com.moemoe.http.NaverTokenClient;
 import com.moemoe.http.NaverUserInfoClient;
+import com.moemoe.http.builder.UrlBuilder;
 import com.moemoe.repository.RefreshTokenEntityRepository;
 import com.moemoe.repository.UserEntityRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,7 @@ import java.util.Map;
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class NaverOAuthService {
-    private final NaverURLBuilder naverURLBuilder;
+    private final UrlBuilder naverUrlBuilder;
     private final NaverTokenClient naverTokenClient;
     private final NaverUserInfoClient naverUserInfoClient;
     private final UserEntityRepository userEntityRepository;
@@ -32,7 +33,7 @@ public class NaverOAuthService {
     private final JwtService jwtService;
 
     public String authorize(String state) {
-        return naverURLBuilder.authorize(state);
+        return naverUrlBuilder.getAuthorizeUrl(state);
     }
 
     @Transactional
@@ -71,12 +72,12 @@ public class NaverOAuthService {
     }
 
     private NaverUserInfoResponse getUserInfo(NaverTokenResponse token) {
-        String userInfoUrl = naverURLBuilder.getUserInfo();
+        String userInfoUrl = naverUrlBuilder.getUserInfoUrl();
         return naverUserInfoClient.getUserInfo(URI.create(userInfoUrl), token.getAuthorizationToken());
     }
 
     private NaverTokenResponse getToken(String code, String state) {
-        String tokenUrl = naverURLBuilder.getToken(code, state);
+        String tokenUrl = naverUrlBuilder.getTokenUrl(code, state);
         return naverTokenClient.getToken(URI.create(tokenUrl));
     }
 }

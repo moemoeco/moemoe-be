@@ -23,7 +23,7 @@ public class OAuthController {
             @PathVariable OAuthPlatform platformType) {
         log.info("Login page");
         if (platformType.equals(OAuthPlatform.KAKAO)) {
-            return kakaoOAuthService.authorize();
+            return kakaoOAuthService.authorize("");
         } else if (platformType.equals(OAuthPlatform.NAVER)) {
             return naverOAuthService.authorize("");
         } else {
@@ -35,10 +35,10 @@ public class OAuthController {
     public LoginTokenResponse login(
             @PathVariable OAuthPlatform platformType,
             @RequestParam("code") String code,
-            @RequestParam(value = "state", required = false) String state) {
+            @RequestParam(value = "state") String state) {
         log.info("Login");
         if (platformType.equals(OAuthPlatform.KAKAO)) {
-            return kakaoOAuthService.login(code);
+            return kakaoOAuthService.login(code, state);
         } else if (platformType.equals(OAuthPlatform.NAVER)) {
             return naverOAuthService.login(code, state);
         } else {

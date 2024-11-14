@@ -31,13 +31,13 @@ public class KakaoOAuthService {
     private final RefreshTokenEntityRepository refreshTokenEntityRepository;
     private final JwtService jwtService;
 
-    public String authorize() {
-        return kakaoURLBuilder.authorize();
+    public String authorize(String state) {
+        return kakaoURLBuilder.authorize(state);
     }
 
     @Transactional
-    public LoginTokenResponse login(String code) {
-        KakaoTokenResponse token = getToken(code);
+    public LoginTokenResponse login(String code, String state) {
+        KakaoTokenResponse token = getToken(code, state);
         KakaoUserInfoResponse userInfo = getKakaoUserInfoResponse(token);
         User userEntity = getUserEntity(userInfo);
 
@@ -76,8 +76,8 @@ public class KakaoOAuthService {
         return kakaoUserInfoClient.getUserInfo(URI.create(userInfoUrl), token.getAuthorizationToken());
     }
 
-    private KakaoTokenResponse getToken(String code) {
-        String tokenUrl = kakaoURLBuilder.getToken(code);
+    private KakaoTokenResponse getToken(String code, String state) {
+        String tokenUrl = kakaoURLBuilder.getToken(code, state);
         return kakaoTokenClient.getToken(URI.create(tokenUrl));
     }
 }

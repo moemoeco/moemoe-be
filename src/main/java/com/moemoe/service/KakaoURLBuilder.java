@@ -26,11 +26,12 @@ public class KakaoURLBuilder {
     private String scopes;
 
 
-    public String authorize() {
+    public String authorize(String state) {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.put("response_type", List.of("code"));
         params.put("client_id", List.of(clientId));
         params.put("redirect_uri", List.of(redirectUri));
+        params.put("state", List.of(state));
         params.put("scope", List.of(scopes));
 
         return UriComponentsBuilder.fromHttpUrl(authorizationUri)
@@ -39,12 +40,13 @@ public class KakaoURLBuilder {
                 .toString();
     }
 
-    public String getToken(String code) {
+    public String getToken(String code, String state) {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.put("grant_type", List.of("authorization_code"));
         params.put("client_id", List.of(clientId));
         params.put("redirect_uri", List.of(redirectUri));
         params.put("code", List.of(code));
+        params.put("state", List.of(state));
         params.put("client_secret", List.of(clientSecret));
 
         return UriComponentsBuilder.fromHttpUrl(tokenUri)

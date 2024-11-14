@@ -15,12 +15,13 @@ class KakaoURLBuilderTest {
 
     @Test
     void authorize() {
-        String expectedUrl = "https://kauth.kakao.com/oauth/authorize" +
+        String expectedUrl = "http://authorization-uri" +
                 "?response_type=code" +
                 "&client_id=client-id" +
                 "&redirect_uri=redirect-uri" +
+                "&state=state" +
                 "&scope=profile_nickname,name";
-        String actualUrl = kakaoURLBuilder.authorize();
+        String actualUrl = kakaoURLBuilder.authorize("state");
 
         assertThat(actualUrl)
                 .isEqualTo(expectedUrl);
@@ -28,14 +29,15 @@ class KakaoURLBuilderTest {
 
     @Test
     void getToken() {
-        String expectedUrl = "https://kauth.kakao.com/oauth/token" +
+        String expectedUrl = "http://token-uri" +
                 "?grant_type=authorization_code" +
                 "&client_id=client-id" +
                 "&redirect_uri=redirect-uri" +
                 "&code=test" +
+                "&state=state" +
                 "&client_secret=client-secret";
 
-        String actualUrl = kakaoURLBuilder.getToken("test");
+        String actualUrl = kakaoURLBuilder.getToken("test", "state");
 
         assertThat(actualUrl)
                 .isEqualTo(expectedUrl);
@@ -43,7 +45,7 @@ class KakaoURLBuilderTest {
 
     @Test
     void getUserInfo() {
-        String expectedUrl = "https://kapi.kakao.com/v2/user/me" +
+        String expectedUrl = "http://user-info-uri" +
                 "?secure_resource=true";
 
         String actualUrl = kakaoURLBuilder.getUserInfo();

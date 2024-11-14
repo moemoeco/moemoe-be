@@ -31,10 +31,18 @@ public class OAuthController {
         }
     }
 
-    @GetMapping("/login")
+    @GetMapping("/{platformType}/login")
     public LoginTokenResponse login(
-            @RequestParam("code") String code) {
+            @PathVariable OAuthPlatform platformType,
+            @RequestParam("code") String code,
+            @RequestParam(value = "state", required = false) String state) {
         log.info("Login");
-        return kakaoOAuthService.login(code);
+        if (platformType.equals(OAuthPlatform.KAKAO)) {
+            return kakaoOAuthService.login(code);
+        } else if (platformType.equals(OAuthPlatform.NAVER)) {
+            return naverOAuthService.login(code, state);
+        } else {
+            throw new IllegalArgumentException("Unknown platform type: " + platformType);
+        }
     }
 }

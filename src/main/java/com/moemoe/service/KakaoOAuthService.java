@@ -68,7 +68,6 @@ public class KakaoOAuthService {
                         .birthday(kakaoAccount.birthday())
                         .birthyear(kakaoAccount.birthyear())
                         .profileImageUrl(profile.profileImageUrl())
-                        .thumbnailImageUrl(profile.thumbnailImageUrl())
                         .build()));
     }
 

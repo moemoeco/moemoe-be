@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public record NaverUserInfoResponse(
         @JsonProperty("resultcode") String resultCode,
         String message,
-        NaverAccount response
+        @JsonProperty("response") NaverAccount naverAccount
 ) {
     public record NaverAccount(
             String id,

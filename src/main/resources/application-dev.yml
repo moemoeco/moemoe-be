@@ -7,7 +7,7 @@ spring:
       host: localhost
       port: 27017
       database: moemoe
-#      com.mongodb.MongoCommandException: Command failed with error 18 (AuthenticationFailed): 'Authentication failed.'  에러로 인해 잠시 제거
+      #      com.mongodb.MongoCommandException: Command failed with error 18 (AuthenticationFailed): 'Authentication failed.'  에러로 인해 잠시 제거
       username: root
       password: example
       authentication-database: admin

@@ -1,22 +1,22 @@
 spring:
   profiles:
-    active: local
+    active: dev
   security:
     oauth2:
       client:
         registration:
           kakao:
-            client-id: fa991cfca3acd11dfe5c5fbae4e4e777
-            client-secret: vlDelx5LPpLIGuJjImconvk1FU2GVVLB
+            client-id: ${KAKAO_CLIENT_ID}
+            client-secret: ${KAKAO_CLIENT_SECRET}
+            redirect-uri: ${KAKAO_REDIRECT_URI}
             client-authentication-method: client_secret_post
             authorization-grant-type: authorization_code
-            redirect-uri: http://localhost:9000/oauth/kakao/login
             scope: profile_nickname,profile_image,account_email,name,gender,birthday,birthyear
           naver:
-            client-id: LUVKeegdX1kEF7mH5sXM
-            client-secret: UNNaRySITw
+            client-id: ${NAVER_CLIENT_ID}
+            client-secret: ${NAVER_CLIENT_SECRET}
+            redirect-uri: ${NAVER_REDIRECT_URI}
             client-name: Naver
-            redirect-uri: http://localhost:9000/oauth/naver/login
             authorization-grant-type: authorization_code
         provider:
           kakao:
@@ -32,10 +32,10 @@ server:
   port: 9000
 service:
   jwt:
-    issuer: "test-issuer"
+    issuer: ${JWT_ISSUER}
+    secret-key: ${JWT_SECRET_KEY}
     access-expiration: 1800000 # 30분 (30 * 60 * 1000 밀리초)
     refresh-expiration: 108000000 # 30일 (30 * 60 * 60 * 1000 밀리초)
-    secret-key: "3v6Gc1yQ_wQD9pbV1vCj3E2qE8-RLdljM2xU6yWg7ZI"
 springdoc:
   swagger-ui:
     path: /swagger-ui.html

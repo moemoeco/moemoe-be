@@ -1,12 +1,13 @@
-package com.moemoe.dto;
+package com.moemoe.dto.naver;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.moemoe.dto.UserInfoResponse;
 
 public record NaverUserInfoResponse(
         @JsonProperty("resultcode") String resultCode,
         String message,
         @JsonProperty("response") NaverAccount naverAccount
-) {
+) implements UserInfoResponse {
     public record NaverAccount(
             String id,
             @JsonProperty("profile_image") String profileImageUrl,

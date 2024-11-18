@@ -1,6 +1,6 @@
 package com.moemoe.http.client.naver;
 
-import com.moemoe.dto.NaverTokenResponse;
+import com.moemoe.dto.naver.NaverTokenResponse;
 import org.springframework.http.MediaType;
 import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PostExchange;

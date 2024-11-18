@@ -3,12 +3,11 @@ package com.moemoe.service;
 import com.moemoe.domain.RefreshToken;
 import com.moemoe.domain.User;
 import com.moemoe.domain.UserRole;
-import com.moemoe.dto.LoginTokenResponse;
-import com.moemoe.dto.NaverTokenResponse;
-import com.moemoe.dto.NaverUserInfoResponse;
+import com.moemoe.dto.*;
+import com.moemoe.dto.naver.NaverUserInfoResponse;
+import com.moemoe.http.builder.UrlBuilder;
 import com.moemoe.http.client.naver.NaverTokenClient;
 import com.moemoe.http.client.naver.NaverUserInfoClient;
-import com.moemoe.http.builder.UrlBuilder;
 import com.moemoe.repository.RefreshTokenEntityRepository;
 import com.moemoe.repository.UserEntityRepository;
 import lombok.RequiredArgsConstructor;
@@ -38,8 +37,8 @@ public class NaverOAuthService {
 
     @Transactional
     public LoginTokenResponse login(String code, String state) {
-        NaverTokenResponse token = getToken(code, state);
-        NaverUserInfoResponse userInfo = getUserInfo(token);
+        TokenResponse token = getToken(code, state);
+        UserInfoResponse userInfo = getUserInfo(token);
         User userEntity = getUserEntity(userInfo);
 
         Map<String, String> claims = new HashMap<>();
@@ -56,8 +55,9 @@ public class NaverOAuthService {
                 .build();
     }
 
-    private User getUserEntity(NaverUserInfoResponse userInfo) {
-        NaverUserInfoResponse.NaverAccount naverAccount = userInfo.naverAccount();
+    private User getUserEntity(UserInfoResponse userInfo) {
+        NaverUserInfoResponse naverUserInfo = (NaverUserInfoResponse) userInfo;
+        NaverUserInfoResponse.NaverAccount naverAccount = naverUserInfo.naverAccount();
         return userEntityRepository.findByEmail(naverAccount.email())
                 .orElseGet(() -> userEntityRepository.save(User.builder()
                         .socialId(naverAccount.id())
@@ -71,12 +71,12 @@ public class NaverOAuthService {
                         .build()));
     }
 
-    private NaverUserInfoResponse getUserInfo(NaverTokenResponse token) {
+    private UserInfoResponse getUserInfo(TokenResponse token) {
         String userInfoUrl = naverUrlBuilder.getUserInfoUrl();
-        return naverUserInfoClient.getUserInfo(URI.create(userInfoUrl), token.getAuthorizationToken());
+        return naverUserInfoClient.getUserInfo(URI.create(userInfoUrl), token.authorizationToken());
     }
 
-    private NaverTokenResponse getToken(String code, String state) {
+    private TokenResponse getToken(String code, String state) {
         String tokenUrl = naverUrlBuilder.getTokenUrl(code, state);
         return naverTokenClient.getToken(URI.create(tokenUrl));
     }

@@ -1,12 +1,13 @@
-package com.moemoe.dto;
+package com.moemoe.dto.kakao;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.moemoe.dto.UserInfoResponse;
 
 public record KakaoUserInfoResponse(
         String id,
         @JsonProperty("connected_at") String connectedAt,
         @JsonProperty("kakao_account") KakaoAccount kakaoAccount
-) {
+) implements UserInfoResponse {
     public record KakaoAccount(
             Profile profile,
             String name,

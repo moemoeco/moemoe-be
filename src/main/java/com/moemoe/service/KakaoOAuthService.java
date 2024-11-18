@@ -3,12 +3,13 @@ package com.moemoe.service;
 import com.moemoe.domain.RefreshToken;
 import com.moemoe.domain.User;
 import com.moemoe.domain.UserRole;
-import com.moemoe.dto.KakaoTokenResponse;
-import com.moemoe.dto.KakaoUserInfoResponse;
+import com.moemoe.dto.kakao.KakaoUserInfoResponse;
 import com.moemoe.dto.LoginTokenResponse;
+import com.moemoe.dto.TokenResponse;
+import com.moemoe.dto.UserInfoResponse;
+import com.moemoe.http.builder.UrlBuilder;
 import com.moemoe.http.client.kakao.KakaoTokenClient;
 import com.moemoe.http.client.kakao.KakaoUserInfoClient;
-import com.moemoe.http.builder.UrlBuilder;
 import com.moemoe.repository.RefreshTokenEntityRepository;
 import com.moemoe.repository.UserEntityRepository;
 import lombok.RequiredArgsConstructor;
@@ -38,8 +39,8 @@ public class KakaoOAuthService {
 
     @Transactional
     public LoginTokenResponse login(String code, String state) {
-        KakaoTokenResponse token = getToken(code, state);
-        KakaoUserInfoResponse userInfo = getKakaoUserInfoResponse(token);
+        TokenResponse token = getToken(code, state);
+        UserInfoResponse userInfo = getUserInfo(token);
         User userEntity = getUserEntity(userInfo);
 
         Map<String, String> claims = new HashMap<>();
@@ -56,12 +57,13 @@ public class KakaoOAuthService {
                 .build();
     }
 
-    private User getUserEntity(KakaoUserInfoResponse userInfo) {
-        KakaoUserInfoResponse.KakaoAccount kakaoAccount = userInfo.kakaoAccount();
+    private User getUserEntity(UserInfoResponse userInfo) {
+        KakaoUserInfoResponse kakaoUserInfo = (KakaoUserInfoResponse) userInfo;
+        KakaoUserInfoResponse.KakaoAccount kakaoAccount = kakaoUserInfo.kakaoAccount();
         KakaoUserInfoResponse.Profile profile = kakaoAccount.profile();
         return userEntityRepository.findByEmail(kakaoAccount.email())
                 .orElseGet(() -> userEntityRepository.save(User.builder()
-                        .socialId(String.valueOf(userInfo.id()))
+                        .socialId(String.valueOf(kakaoUserInfo.id()))
                         .email(kakaoAccount.email())
                         .name(kakaoAccount.name())
                         .role(UserRole.USER)
@@ -72,12 +74,12 @@ public class KakaoOAuthService {
                         .build()));
     }
 
-    private KakaoUserInfoResponse getKakaoUserInfoResponse(KakaoTokenResponse token) {
+    private UserInfoResponse getUserInfo(TokenResponse token) {
         String userInfoUrl = kakaoUrlBuilder.getUserInfoUrl();
-        return kakaoUserInfoClient.getUserInfo(URI.create(userInfoUrl), token.getAuthorizationToken());
+        return kakaoUserInfoClient.getUserInfo(URI.create(userInfoUrl), token.authorizationToken());
     }
 
-    private KakaoTokenResponse getToken(String code, String state) {
+    private TokenResponse getToken(String code, String state) {
         String tokenUrl = kakaoUrlBuilder.getTokenUrl(code, state);
         return kakaoTokenClient.getToken(URI.create(tokenUrl));
     }

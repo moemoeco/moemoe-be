@@ -1,4 +1,4 @@
-package com.moemoe.http;
+package com.moemoe.http.client.naver;
 
 import com.moemoe.dto.NaverUserInfoResponse;
 import org.springframework.web.bind.annotation.RequestHeader;

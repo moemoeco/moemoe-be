@@ -1,14 +1,14 @@
-package com.moemoe.http;
+package com.moemoe.http.client.kakao;
 
-import com.moemoe.dto.NaverTokenResponse;
+import com.moemoe.dto.KakaoTokenResponse;
 import org.springframework.http.MediaType;
 import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PostExchange;
 
 import java.net.URI;
 
-@HttpExchange("https://nid.naver.com/oauth2.0/token")
-public interface NaverTokenClient {
+@HttpExchange("https://kauth.kakao.com/oauth/token")
+public interface KakaoTokenClient {
     @PostExchange(contentType = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-    NaverTokenResponse getToken(URI uri);
+    KakaoTokenResponse getToken(URI uri);
 }

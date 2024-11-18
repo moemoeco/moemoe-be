@@ -6,8 +6,8 @@ import com.moemoe.domain.UserRole;
 import com.moemoe.dto.KakaoTokenResponse;
 import com.moemoe.dto.KakaoUserInfoResponse;
 import com.moemoe.dto.LoginTokenResponse;
-import com.moemoe.http.KakaoTokenClient;
-import com.moemoe.http.KakaoUserInfoClient;
+import com.moemoe.http.client.kakao.KakaoTokenClient;
+import com.moemoe.http.client.kakao.KakaoUserInfoClient;
 import com.moemoe.http.builder.UrlBuilder;
 import com.moemoe.repository.RefreshTokenEntityRepository;
 import com.moemoe.repository.UserEntityRepository;
@@ -61,7 +61,7 @@ public class KakaoOAuthService {
         KakaoUserInfoResponse.Profile profile = kakaoAccount.profile();
         return userEntityRepository.findByEmail(kakaoAccount.email())
                 .orElseGet(() -> userEntityRepository.save(User.builder()
-                        .socialId(userInfo.id())
+                        .socialId(String.valueOf(userInfo.id()))
                         .email(kakaoAccount.email())
                         .name(kakaoAccount.name())
                         .role(UserRole.USER)

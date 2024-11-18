@@ -1,4 +1,4 @@
-package com.moemoe.http;
+package com.moemoe.http.client.kakao;
 
 import com.moemoe.dto.KakaoUserInfoResponse;
 import org.springframework.http.MediaType;

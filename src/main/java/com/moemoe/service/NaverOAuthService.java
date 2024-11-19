@@ -1,7 +1,7 @@
 package com.moemoe.service;
 
-import com.moemoe.domain.User;
-import com.moemoe.domain.UserRole;
+import com.moemoe.domain.mongo.User;
+import com.moemoe.domain.mongo.UserRole;
 import com.moemoe.dto.TokenResponse;
 import com.moemoe.dto.UserInfoResponse;
 import com.moemoe.dto.naver.NaverUserInfoResponse;
@@ -9,8 +9,8 @@ import com.moemoe.http.builder.NaverUrlBuilder;
 import com.moemoe.http.builder.UrlBuilder;
 import com.moemoe.http.client.naver.NaverTokenClient;
 import com.moemoe.http.client.naver.NaverUserInfoClient;
-import com.moemoe.repository.RefreshTokenEntityRepository;
-import com.moemoe.repository.UserEntityRepository;
+import com.moemoe.repository.redis.RefreshTokenEntityRepository;
+import com.moemoe.repository.mongo.UserEntityRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

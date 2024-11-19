@@ -1,4 +1,4 @@
-package com.moemoe.config;
+package com.moemoe.config.web;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;

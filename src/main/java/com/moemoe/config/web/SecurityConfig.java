@@ -1,4 +1,4 @@
-package com.moemoe.config;
+package com.moemoe.config.web;
 
 import com.moemoe.config.filter.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;

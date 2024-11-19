@@ -1,7 +1,7 @@
-package com.moemoe.config;
+package com.moemoe.config.web;
 
 import com.moemoe.constant.OAuthPlatformConverter;
-import com.moemoe.repository.UserEntityRepository;
+import com.moemoe.repository.mongo.UserEntityRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,7 +19,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Bean
     public UserDetailsService userDetailsService() {
-        return ((username) -> userEntityRepository.findByEmail(username)
+        return (userName -> userEntityRepository.findByEmail(userName)
                 .orElseThrow(() -> new UsernameNotFoundException("Not found user name")));
     }
 

@@ -1,15 +1,17 @@
 package com.moemoe.service;
 
-import com.moemoe.domain.User;
-import com.moemoe.domain.UserRole;
+import com.moemoe.domain.mongo.User;
+import com.moemoe.domain.mongo.UserRole;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.util.ReflectionUtils;
 
 import javax.crypto.SecretKey;
@@ -21,7 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 
-@SpringBootTest
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes = {JwtService.class})
 @TestPropertySource(properties = {
         "service.jwt.issuer=test-issuer",
         "service.jwt.access-expiration=#{30 * 60 * 1000}", // 30분

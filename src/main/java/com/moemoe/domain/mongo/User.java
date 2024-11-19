@@ -1,4 +1,4 @@
-package com.moemoe.domain;
+package com.moemoe.domain.mongo;
 
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -28,7 +28,6 @@ public class User implements UserDetails {
     private String gender;
     private String birthyear;
     private String birthday;
-    private String thumbnailImageUrl;
     private String profileImageUrl;
 
     @Builder
@@ -39,7 +38,6 @@ public class User implements UserDetails {
                 String gender,
                 String birthyear,
                 String birthday,
-                String thumbnailImageUrl,
                 String profileImageUrl) {
         this.socialId = socialId;
         this.name = name;
@@ -48,7 +46,6 @@ public class User implements UserDetails {
         this.gender = gender;
         this.birthyear = birthyear;
         this.birthday = birthday;
-        this.thumbnailImageUrl = thumbnailImageUrl;
         this.profileImageUrl = profileImageUrl;
     }
 

@@ -1,16 +1,18 @@
-package com.moemoe.dto;
+package com.moemoe.dto.kakao;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.moemoe.dto.TokenResponse;
 
 public record KakaoTokenResponse(
         @JsonProperty("token_type") String tokenType,
         @JsonProperty("access_token") String accessToken,
-        @JsonProperty("id_token") String idToken,
-        @JsonProperty("expires_in") int expiresIn,
         @JsonProperty("refresh_token") String refreshToken,
+        @JsonProperty("expires_in") int expiresIn,
+        @JsonProperty("id_token") String idToken,
         @JsonProperty("refresh_token_expires_in") int refreshTokenExpiresIn
-) {
-    public String getAuthorizationToken() {
+) implements TokenResponse {
+    @Override
+    public String authorizationToken() {
         return this.tokenType + " " + this.accessToken;
     }
 }

@@ -1,6 +1,6 @@
 package com.moemoe.service;
 
-import com.moemoe.domain.UserRole;
+import com.moemoe.domain.mongo.UserRole;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;

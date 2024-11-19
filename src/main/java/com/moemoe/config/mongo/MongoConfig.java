@@ -1,4 +1,4 @@
-package com.moemoe.config;
+package com.moemoe.config.mongo;
 
 
 import lombok.RequiredArgsConstructor;

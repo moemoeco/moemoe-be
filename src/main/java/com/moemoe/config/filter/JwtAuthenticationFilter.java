@@ -1,13 +1,10 @@
 package com.moemoe.config.filter;
 
-import com.moemoe.domain.User;
-import com.moemoe.domain.UserRole;
+import com.moemoe.domain.mongo.User;
+import com.moemoe.domain.mongo.UserRole;
 import com.moemoe.service.JwtService;
-import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Header;
 import io.jsonwebtoken.MalformedJwtException;
-import io.netty.handler.codec.http.DefaultHttpHeaders;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,8 +20,6 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 @Slf4j
 @Component

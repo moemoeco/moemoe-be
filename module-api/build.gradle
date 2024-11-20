@@ -1,0 +1,17 @@
+apply plugin: 'war'
+//
+//bootJar {
+//    enabled = false
+//}
+//
+//bootWar {
+//    enabled = true
+//    archiveFileName = 'moemoe.war'
+//}
+
+dependencies {
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

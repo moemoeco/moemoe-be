@@ -1,4 +1,4 @@
-package com.moemoe.domain.mongo;
+package com.moemoe.mongo.constant;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

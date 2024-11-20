@@ -1,6 +1,6 @@
-package com.moemoe.repository.mongo;
+package com.moemoe.mongo.repository;
 
-import com.moemoe.domain.mongo.User;
+import com.moemoe.mongo.entity.User;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 

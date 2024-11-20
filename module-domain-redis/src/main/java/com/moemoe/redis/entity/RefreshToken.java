@@ -1,4 +1,4 @@
-package com.moemoe.domain.redis;
+package com.moemoe.redis.entity;
 
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AccessLevel;

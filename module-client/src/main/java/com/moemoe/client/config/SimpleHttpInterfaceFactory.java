@@ -1,4 +1,4 @@
-package com.moemoe.http;
+package com.moemoe.client.config;
 
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.web.reactive.function.client.WebClient;

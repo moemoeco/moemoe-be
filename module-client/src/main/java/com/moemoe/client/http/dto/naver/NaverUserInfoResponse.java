@@ -1,7 +1,7 @@
-package com.moemoe.dto.naver;
+package com.moemoe.client.http.dto.naver;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.moemoe.dto.UserInfoResponse;
+import com.moemoe.client.http.dto.UserInfoResponse;
 
 public record NaverUserInfoResponse(
         @JsonProperty("resultcode") String resultCode,

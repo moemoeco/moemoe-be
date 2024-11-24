@@ -1,4 +1,4 @@
-package com.moemoe.http;
+package com.moemoe.client.config;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanDefinition;

@@ -1,6 +1,6 @@
-package com.moemoe.http.client.naver;
+package com.moemoe.client.http.naver;
 
-import com.moemoe.dto.naver.NaverUserInfoResponse;
+import com.moemoe.client.http.dto.naver.NaverUserInfoResponse;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PostExchange;

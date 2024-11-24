@@ -1,15 +1,15 @@
-package com.moemoe.dto.kakao;
+package com.moemoe.client.http.dto.naver;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.moemoe.dto.TokenResponse;
+import com.moemoe.client.http.dto.TokenResponse;
 
-public record KakaoTokenResponse(
+public record NaverTokenResponse(
         @JsonProperty("token_type") String tokenType,
         @JsonProperty("access_token") String accessToken,
         @JsonProperty("refresh_token") String refreshToken,
         @JsonProperty("expires_in") int expiresIn,
-        @JsonProperty("id_token") String idToken,
-        @JsonProperty("refresh_token_expires_in") int refreshTokenExpiresIn
+        @JsonProperty("error") String errorMsg,
+        @JsonProperty("error_description") String errorDescription
 ) implements TokenResponse {
     @Override
     public String authorizationToken() {

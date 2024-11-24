@@ -1,7 +1,7 @@
-package com.moemoe.dto.kakao;
+package com.moemoe.client.http.dto.kakao;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.moemoe.dto.UserInfoResponse;
+import com.moemoe.client.http.dto.UserInfoResponse;
 
 public record KakaoUserInfoResponse(
         String id,

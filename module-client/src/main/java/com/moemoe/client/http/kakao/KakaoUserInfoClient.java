@@ -1,6 +1,6 @@
-package com.moemoe.http.client.kakao;
+package com.moemoe.client.http.kakao;
 
-import com.moemoe.dto.kakao.KakaoUserInfoResponse;
+import com.moemoe.client.http.dto.kakao.KakaoUserInfoResponse;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.service.annotation.HttpExchange;

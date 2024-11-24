@@ -1,4 +1,4 @@
-package com.moemoe.dto;
+package com.moemoe.client.http.dto;
 
 public interface TokenResponse {
     String tokenType();

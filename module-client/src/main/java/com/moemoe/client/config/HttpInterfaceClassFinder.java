@@ -1,6 +1,5 @@
-package com.moemoe.http;
+package com.moemoe.client.config;
 
-import com.moemoe.MoemoeApplication;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
@@ -21,6 +20,6 @@ public class HttpInterfaceClassFinder {
         };
 
         scanner.addIncludeFilter(new AnnotationTypeFilter(HttpExchange.class));
-        return scanner.findCandidateComponents(MoemoeApplication.class.getPackage().getName());
+        return scanner.findCandidateComponents("com.moemoe.client");
     }
 }

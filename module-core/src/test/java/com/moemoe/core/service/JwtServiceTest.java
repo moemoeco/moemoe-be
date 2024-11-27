@@ -1,7 +1,8 @@
-package com.moemoe.service;
+package com.moemoe.core.service;
 
-import com.moemoe.domain.mongo.User;
-import com.moemoe.domain.mongo.UserRole;
+import com.moemoe.core.service.jwt.JwtService;
+import com.moemoe.mongo.constant.UserRole;
+import com.moemoe.mongo.entity.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -121,7 +122,7 @@ class JwtServiceTest {
         String email = "test@example.com";
         String role = UserRole.USER.name();
         Map<String, String> claims = Map.of("email", email, "role", role);
-        User user = User.builder().email(email).build();
+        com.moemoe.mongo.entity.User user = User.builder().email(email).build();
 
         Field accessExpirationField = ReflectionUtils.findField(jwtService.getClass(), "accessExpiration");
         assert accessExpirationField != null;

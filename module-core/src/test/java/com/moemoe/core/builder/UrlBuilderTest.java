@@ -1,5 +1,8 @@
-package com.moemoe.http.builder;
+package com.moemoe.core.builder;
 
+import com.moemoe.core.service.builder.KakaoUrlBuilder;
+import com.moemoe.core.service.builder.NaverUrlBuilder;
+import com.moemoe.core.service.builder.UrlBuilder;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

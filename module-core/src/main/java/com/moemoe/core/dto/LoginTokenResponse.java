@@ -1,4 +1,4 @@
-package com.moemoe.dto;
+package com.moemoe.core.dto;
 
 import lombok.Builder;
 

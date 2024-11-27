@@ -1,12 +1,13 @@
-package com.moemoe.service;
+package com.moemoe.core.service.oauth;
 
-import com.moemoe.domain.redis.RefreshToken;
-import com.moemoe.domain.mongo.User;
-import com.moemoe.dto.LoginTokenResponse;
-import com.moemoe.dto.TokenResponse;
-import com.moemoe.dto.UserInfoResponse;
-import com.moemoe.repository.redis.RefreshTokenEntityRepository;
-import com.moemoe.repository.mongo.UserEntityRepository;
+import com.moemoe.client.http.dto.TokenResponse;
+import com.moemoe.client.http.dto.UserInfoResponse;
+import com.moemoe.core.dto.LoginTokenResponse;
+import com.moemoe.core.service.jwt.JwtService;
+import com.moemoe.mongo.entity.User;
+import com.moemoe.mongo.repository.UserEntityRepository;
+import com.moemoe.redis.entity.RefreshToken;
+import com.moemoe.redis.repository.RefreshTokenEntityRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 

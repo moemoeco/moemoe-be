@@ -46,6 +46,19 @@ subprojects {
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     }
 
+    if (project.name in ['module-domain-mongo', 'module-core']) {
+        dependencies {
+            implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+        }
+    }
+
+    if (project.name in ['module-domain-redis', 'module-core']) {
+        dependencies {
+            implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+        }
+    }
+
+
     tasks.named('test') {
         useJUnitPlatform()
     }

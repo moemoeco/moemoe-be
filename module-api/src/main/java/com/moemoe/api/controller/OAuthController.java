@@ -1,11 +1,12 @@
-package com.moemoe.controller;
+package com.moemoe.api.controller;
 
 
-import com.moemoe.constant.OAuthPlatform;
-import com.moemoe.dto.LoginTokenResponse;
-import com.moemoe.service.KakaoOAuthService;
-import com.moemoe.service.NaverOAuthService;
-import com.moemoe.service.OAuthTemplate;
+import com.moemoe.api.constant.OAuthPlatform;
+import com.moemoe.core.dto.AuthorizationResponse;
+import com.moemoe.core.dto.LoginTokenResponse;
+import com.moemoe.core.service.oauth.KakaoOAuthService;
+import com.moemoe.core.service.oauth.NaverOAuthService;
+import com.moemoe.core.service.oauth.OAuthTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +28,7 @@ public class OAuthController {
     }
 
     @GetMapping("/{platformType}/login-page")
-    public String loginPage(
+    public AuthorizationResponse loginPage(
             @PathVariable OAuthPlatform platformType) {
         log.info("Login page");
         OAuthTemplate oAuthTemplate = getOAuthTemplate(platformType);

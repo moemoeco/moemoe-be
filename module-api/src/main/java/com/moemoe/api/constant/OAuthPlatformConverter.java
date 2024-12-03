@@ -1,4 +1,4 @@
-package com.moemoe.constant;
+package com.moemoe.api.constant;
 
 
 import org.springframework.core.convert.converter.Converter;

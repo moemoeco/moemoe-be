@@ -1,8 +1,8 @@
-package com.moemoe.config.filter;
+package com.moemoe.api.config.filter;
 
-import com.moemoe.domain.mongo.User;
-import com.moemoe.domain.mongo.UserRole;
-import com.moemoe.service.JwtService;
+import com.moemoe.core.service.jwt.JwtService;
+import com.moemoe.mongo.constant.UserRole;
+import com.moemoe.mongo.entity.User;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import jakarta.servlet.FilterChain;
@@ -32,10 +32,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
+        String requestURI = request.getRequestURI();
         String authHeader = request.getHeader(AUTHENTICATION_HEADER);
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            log.info("Authentication header is invalid.");
+            // 특정 경로 제외
+            if (!isDoNotFilteredUri(requestURI)) {
+                log.info("Authentication header is invalid.");
+            }
             filterChain.doFilter(request, response);
             return;
         }
@@ -68,6 +72,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // 리프레시 토큰 유효 기간이 지난 경우 - logout api redirect
         }
         filterChain.doFilter(request, response);
+    }
+
+    private boolean isDoNotFilteredUri(String requestURI) {
+        return requestURI.startsWith("/swagger-ui")
+                || requestURI.startsWith("/api-docs")
+                || requestURI.startsWith("/oauth");
     }
 }
 

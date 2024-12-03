@@ -24,31 +24,30 @@ subprojects {
     apply plugin: 'io.spring.dependency-management'
 
     dependencies {
-        implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
-        implementation 'org.springframework.boot:spring-boot-starter-security'
         implementation 'org.springframework.boot:spring-boot-starter-web'
-
-        // Swagger
-        implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.4'
-
-        // https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api
-        implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
-        runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
-        runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
-
 
         implementation 'org.projectlombok:lombok'
         compileOnly 'org.projectlombok:lombok'
         annotationProcessor 'org.projectlombok:lombok'
 
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
-        testImplementation 'org.springframework.security:spring-security-test'
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     }
 
-    if (project.name in ['module-domain-mongo', 'module-core']) {
+    if (project.name in ['module-domain-mongo', 'module-core', 'module-api']) {
         dependencies {
+            implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+            implementation 'org.springframework.boot:spring-boot-starter-security'
             implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+        }
+    }
+
+    if (project.name in ['module-core', 'module-api']) {
+        dependencies {
+            // https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api
+            implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+            runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+            runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
         }
     }
 

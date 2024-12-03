@@ -1,11 +1,11 @@
-package com.moemoe;
+package com.moemoe.api;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
-@SpringBootApplication
-@EnableMongoRepositories(basePackages = "com.moemoe.repository")
+@SpringBootApplication(scanBasePackages = {"com.moemoe.core", "com.moemoe.api"})
+@EnableMongoRepositories(basePackages = "com.moemoe.mongo")
 public class MoemoeApplication {
 
     public static void main(String[] args) {

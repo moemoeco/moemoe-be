@@ -9,9 +9,9 @@ import java.io.UnsupportedEncodingException;
 
 @UtilityClass
 public class ResponseConvertUtil {
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    public <T> T convertResponseToClass(ResultActions resultActions, Class<T> type){
+    public static <T> T convertResponseToClass(ResultActions resultActions, Class<T> type) {
         String content = getContent(resultActions);
         try {
             return objectMapper.readValue(content, type);

@@ -2,6 +2,7 @@ package com.moemoe.mongo.config;
 
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
@@ -14,6 +15,7 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 @Configuration
 @RequiredArgsConstructor
 @EnableMongoRepositories("com.moemoe.mongo.repository")
+@EnableAutoConfiguration
 public class MongoConfig {
     private final MongoDatabaseFactory mongoDatabaseFactory;
     private final MongoMappingContext mongoMappingContext;

@@ -3,6 +3,7 @@ package com.moemoe.redis.config;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import org.springframework.util.StringUtils;
 import redis.embedded.RedisExecProvider;
 import redis.embedded.RedisServer;
@@ -14,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 @TestConfiguration
+@EnableRedisRepositories(basePackages = "com.moemoe.redis")
 public class EmbeddedRedisConfig {
     private static final int REDIS_PORT = 6379;
     private RedisServer redisServer;

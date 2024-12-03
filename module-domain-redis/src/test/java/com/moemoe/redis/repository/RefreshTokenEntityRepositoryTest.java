@@ -5,7 +5,7 @@ import com.moemoe.redis.config.RedisConfig;
 import com.moemoe.redis.entity.RefreshToken;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.data.redis.DataRedisTest;
 import org.springframework.test.context.ContextConfiguration;
 
 import java.util.Optional;
@@ -13,7 +13,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
-@SpringBootTest
+@DataRedisTest
 @ContextConfiguration(classes = {RedisConfig.class, EmbeddedRedisConfig.class})
 class RefreshTokenEntityRepositoryTest {
     @Autowired

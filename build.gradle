@@ -16,7 +16,11 @@ allprojects {
         mavenCentral()
     }
 
-
+    tasks.withType(JavaCompile).tap {
+        configureEach {
+            options.annotationProcessorPath = configurations.annotationProcessor
+        }
+    }
 }
 subprojects {
     apply plugin: 'java'
@@ -25,6 +29,7 @@ subprojects {
 
     dependencies {
         implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'org.springframework.boot:spring-boot-starter-validation'
 
         implementation 'org.projectlombok:lombok'
         compileOnly 'org.projectlombok:lombok'

@@ -1,14 +1,14 @@
 package com.moemoe.core.service.builder;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
 
-@Component
+@Service
 public class KakaoUrlBuilder implements UrlBuilder {
     @Value("${spring.security.oauth2.client.provider.kakao.authorization-uri}")
     private String authorizationUri;

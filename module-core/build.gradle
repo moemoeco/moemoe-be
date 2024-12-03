@@ -1,0 +1,5 @@
+dependencies {
+    implementation project(":module-domain-mongo")
+    implementation project(":module-domain-redis")
+    implementation project(":module-client")
+}

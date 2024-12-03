@@ -6,6 +6,7 @@ import com.moemoe.client.http.dto.UserInfoResponse;
 import com.moemoe.client.http.dto.kakao.KakaoUserInfoResponse;
 import com.moemoe.client.http.kakao.KakaoTokenClient;
 import com.moemoe.client.http.kakao.KakaoUserInfoClient;
+import com.moemoe.core.dto.AuthorizationResponse;
 import com.moemoe.core.service.builder.KakaoUrlBuilder;
 import com.moemoe.core.service.builder.UrlBuilder;
 import com.moemoe.core.service.jwt.JwtService;
@@ -38,8 +39,8 @@ public class KakaoOAuthService extends OAuthTemplate {
     }
 
     @Override
-    public String authorize(String state) {
-        return kakaoUrlBuilder.getAuthorizeUrl(state);
+    public AuthorizationResponse authorize(String state) {
+        return new AuthorizationResponse(kakaoUrlBuilder.getAuthorizeUrl(state));
     }
 
     @Override

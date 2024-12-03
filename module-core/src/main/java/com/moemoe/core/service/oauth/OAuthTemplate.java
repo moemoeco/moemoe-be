@@ -2,6 +2,7 @@ package com.moemoe.core.service.oauth;
 
 import com.moemoe.client.http.dto.TokenResponse;
 import com.moemoe.client.http.dto.UserInfoResponse;
+import com.moemoe.core.dto.AuthorizationResponse;
 import com.moemoe.core.dto.LoginTokenResponse;
 import com.moemoe.core.service.jwt.JwtService;
 import com.moemoe.mongo.entity.User;
@@ -51,7 +52,7 @@ public abstract class OAuthTemplate {
                 .build();
     }
 
-    public abstract String authorize(String state);
+    public abstract AuthorizationResponse authorize(String state);
 
     protected abstract TokenResponse getToken(String code, String state);
 

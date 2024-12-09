@@ -33,10 +33,11 @@ public class Product {
     private String description;
     @Min(value = 1, message = "Price must be greater than 0")
     private long price;
+    private long viewCount;
     private String location;
     @Size(max = 10, message = "Images can include up to 10 items only.")
     private List<String> imageUrlList;
-    @Size(max = 10, message = "Tags can include up to 10 items only.")
+    @Size(max = 5, message = "Tags can include up to 5 items only.")
     private List<String> tagIdList;
     private ProductStatus status;
     @CreatedDate
@@ -56,6 +57,7 @@ public class Product {
         this.title = title;
         this.description = description;
         this.price = price;
+        this.viewCount = 0;
         this.location = location;
         this.imageUrlList = ObjectUtils.isEmpty(imageUrlList) ? new ArrayList<>() : imageUrlList;
         this.tagIdList = ObjectUtils.isEmpty(tagIdList) ? new ArrayList<>() : tagIdList;

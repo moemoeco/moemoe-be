@@ -123,13 +123,12 @@ class ProductEntityRepositoryTest {
                 .title("Invalid Product")
                 .price(1000)
                 .imageUrlList(List.of("image1.jpg", "image2.jpg"))
-                .tagIdList(List.of("tag1", "tag2", "tag3", "tag4", "tag5",
-                        "tag6", "tag7", "tag8", "tag9", "tag10", "tag11"))
+                .tagIdList(List.of("tag1", "tag2", "tag3", "tag4", "tag5", "tag6"))
                 .build();
 
         // 저장 시도 및 예외 검증
         assertThatThrownBy(() -> productEntityRepository.save(product))
                 .isInstanceOf(ConstraintViolationException.class)
-                .hasMessageContaining("Tags can include up to 10 items only.");
+                .hasMessageContaining("Tags can include up to 5 items only.");
     }
 }

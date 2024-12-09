@@ -98,6 +98,24 @@ class ProductEntityRepositoryTest {
     }
 
     @Test
+    @DisplayName("실패 케이스: imageUrlList가 비어있으면 예외가 발생한다.")
+    void createProductWithEmptyImageUrlList() {
+        Product product = Product.builder()
+                .sellerId(new ObjectId())
+                .title("Invalid Product")
+                .description("This product has no images.")
+                .price(1000)
+                .location("Seoul")
+                .imageUrlList(List.of()) // 빈 리스트
+                .tagIdList(List.of("tag1", "tag2"))
+                .build();
+
+        assertThatThrownBy(() -> productEntityRepository.save(product))
+                .isInstanceOf(ConstraintViolationException.class)
+                .hasMessageContaining("Images must include at least 1 item and up to 10 items.");
+    }
+
+    @Test
     @DisplayName("실패 케이스: imageUrlList가 11개이면 예외가 발생한다.")
     void createProductWithExcessiveImageUrlList() {
         Product product = Product.builder()
@@ -112,7 +130,7 @@ class ProductEntityRepositoryTest {
         // 저장 시도 및 예외 검증
         assertThatThrownBy(() -> productEntityRepository.save(product))
                 .isInstanceOf(ConstraintViolationException.class)
-                .hasMessageContaining("Images can include up to 10 items only.");
+                .hasMessageContaining("Images must include at least 1 item and up to 10 items.");
     }
 
     @Test

@@ -35,7 +35,7 @@ public class Product {
     private long price;
     private long viewCount;
     private String location;
-    @Size(max = 10, message = "Images can include up to 10 items only.")
+    @Size(min = 1, max = 10, message = "Images must include at least 1 item and up to 10 items.")
     private List<String> imageUrlList;
     @Size(max = 5, message = "Tags can include up to 5 items only.")
     private List<String> tagIdList;

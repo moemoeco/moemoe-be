@@ -25,7 +25,7 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Product {
     @Id
-    private String id;
+    private ObjectId id;
     @NotNull(message = "Seller Id must not be null")
     private ObjectId sellerId;
     @NotEmpty(message = "Title must not be empty")

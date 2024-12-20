@@ -26,15 +26,15 @@ class ProductEntityRepositoryTest {
     @DisplayName("정상 케이스: 유효한 데이터를 저장할 수 있다.")
     void createValidProduct() {
         // 정상 데이터
-        Product product = Product.builder()
-                .sellerId(new ObjectId())
-                .title("Valid Product")
-                .description("This is a valid product.")
-                .price(1000)
-                .location("Seoul")
-                .imageUrlList(List.of("image1.jpg", "image2.jpg"))
-                .tagIdList(List.of("tag1", "tag2"))
-                .build();
+        Product product = Product.of(
+                new ObjectId(),
+                "Valid Product",
+                "This is a valid product.",
+                "Seoul",
+                1000,
+                List.of("image1.jpg", "image2.jpg"),
+                List.of("tag1", "tag2")
+        );
 
         // 저장
         Product savedProduct = productEntityRepository.save(product);
@@ -43,19 +43,21 @@ class ProductEntityRepositoryTest {
         assertThat(savedProduct)
                 .isNotNull();
         assertThat(savedProduct.getId())
-                .isNotBlank();
+                .isNotNull();
     }
 
     @Test
     @DisplayName("실패 케이스: sellerId가 null이면 예외가 발생한다.")
     void createProductWithNullSellerId() {
-        Product product = Product.builder()
-                .sellerId(null)
-                .title("Invalid Product")
-                .price(1000)
-                .imageUrlList(List.of("image1.jpg", "image2.jpg"))
-                .tagIdList(List.of("tag1", "tag2"))
-                .build();
+        Product product = Product.of(
+                null,
+                "Invalid Product",
+                null,
+                null,
+                1000,
+                List.of("image1.jpg", "image2.jpg"),
+                List.of("tag1", "tag2")
+        );
 
         // 저장 시도 및 예외 검증
         assertThatThrownBy(() -> productEntityRepository.save(product))
@@ -66,13 +68,15 @@ class ProductEntityRepositoryTest {
     @Test
     @DisplayName("실패 케이스: title이 null이면 예외가 발생한다.")
     void createProductWithNullTitle() {
-        Product product = Product.builder()
-                .sellerId(new ObjectId())
-                .title(null)
-                .price(1000)
-                .imageUrlList(List.of("image1.jpg", "image2.jpg"))
-                .tagIdList(List.of("tag1", "tag2"))
-                .build();
+        Product product = Product.of(
+                new ObjectId(),
+                null,
+                null,
+                null,
+                1000,
+                List.of("image1.jpg", "image2.jpg"),
+                List.of("tag1", "tag2")
+        );
 
         // 저장 시도 및 예외 검증
         assertThatThrownBy(() -> productEntityRepository.save(product))
@@ -83,13 +87,15 @@ class ProductEntityRepositoryTest {
     @Test
     @DisplayName("실패 케이스: price가 0이면 예외가 발생한다.")
     void createProductWithZeroPrice() {
-        Product product = Product.builder()
-                .sellerId(new ObjectId())
-                .title("Invalid Product")
-                .price(0)
-                .imageUrlList(List.of("image1.jpg", "image2.jpg"))
-                .tagIdList(List.of("tag1", "tag2"))
-                .build();
+        Product product = Product.of(
+                new ObjectId(),
+                "Invalid Product",
+                null,
+                null,
+                0,
+                List.of("image1.jpg", "image2.jpg"),
+                List.of("tag1", "tag2")
+        );
 
         // 저장 시도 및 예외 검증
         assertThatThrownBy(() -> productEntityRepository.save(product))
@@ -100,15 +106,15 @@ class ProductEntityRepositoryTest {
     @Test
     @DisplayName("실패 케이스: imageUrlList가 비어있으면 예외가 발생한다.")
     void createProductWithEmptyImageUrlList() {
-        Product product = Product.builder()
-                .sellerId(new ObjectId())
-                .title("Invalid Product")
-                .description("This product has no images.")
-                .price(1000)
-                .location("Seoul")
-                .imageUrlList(List.of()) // 빈 리스트
-                .tagIdList(List.of("tag1", "tag2"))
-                .build();
+        Product product = Product.of(
+                new ObjectId(),
+                "Invalid Product",
+                "This product has no images.",
+                "Seoul",
+                1000,
+                List.of(), // 빈 리스트
+                List.of("tag1", "tag2")
+        );
 
         assertThatThrownBy(() -> productEntityRepository.save(product))
                 .isInstanceOf(ConstraintViolationException.class)
@@ -118,14 +124,16 @@ class ProductEntityRepositoryTest {
     @Test
     @DisplayName("실패 케이스: imageUrlList가 11개이면 예외가 발생한다.")
     void createProductWithExcessiveImageUrlList() {
-        Product product = Product.builder()
-                .sellerId(new ObjectId())
-                .title("Invalid Product")
-                .price(1000)
-                .imageUrlList(List.of("img1.jpg", "img2.jpg", "img3.jpg", "img4.jpg", "img5.jpg",
-                        "img6.jpg", "img7.jpg", "img8.jpg", "img9.jpg", "img10.jpg", "img11.jpg"))
-                .tagIdList(List.of("tag1", "tag2"))
-                .build();
+        Product product = Product.of(
+                new ObjectId(),
+                "Invalid Product",
+                null,
+                null,
+                1000,
+                List.of("img1.jpg", "img2.jpg", "img3.jpg", "img4.jpg", "img5.jpg",
+                        "img6.jpg", "img7.jpg", "img8.jpg", "img9.jpg", "img10.jpg", "img11.jpg"),
+                List.of("tag1", "tag2")
+        );
 
         // 저장 시도 및 예외 검증
         assertThatThrownBy(() -> productEntityRepository.save(product))
@@ -134,15 +142,17 @@ class ProductEntityRepositoryTest {
     }
 
     @Test
-    @DisplayName("실패 케이스: tagIdList가 11개이면 예외가 발생한다.")
+    @DisplayName("실패 케이스: tagIdList가 6개이면 예외가 발생한다.")
     void createProductWithExcessiveTagIdList() {
-        Product product = Product.builder()
-                .sellerId(new ObjectId())
-                .title("Invalid Product")
-                .price(1000)
-                .imageUrlList(List.of("image1.jpg", "image2.jpg"))
-                .tagIdList(List.of("tag1", "tag2", "tag3", "tag4", "tag5", "tag6"))
-                .build();
+        Product product = Product.of(
+                new ObjectId(),
+                "Invalid Product",
+                null,
+                null,
+                1000,
+                List.of("image1.jpg", "image2.jpg"),
+                List.of("tag1", "tag2", "tag3", "tag4", "tag5", "tag6")
+        );
 
         // 저장 시도 및 예외 검증
         assertThatThrownBy(() -> productEntityRepository.save(product))

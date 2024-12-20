@@ -5,7 +5,7 @@ import com.moemoe.client.http.dto.UserInfoResponse;
 import com.moemoe.client.http.dto.naver.NaverUserInfoResponse;
 import com.moemoe.client.http.naver.NaverTokenClient;
 import com.moemoe.client.http.naver.NaverUserInfoClient;
-import com.moemoe.core.dto.AuthorizationResponse;
+import com.moemoe.core.response.AuthorizationResponse;
 import com.moemoe.core.service.builder.NaverUrlBuilder;
 import com.moemoe.core.service.builder.UrlBuilder;
 import com.moemoe.core.service.jwt.JwtService;

@@ -6,7 +6,6 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
@@ -25,7 +24,7 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Product {
     @Id
-    private String id;
+    private ObjectId id;
     @NotNull(message = "Seller Id must not be null")
     private ObjectId sellerId;
     @NotEmpty(message = "Title must not be empty")
@@ -45,14 +44,23 @@ public class Product {
     @LastModifiedDate
     private LocalDateTime modifiedDate;
 
-    @Builder
-    public Product(ObjectId sellerId,
-                   String title,
-                   String description,
-                   long price,
-                   String location,
-                   List<String> imageUrlList,
-                   List<String> tagIdList) {
+    public static Product of(ObjectId sellerId,
+                             String title,
+                             String description,
+                             String location,
+                             long price,
+                             List<String> imageUrlList,
+                             List<String> tagIdList) {
+        return new Product(sellerId, title, description, price, location, imageUrlList, tagIdList);
+    }
+
+    private Product(ObjectId sellerId,
+                    String title,
+                    String description,
+                    long price,
+                    String location,
+                    List<String> imageUrlList,
+                    List<String> tagIdList) {
         this.sellerId = sellerId;
         this.title = title;
         this.description = description;

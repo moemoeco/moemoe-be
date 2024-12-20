@@ -2,8 +2,8 @@ package com.moemoe.api.controller;
 
 
 import com.moemoe.api.constant.OAuthPlatform;
-import com.moemoe.core.dto.AuthorizationResponse;
-import com.moemoe.core.dto.LoginTokenResponse;
+import com.moemoe.core.response.AuthorizationResponse;
+import com.moemoe.core.response.LoginTokenResponse;
 import com.moemoe.core.service.oauth.KakaoOAuthService;
 import com.moemoe.core.service.oauth.NaverOAuthService;
 import com.moemoe.core.service.oauth.OAuthTemplate;

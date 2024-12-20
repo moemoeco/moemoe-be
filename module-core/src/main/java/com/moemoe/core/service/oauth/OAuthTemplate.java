@@ -2,8 +2,8 @@ package com.moemoe.core.service.oauth;
 
 import com.moemoe.client.http.dto.TokenResponse;
 import com.moemoe.client.http.dto.UserInfoResponse;
-import com.moemoe.core.dto.AuthorizationResponse;
-import com.moemoe.core.dto.LoginTokenResponse;
+import com.moemoe.core.response.AuthorizationResponse;
+import com.moemoe.core.response.LoginTokenResponse;
 import com.moemoe.core.service.jwt.JwtService;
 import com.moemoe.mongo.entity.User;
 import com.moemoe.mongo.repository.UserEntityRepository;

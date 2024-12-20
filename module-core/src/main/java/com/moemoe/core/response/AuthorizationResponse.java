@@ -1,4 +1,4 @@
-package com.moemoe.core.dto;
+package com.moemoe.core.response;
 
 public record AuthorizationResponse(String redirectUrl) {
 }

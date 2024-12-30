@@ -33,7 +33,7 @@ public class Product {
     @Min(value = 1, message = "Price must be greater than 0")
     private long price;
     private long viewCount;
-    private String location;
+    private Location location;
     @Size(min = 1, max = 10, message = "Images must include at least 1 item and up to 10 items.")
     private List<String> imageUrlList;
     @Size(max = 5, message = "Tags can include up to 5 items only.")
@@ -47,7 +47,7 @@ public class Product {
     public static Product of(ObjectId sellerId,
                              String title,
                              String description,
-                             String location,
+                             Location location,
                              long price,
                              List<String> imageUrlList,
                              List<String> tagIdList) {
@@ -58,7 +58,7 @@ public class Product {
                     String title,
                     String description,
                     long price,
-                    String location,
+                    Location location,
                     List<String> imageUrlList,
                     List<String> tagIdList) {
         this.sellerId = sellerId;
@@ -70,5 +70,23 @@ public class Product {
         this.imageUrlList = ObjectUtils.isEmpty(imageUrlList) ? new ArrayList<>() : imageUrlList;
         this.tagIdList = ObjectUtils.isEmpty(tagIdList) ? new ArrayList<>() : tagIdList;
         this.status = ProductStatus.ON_SALE;
+    }
+
+    @Getter
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    public static class Location {
+        private double latitude;
+        private double longitude;
+        private String detailedAddress;
+
+        private Location(double latitude, double longitude, String detailedAddress) {
+            this.latitude = latitude;
+            this.longitude = longitude;
+            this.detailedAddress = detailedAddress;
+        }
+
+        public static Location of(double latitude, double longitude, String detailedAddress) {
+            return new Location(latitude, longitude, detailedAddress);
+        }
     }
 }

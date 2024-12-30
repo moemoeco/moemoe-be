@@ -25,30 +25,45 @@ class ProductEntityRepositoryTest {
     @Test
     @DisplayName("정상 케이스: 유효한 데이터를 저장할 수 있다.")
     void createValidProduct() {
-        // 정상 데이터
+        // given
         Product product = Product.of(
                 new ObjectId(),
                 "Valid Product",
                 "This is a valid product.",
-                "Seoul",
+                Product.Location.of(37.5665, 126.9780, "Seoul"),
                 1000,
                 List.of("image1.jpg", "image2.jpg"),
                 List.of("tag1", "tag2")
         );
 
-        // 저장
+        // when
         Product savedProduct = productEntityRepository.save(product);
 
-        // 검증
+        // then
         assertThat(savedProduct)
                 .isNotNull();
         assertThat(savedProduct.getId())
                 .isNotNull();
+        assertThat(savedProduct.getSellerId())
+                .isEqualTo(product.getSellerId());
+        assertThat(savedProduct.getTitle())
+                .isEqualTo(product.getTitle());
+        assertThat(savedProduct.getDescription())
+                .isEqualTo(product.getDescription());
+        assertThat(savedProduct.getLocation())
+                .isEqualTo(product.getLocation());
+        assertThat(savedProduct.getPrice())
+                .isEqualTo(product.getPrice());
+        assertThat(savedProduct.getImageUrlList())
+                .isEqualTo(product.getImageUrlList());
+        assertThat(savedProduct.getTagIdList())
+                .isEqualTo(product.getTagIdList());
     }
 
     @Test
     @DisplayName("실패 케이스: sellerId가 null이면 예외가 발생한다.")
     void createProductWithNullSellerId() {
+        // given
         Product product = Product.of(
                 null,
                 "Invalid Product",
@@ -59,7 +74,7 @@ class ProductEntityRepositoryTest {
                 List.of("tag1", "tag2")
         );
 
-        // 저장 시도 및 예외 검증
+        // when , then
         assertThatThrownBy(() -> productEntityRepository.save(product))
                 .isInstanceOf(ConstraintViolationException.class)
                 .hasMessageContaining("Seller Id must not be null");
@@ -68,6 +83,7 @@ class ProductEntityRepositoryTest {
     @Test
     @DisplayName("실패 케이스: title이 null이면 예외가 발생한다.")
     void createProductWithNullTitle() {
+        // given
         Product product = Product.of(
                 new ObjectId(),
                 null,
@@ -78,7 +94,7 @@ class ProductEntityRepositoryTest {
                 List.of("tag1", "tag2")
         );
 
-        // 저장 시도 및 예외 검증
+        // when , then
         assertThatThrownBy(() -> productEntityRepository.save(product))
                 .isInstanceOf(ConstraintViolationException.class)
                 .hasMessageContaining("Title must not be empty");
@@ -97,7 +113,7 @@ class ProductEntityRepositoryTest {
                 List.of("tag1", "tag2")
         );
 
-        // 저장 시도 및 예외 검증
+        // when , then
         assertThatThrownBy(() -> productEntityRepository.save(product))
                 .isInstanceOf(ConstraintViolationException.class)
                 .hasMessageContaining("Price must be greater than 0");
@@ -106,13 +122,14 @@ class ProductEntityRepositoryTest {
     @Test
     @DisplayName("실패 케이스: imageUrlList가 비어있으면 예외가 발생한다.")
     void createProductWithEmptyImageUrlList() {
+        // given
         Product product = Product.of(
                 new ObjectId(),
                 "Invalid Product",
                 "This product has no images.",
-                "Seoul",
+                null,
                 1000,
-                List.of(), // 빈 리스트
+                List.of(),
                 List.of("tag1", "tag2")
         );
 
@@ -124,6 +141,7 @@ class ProductEntityRepositoryTest {
     @Test
     @DisplayName("실패 케이스: imageUrlList가 11개이면 예외가 발생한다.")
     void createProductWithExcessiveImageUrlList() {
+        // given
         Product product = Product.of(
                 new ObjectId(),
                 "Invalid Product",
@@ -135,7 +153,7 @@ class ProductEntityRepositoryTest {
                 List.of("tag1", "tag2")
         );
 
-        // 저장 시도 및 예외 검증
+        // when , then
         assertThatThrownBy(() -> productEntityRepository.save(product))
                 .isInstanceOf(ConstraintViolationException.class)
                 .hasMessageContaining("Images must include at least 1 item and up to 10 items.");
@@ -144,6 +162,7 @@ class ProductEntityRepositoryTest {
     @Test
     @DisplayName("실패 케이스: tagIdList가 6개이면 예외가 발생한다.")
     void createProductWithExcessiveTagIdList() {
+        // given
         Product product = Product.of(
                 new ObjectId(),
                 "Invalid Product",
@@ -154,7 +173,7 @@ class ProductEntityRepositoryTest {
                 List.of("tag1", "tag2", "tag3", "tag4", "tag5", "tag6")
         );
 
-        // 저장 시도 및 예외 검증
+        // when , then
         assertThatThrownBy(() -> productEntityRepository.save(product))
                 .isInstanceOf(ConstraintViolationException.class)
                 .hasMessageContaining("Tags can include up to 5 items only.");

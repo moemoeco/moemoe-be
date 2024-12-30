@@ -13,5 +13,6 @@ import software.amazon.awssdk.regions.Region;
 public class AwsProperty {
     private String accessKey;
     private String secretKey;
+    private String bucketName;
     private Region region;
 }

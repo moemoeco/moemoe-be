@@ -14,6 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestPropertySource(properties = {
         "cloud.aws.accessKey=testAccessKey",
         "cloud.aws.secretKey=testSecretKey",
+        "cloud.aws.bucketName=testBucketName",
         "cloud.aws.region=ap-northeast-2"
 })
 @EnableConfigurationProperties(AwsProperty.class)
@@ -28,6 +29,8 @@ class AwsPropertyTest {
                 .isEqualTo("testAccessKey");
         assertThat(awsProperty.getSecretKey())
                 .isEqualTo("testSecretKey");
+        assertThat(awsProperty.getBucketName())
+                .isEqualTo("testBucketName");
         assertThat(awsProperty.getRegion())
                 .isEqualTo(Region.AP_NORTHEAST_2);
     }

@@ -62,6 +62,13 @@ subprojects {
         }
     }
 
+    if (project.name in ['module-core', 'module-client']) {
+        dependencies {
+            // https://mvnrepository.com/artifact/software.amazon.awssdk/bom
+            implementation(platform("software.amazon.awssdk:bom:2.29.37"))
+            implementation("software.amazon.awssdk:s3")
+        }
+    }
 
     tasks.named('test') {
         useJUnitPlatform()

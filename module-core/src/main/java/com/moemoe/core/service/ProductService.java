@@ -1,0 +1,60 @@
+package com.moemoe.core.service;
+
+import com.moemoe.client.aws.AwsS3Client;
+import com.moemoe.core.request.RegisterProductRequest;
+import com.moemoe.mongo.entity.Product;
+import com.moemoe.mongo.repository.ProductEntityRepository;
+import com.moemoe.mongo.repository.UserEntityRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.bson.types.ObjectId;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.services.s3.S3Client;
+
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class ProductService {
+    private final UserEntityRepository userEntityRepository;
+    private final ProductEntityRepository productEntityRepository;
+    private final AwsS3Client awsS3Client;
+
+    @Transactional
+    public String register(RegisterProductRequest request,
+                           List<MultipartFile> imageList) {
+        validateSellerExists(request.getSellerId());
+
+        List<String> imageUrlList = new ArrayList<>();
+        try (S3Client s3Client = awsS3Client.getS3Client()) {
+            for (MultipartFile image : imageList) {
+                String imageUrl = awsS3Client.upload(s3Client, Path.of(request.getSellerId().toHexString(), image.getName()).toString(), image);
+                imageUrlList.add(imageUrl);
+            }
+        }
+
+        Product productEntity = createProductEntity(request, imageUrlList);
+        return productEntityRepository.save(productEntity).getId().toHexString();
+    }
+
+    private Product createProductEntity(RegisterProductRequest request, List<String> imageUrlList) {
+        return Product.of(request.getSellerId(),
+                request.getTitle(),
+                request.getDescription(),
+                Product.Location.of(request.getLatitude(), request.getLongitude(), request.getDetailAddress()),
+                request.getPrice(),
+                imageUrlList,
+                request.getTagIdList());
+    }
+
+    private void validateSellerExists(ObjectId sellerId) {
+        if (!userEntityRepository.existsById(sellerId)) {
+            throw new IllegalArgumentException("Seller with ID " + sellerId + " does not exist");
+        }
+    }
+}

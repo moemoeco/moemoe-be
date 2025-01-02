@@ -16,10 +16,8 @@ allprojects {
         mavenCentral()
     }
 
-    tasks.withType(JavaCompile).tap {
-        configureEach {
-            options.annotationProcessorPath = configurations.annotationProcessor
-        }
+    tasks.withType(JavaCompile).configureEach {
+        options.annotationProcessorPath = configurations.annotationProcessor
     }
 }
 subprojects {
@@ -27,7 +25,49 @@ subprojects {
     apply plugin: 'org.springframework.boot'
     apply plugin: 'io.spring.dependency-management'
 
+    // 공통 의존성 정의
+    def commonDependencies = [
+            'oauth': [
+                    'org.springframework.boot:spring-boot-starter-oauth2-client',
+                    'org.springframework.boot:spring-boot-starter-security'
+            ],
+            'mongo': [
+                    'org.springframework.boot:spring-boot-starter-data-mongodb'
+            ],
+            'redis': [
+                    'org.springframework.boot:spring-boot-starter-data-redis'
+            ],
+            'jwt'  : [
+                    'io.jsonwebtoken:jjwt-api:0.12.6',
+                    'io.jsonwebtoken:jjwt-impl:0.12.6',
+                    'io.jsonwebtoken:jjwt-jackson:0.12.6'
+            ]
+    ]
+
+    // 테스트 의존성 그룹 정의
+    def testDependencies = [
+            'mongoTest' : [
+                    'de.flapdoodle.embed:de.flapdoodle.embed.mongo:4.17.0',
+                    'de.flapdoodle.embed:de.flapdoodle.embed.mongo.spring30x:4.7.0'
+            ],
+            'localstack': [
+                    'org.testcontainers:testcontainers-bom:1.20.4',
+                    'org.testcontainers:localstack',
+                    'org.testcontainers:junit-jupiter'
+            ]
+    ]
+
+    // 모듈별 의존성 매핑
+    def moduleDependencyGroups = [
+            'module-domain-mongo': ['oauth', 'mongo', 'mongoTest'],
+            'module-core'        : ['oauth', 'mongo', 'redis', 'jwt'],
+            'module-api'         : ['oauth', 'mongo', 'mongoTest', 'jwt', 'localstack'],
+            'module-domain-redis': ['redis'],
+            'module-client'      : ['localstack']
+    ]
+
     dependencies {
+        // 공통 의존성 추가
         implementation 'org.springframework.boot:spring-boot-starter-web'
         implementation 'org.springframework.boot:spring-boot-starter-validation'
 
@@ -37,39 +77,33 @@ subprojects {
 
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    }
 
-    if (project.name in ['module-domain-mongo', 'module-core', 'module-api']) {
-        dependencies {
-            implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
-            implementation 'org.springframework.boot:spring-boot-starter-security'
-            implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+        // AWS BOM 의존성 처리
+        if (project.name in ['module-core', 'module-client']) {
+            implementation platform('software.amazon.awssdk:bom:2.29.37')
+            implementation 'software.amazon.awssdk:s3'
         }
     }
 
-    if (project.name in ['module-core', 'module-api']) {
-        dependencies {
-            // https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api
-            implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
-            runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
-            runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+    // 현재 모듈 이름을 기준으로 공통 및 테스트 의존성 그룹 추가
+    moduleDependencyGroups[project.name]?.each { group ->
+        if (commonDependencies.containsKey(group)) {
+            commonDependencies[group]?.each { dependency ->
+                dependencies {
+                    implementation dependency
+                }
+            }
+        }
+        if (testDependencies.containsKey(group)) {
+            testDependencies[group]?.each { dependency ->
+                dependencies {
+                    testImplementation dependency
+                }
+            }
         }
     }
 
-    if (project.name in ['module-domain-redis', 'module-core']) {
-        dependencies {
-            implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-        }
-    }
-
-    if (project.name in ['module-core', 'module-client']) {
-        dependencies {
-            // https://mvnrepository.com/artifact/software.amazon.awssdk/bom
-            implementation(platform("software.amazon.awssdk:bom:2.29.37"))
-            implementation("software.amazon.awssdk:s3")
-        }
-    }
-
+    // 테스트 설정
     tasks.named('test') {
         useJUnitPlatform()
     }

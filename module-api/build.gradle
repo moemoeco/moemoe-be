@@ -8,6 +8,7 @@ dependencies {
     implementation project(':module-domain-mongo')
 
     testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation project(':module-client')
 }
 
 tasks.named('test') {

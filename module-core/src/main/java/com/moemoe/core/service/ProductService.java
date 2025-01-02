@@ -16,6 +16,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -33,13 +34,19 @@ public class ProductService {
         List<String> imageUrlList = new ArrayList<>();
         try (S3Client s3Client = awsS3Client.getS3Client()) {
             for (MultipartFile image : imageList) {
-                String imageUrl = awsS3Client.upload(s3Client, Path.of(request.getSellerId().toHexString(), image.getName()).toString(), image);
+                String imageUrl = awsS3Client.upload(s3Client, Path.of(request.getSellerId().toHexString(), getFileName(image)).toString(), image);
                 imageUrlList.add(imageUrl);
             }
         }
 
         Product productEntity = createProductEntity(request, imageUrlList);
         return productEntityRepository.save(productEntity).getId().toHexString();
+    }
+
+    private String getFileName(MultipartFile image) {
+        return Optional.ofNullable(image.getOriginalFilename())
+                .map(fileName -> Path.of(fileName).getFileName().toString())
+                .orElseThrow(() -> new IllegalArgumentException("파일 이름이 null 입니다."));
     }
 
     private Product createProductEntity(RegisterProductRequest request, List<String> imageUrlList) {

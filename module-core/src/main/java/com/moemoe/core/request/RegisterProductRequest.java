@@ -14,7 +14,8 @@ import java.util.List;
 @Getter
 public class RegisterProductRequest {
     @NotNull(message = "Seller Id must not be null")
-    private ObjectId sellerId;
+    @Getter(AccessLevel.NONE)
+    private String sellerId;
     @NotEmpty(message = "Title must not be empty")
     private String title;
     private String description;
@@ -36,6 +37,10 @@ public class RegisterProductRequest {
 
     public String getDetailAddress() {
         return this.location.getDetailAddress();
+    }
+
+    public ObjectId getSellerId() {
+        return new ObjectId(this.sellerId);
     }
 
     @Getter

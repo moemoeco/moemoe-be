@@ -6,7 +6,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
 
 import java.util.List;
@@ -20,7 +19,6 @@ public class RegisterProductRequest {
     private String title;
     private String description;
     @NotNull
-    @Getter(AccessLevel.NONE)
     private Location location;
     @Min(value = 0)
     private long price;
@@ -44,7 +42,6 @@ public class RegisterProductRequest {
     }
 
     @Getter
-    @RequiredArgsConstructor
     private static class Location {
         private double latitude;
         private double longitude;

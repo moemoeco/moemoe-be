@@ -2,6 +2,7 @@ package com.moemoe.api.controller;
 
 
 import com.moemoe.core.request.RegisterProductRequest;
+import com.moemoe.core.response.IdResponse;
 import com.moemoe.core.service.ProductService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
@@ -24,7 +25,7 @@ public class ProductController {
     private final ProductService productService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public String register(
+    public IdResponse register(
             @Valid @RequestPart(value = "request") RegisterProductRequest request,
             @Valid @Size(min = 1, max = 10, message = "Images must include at least 1 item and up to 10 items.") @RequestPart(value = "imageList") List<MultipartFile> imageList
     ) {

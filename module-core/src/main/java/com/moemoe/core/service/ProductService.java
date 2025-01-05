@@ -3,6 +3,7 @@ package com.moemoe.core.service;
 import com.moemoe.client.aws.AwsS3Client;
 import com.moemoe.client.exception.ClientRuntimeException;
 import com.moemoe.core.request.RegisterProductRequest;
+import com.moemoe.core.response.IdResponse;
 import com.moemoe.mongo.entity.Product;
 import com.moemoe.mongo.repository.ProductEntityRepository;
 import com.moemoe.mongo.repository.UserEntityRepository;
@@ -28,8 +29,8 @@ public class ProductService {
     private final AwsS3Client awsS3Client;
 
     @Transactional
-    public String register(RegisterProductRequest request,
-                           List<MultipartFile> imageList) {
+    public IdResponse register(RegisterProductRequest request,
+                               List<MultipartFile> imageList) {
         validateSellerExists(request.getSellerId());
 
         List<String> imageUrlList = new ArrayList<>();
@@ -43,7 +44,7 @@ public class ProductService {
         }
 
         Product productEntity = createProductEntity(request, imageUrlList);
-        return productEntityRepository.save(productEntity).getId().toHexString();
+        return new IdResponse(productEntityRepository.save(productEntity).getId());
     }
 
     private String getFileName(MultipartFile image) {

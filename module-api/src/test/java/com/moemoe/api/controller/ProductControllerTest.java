@@ -3,6 +3,7 @@ package com.moemoe.api.controller;
 import com.moemoe.api.AbstractControllerTest;
 import com.moemoe.client.aws.AwsS3Client;
 import com.moemoe.client.exception.ClientRuntimeException;
+import com.moemoe.core.response.IdResponse;
 import com.moemoe.core.service.ProductService;
 import com.moemoe.mongo.entity.Product;
 import com.moemoe.mongo.entity.User;
@@ -134,7 +135,7 @@ class ProductControllerTest extends AbstractControllerTest {
             ResultActions resultActions = mockMvc.perform(content)
                     .andExpect(status().isOk())
                     .andDo(print());
-            String actualProductKey = getContent(resultActions);
+            String actualProductKey = convertResponseToClass(resultActions, IdResponse.class).getId();
 
             // then
             Product actualProduct = productEntityRepository.findById(new ObjectId(actualProductKey)).orElseThrow();

@@ -72,7 +72,7 @@ class ProductServiceTest {
         given(productEntityRepository.save(Mockito.any(Product.class))).willReturn(sampleProduct);
 
         // when
-        String actualId = productService.register(expectedRequest, expectedImageList);
+        String actualId = productService.register(expectedRequest, expectedImageList).getId();
 
         // then
         assertThat(actualId)

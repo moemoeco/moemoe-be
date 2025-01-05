@@ -5,6 +5,7 @@ import com.moemoe.client.aws.AwsS3Client;
 import com.moemoe.client.exception.ClientRuntimeException;
 import com.moemoe.core.response.IdResponse;
 import com.moemoe.core.service.ProductService;
+import com.moemoe.mongo.constant.ProductCondition;
 import com.moemoe.mongo.entity.Product;
 import com.moemoe.mongo.entity.User;
 import com.moemoe.mongo.repository.ProductEntityRepository;
@@ -107,15 +108,19 @@ class ProductControllerTest extends AbstractControllerTest {
             String expectedTitle = "모에 상품 판매";
             String expectedDescription = "모에 상품 판매 설명";
             long expectedPrice = 1000L;
+            ProductCondition expectedCondition = ProductCondition.NEW;
             Map<String, ? extends Serializable> location = Map.of("latitude", 10.0,
                     "longitude", 20.0,
                     "detailAddress", "123 서울시 구로구");
-            Map<String, Object> request = Map.of("sellerId", seller.getId().toHexString(),
+            Map<String, Object> request = getRequest(
+                    "sellerId", seller.getId().toHexString(),
                     "title", expectedTitle,
                     "description", expectedDescription,
                     "location", location,
                     "price", expectedPrice,
-                    "tagIdList", new ArrayList<>());
+                    "tagIdList", new ArrayList<>(),
+                    "condition", expectedCondition
+            );
             String requestJson = convertRequestToJson(request);
 
             // mock s3 client
@@ -152,6 +157,9 @@ class ProductControllerTest extends AbstractControllerTest {
                     .extracting(Product::getPrice)
                     .isEqualTo(expectedPrice);
             assertThat(actualProduct)
+                    .extracting(Product::getCondition)
+                    .isEqualTo(expectedCondition);
+            assertThat(actualProduct)
                     .extracting(Product::getLocation)
                     .extracting(Product.Location::getLatitude, Product.Location::getLongitude, Product.Location::getDetailedAddress)
                     .containsExactly(10.0, 20.0, "123 서울시 구로구");
@@ -184,15 +192,18 @@ class ProductControllerTest extends AbstractControllerTest {
             String expectedTitle = "모에 상품 판매";
             String expectedDescription = "모에 상품 판매 설명";
             long expectedPrice = 1000L;
+            ProductCondition expectedCondition = ProductCondition.NEW;
             Map<String, ? extends Serializable> location = Map.of("latitude", 10.0,
                     "longitude", 20.0,
                     "detailAddress", "123 서울시 구로구");
-            Map<String, Object> request = Map.of(
+            Map<String, Object> request = getRequest(
                     "title", expectedTitle,
                     "description", expectedDescription,
                     "location", location,
                     "price", expectedPrice,
-                    "tagIdList", new ArrayList<>());
+                    "tagIdList", new ArrayList<>(),
+                    "condition", expectedCondition
+            );
             String requestJson = convertRequestToJson(request);
             List<MockMultipartFile> mockMultipartFiles = getMockMultipartFiles();
 
@@ -216,16 +227,19 @@ class ProductControllerTest extends AbstractControllerTest {
             User seller = userEntityRepository.save(User.builder().name("seller").build());
             String expectedDescription = "모에 상품 판매 설명";
             long expectedPrice = 1000L;
+            ProductCondition expectedCondition = ProductCondition.NEW;
             Map<String, ? extends Serializable> location = Map.of(
                     "latitude", 10.0,
                     "longitude", 20.0,
                     "detailAddress", "123 서울시 구로구");
-            Map<String, Object> request = Map.of(
+            Map<String, Object> request = getRequest(
                     "sellerId", seller.getId().toHexString(),
                     "description", expectedDescription,
                     "location", location,
                     "price", expectedPrice,
-                    "tagIdList", new ArrayList<>());
+                    "tagIdList", new ArrayList<>(),
+                    "condition", expectedCondition
+            );
             String requestJson = convertRequestToJson(request);
             List<MockMultipartFile> mockMultipartFiles = getMockMultipartFiles();
 
@@ -251,12 +265,15 @@ class ProductControllerTest extends AbstractControllerTest {
             String expectedTitle = "모에 상품 판매";
             String expectedDescription = "모에 상품 판매 설명";
             long expectedPrice = 1000L;
-            Map<String, Object> request = Map.of(
+            ProductCondition expectedCondition = ProductCondition.NEW;
+            Map<String, Object> request = getRequest(
                     "sellerId", seller.getId().toHexString(),
                     "title", expectedTitle,
                     "description", expectedDescription,
                     "price", expectedPrice,
-                    "tagIdList", new ArrayList<>());
+                    "tagIdList", new ArrayList<>(),
+                    "condition", expectedCondition
+            );
             String requestJson = convertRequestToJson(request);
             List<MockMultipartFile> mockMultipartFiles = getMockMultipartFiles();
 
@@ -286,13 +303,16 @@ class ProductControllerTest extends AbstractControllerTest {
                     "latitude", 10.0,
                     "longitude", 20.0,
                     "detailAddress", "123 서울시 구로구");
-            Map<String, Object> request = Map.of(
+            ProductCondition expectedCondition = ProductCondition.NEW;
+            Map<String, Object> request = getRequest(
                     "sellerId", seller.getId().toHexString(),
                     "title", expectedTitle,
                     "description", expectedDescription,
                     "location", location,
                     "price", expectedPrice,
-                    "tagIdList", new ArrayList<>());
+                    "tagIdList", new ArrayList<>(),
+                    "condition", expectedCondition
+            );
             String requestJson = convertRequestToJson(request);
             List<MockMultipartFile> mockMultipartFiles = getMockMultipartFiles();
 
@@ -321,12 +341,15 @@ class ProductControllerTest extends AbstractControllerTest {
                     "latitude", 10.0,
                     "longitude", 20.0,
                     "detailAddress", "123 서울시 구로구");
-            Map<String, Object> request = Map.of(
+            ProductCondition expectedCondition = ProductCondition.NEW;
+            Map<String, Object> request = getRequest(
                     "sellerId", seller.getId().toHexString(),
                     "title", expectedTitle,
                     "description", expectedDescription,
                     "location", location,
-                    "price", expectedPrice);
+                    "price", expectedPrice,
+                    "condition", expectedCondition
+            );
             String requestJson = convertRequestToJson(request);
             List<MockMultipartFile> mockMultipartFiles = getMockMultipartFiles();
 
@@ -354,13 +377,16 @@ class ProductControllerTest extends AbstractControllerTest {
                     "latitude", 10.0,
                     "longitude", 20.0,
                     "detailAddress", "123 서울시 구로구");
-            Map<String, Object> request = Map.of(
+            ProductCondition expectedCondition = ProductCondition.NEW;
+            Map<String, Object> request = getRequest(
                     "sellerId", seller.getId().toHexString(),
                     "title", expectedTitle,
                     "description", expectedDescription,
                     "location", location,
                     "price", expectedPrice,
-                    "tagIdList", List.of("tag1", "tag2", "tag3", "tag4", "tag5", "tag6"));
+                    "tagIdList", List.of("tag1", "tag2", "tag3", "tag4", "tag5", "tag6"),
+                    "condition", expectedCondition
+            );
             String requestJson = convertRequestToJson(request);
             List<MockMultipartFile> mockMultipartFiles = getMockMultipartFiles();
 
@@ -388,13 +414,16 @@ class ProductControllerTest extends AbstractControllerTest {
                     "latitude", 10.0,
                     "longitude", 20.0,
                     "detailAddress", "123 서울시 구로구");
-            Map<String, Object> request = Map.of(
+            ProductCondition expectedCondition = ProductCondition.NEW;
+            Map<String, Object> request = getRequest(
                     "sellerId", seller.getId().toHexString(),
                     "title", expectedTitle,
                     "description", expectedDescription,
                     "location", location,
                     "price", expectedPrice,
-                    "tagIdList", new ArrayList<>());
+                    "tagIdList", new ArrayList<>(),
+                    "condition", expectedCondition
+            );
             String requestJson = convertRequestToJson(request);
 
             MockMultipartFile requestPart = new MockMultipartFile("request",
@@ -419,13 +448,71 @@ class ProductControllerTest extends AbstractControllerTest {
                     "latitude", 10.0,
                     "longitude", 20.0,
                     "detailAddress", "123 서울시 구로구");
-            Map<String, Object> request = Map.of(
+            ProductCondition expectedCondition = ProductCondition.NEW;
+            Map<String, Object> request = getRequest(
                     "sellerId", seller.getId().toHexString(),
                     "title", expectedTitle,
                     "description", expectedDescription,
                     "location", location,
                     "price", expectedPrice,
-                    "tagIdList", new ArrayList<>());
+                    "tagIdList", new ArrayList<>(),
+                    "condition", expectedCondition
+            );
+            String requestJson = convertRequestToJson(request);
+            MockMultipartFile requestPart = new MockMultipartFile("request",
+                    "request",
+                    MediaType.APPLICATION_JSON_VALUE,
+                    requestJson.getBytes(StandardCharsets.UTF_8));
+
+            List<MockMultipartFile> mockMultipartFiles = new ArrayList<>();
+            for (int i = 0; i < 11; i++) {
+                MockMultipartFile file = new MockMultipartFile(
+                        "imageList",
+                        "test" + i + "jpg",
+                        MediaType.IMAGE_JPEG_VALUE,
+                        "Image".getBytes()
+                );
+                mockMultipartFiles.add(file);
+            }
+
+            MockMultipartHttpServletRequestBuilder content = multipart("/products")
+                    .file(requestPart)
+                    .file(mockMultipartFiles.get(0))
+                    .file(mockMultipartFiles.get(1))
+                    .file(mockMultipartFiles.get(2))
+                    .file(mockMultipartFiles.get(3))
+                    .file(mockMultipartFiles.get(4))
+                    .file(mockMultipartFiles.get(5))
+                    .file(mockMultipartFiles.get(6))
+                    .file(mockMultipartFiles.get(7))
+                    .file(mockMultipartFiles.get(8))
+                    .file(mockMultipartFiles.get(9))
+                    .file(mockMultipartFiles.get(10));
+            mockMvc.perform(content)
+                    .andExpect(status().isBadRequest())
+                    .andDo(print());
+        }
+
+
+        @Test
+        @DisplayName("실패 케이스 : 상태 데이터를 입력하지 않은 경우 경우")
+        void registerNullCondition() throws Exception {
+            User seller = userEntityRepository.save(User.builder().name("seller").build());
+            String expectedTitle = "모에 상품 판매";
+            String expectedDescription = "모에 상품 판매 설명";
+            long expectedPrice = 1000L;
+            Map<String, ? extends Serializable> location = Map.of(
+                    "latitude", 10.0,
+                    "longitude", 20.0,
+                    "detailAddress", "123 서울시 구로구");
+            Map<String, Object> request = getRequest(
+                    "sellerId", seller.getId().toHexString(),
+                    "title", expectedTitle,
+                    "description", expectedDescription,
+                    "location", location,
+                    "price", expectedPrice,
+                    "tagIdList", new ArrayList<>()
+            );
             String requestJson = convertRequestToJson(request);
             MockMultipartFile requestPart = new MockMultipartFile("request",
                     "request",
@@ -477,12 +564,16 @@ class ProductControllerTest extends AbstractControllerTest {
             Map<String, ? extends Serializable> location = Map.of("latitude", 10.0,
                     "longitude", 20.0,
                     "detailAddress", "123 서울시 구로구");
-            Map<String, Object> request = Map.of("sellerId", seller.getId().toHexString(),
+            ProductCondition expectedCondition = ProductCondition.NEW;
+            Map<String, Object> request = getRequest(
+                    "sellerId", seller.getId().toHexString(),
                     "title", expectedTitle,
                     "description", expectedDescription,
                     "location", location,
                     "price", expectedPrice,
-                    "tagIdList", new ArrayList<>());
+                    "tagIdList", new ArrayList<>(),
+                    "condition", expectedCondition
+            );
             String requestJson = convertRequestToJson(request);
 
             MockMultipartFile requestPart = new MockMultipartFile("request",
@@ -517,12 +608,16 @@ class ProductControllerTest extends AbstractControllerTest {
             Map<String, ? extends Serializable> location = Map.of("latitude", 10.0,
                     "longitude", 20.0,
                     "detailAddress", "123 서울시 구로구");
-            Map<String, Object> request = Map.of("sellerId", seller.getId().toHexString(),
+            ProductCondition expectedCondition = ProductCondition.NEW;
+            Map<String, Object> request = getRequest(
+                    "sellerId", seller.getId().toHexString(),
                     "title", expectedTitle,
                     "description", expectedDescription,
                     "location", location,
                     "price", expectedPrice,
-                    "tagIdList", new ArrayList<>());
+                    "tagIdList", new ArrayList<>(),
+                    "condition", expectedCondition
+            );
             String requestJson = convertRequestToJson(request);
 
             MockMultipartFile requestPart = new MockMultipartFile("request",

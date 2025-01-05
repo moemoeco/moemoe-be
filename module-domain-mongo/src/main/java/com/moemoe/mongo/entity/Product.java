@@ -1,5 +1,6 @@
 package com.moemoe.mongo.entity;
 
+import com.moemoe.mongo.constant.ProductCondition;
 import com.moemoe.mongo.constant.ProductStatus;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -30,6 +31,8 @@ public class Product {
     private List<String> imageUrlList;
     private List<String> tagIdList;
     private ProductStatus status;
+    private ProductCondition condition;
+
     @CreatedDate
     private LocalDateTime createdDate;
     @LastModifiedDate
@@ -41,8 +44,9 @@ public class Product {
                              Location location,
                              long price,
                              List<String> imageUrlList,
-                             List<String> tagIdList) {
-        return new Product(sellerId, title, description, price, location, imageUrlList, tagIdList);
+                             List<String> tagIdList,
+                             ProductCondition condition) {
+        return new Product(sellerId, title, description, price, location, imageUrlList, tagIdList, condition);
     }
 
     private Product(ObjectId sellerId,
@@ -51,7 +55,8 @@ public class Product {
                     long price,
                     Location location,
                     List<String> imageUrlList,
-                    List<String> tagIdList) {
+                    List<String> tagIdList,
+                    ProductCondition condition) {
         this.sellerId = sellerId;
         this.title = title;
         this.description = description;
@@ -60,6 +65,7 @@ public class Product {
         this.location = location;
         this.imageUrlList = ObjectUtils.isEmpty(imageUrlList) ? new ArrayList<>() : imageUrlList;
         this.tagIdList = ObjectUtils.isEmpty(tagIdList) ? new ArrayList<>() : tagIdList;
+        this.condition = condition;
         this.status = ProductStatus.ON_SALE;
     }
 

@@ -3,6 +3,7 @@ package com.moemoe.core.service;
 import com.moemoe.client.aws.AwsS3Client;
 import com.moemoe.client.exception.ClientRuntimeException;
 import com.moemoe.core.request.RegisterProductRequest;
+import com.moemoe.mongo.constant.ProductCondition;
 import com.moemoe.mongo.entity.Product;
 import com.moemoe.mongo.repository.ProductEntityRepository;
 import com.moemoe.mongo.repository.UserEntityRepository;
@@ -66,7 +67,8 @@ class ProductServiceTest {
                 Product.Location.of(expectedRequest.getLatitude(), expectedRequest.getLongitude(), expectedRequest.getDetailAddress()),
                 1000L,
                 List.of(expectedImageUrl1, expectedImageUrl2),
-                List.of("tag1", "tag2"));
+                List.of("tag1", "tag2"),
+                ProductCondition.NEW);
         ObjectId expectedProductId = new ObjectId();
         ReflectionTestUtils.setField(sampleProduct, "id", expectedProductId);
         given(productEntityRepository.save(Mockito.any(Product.class))).willReturn(sampleProduct);
@@ -158,7 +160,7 @@ class ProductServiceTest {
                 Product.Location.of(expectedRequest.getLatitude(), expectedRequest.getLongitude(), expectedRequest.getDetailAddress()),
                 1000L,
                 List.of(expectedImageUrl1, expectedImageUrl2),
-                List.of("tag1", "tag2"));
+                List.of("tag1", "tag2"), ProductCondition.NEW);
         ObjectId expectedProductId = new ObjectId();
         ReflectionTestUtils.setField(sampleProduct, "id", expectedProductId);
         given(productEntityRepository.save(Mockito.any(Product.class))).willThrow(new IllegalArgumentException("Spring Data Mongo Exception"));
@@ -204,5 +206,6 @@ class ProductServiceTest {
 
         ReflectionTestUtils.setField(expectedRequest, "price", 1000L);
         ReflectionTestUtils.setField(expectedRequest, "tagIdList", List.of("tag1", "tag2"));
+        ReflectionTestUtils.setField(expectedRequest, "condition", ProductCondition.DAMAGED);
     }
 }

@@ -2,6 +2,7 @@ package com.moemoe.mongo.repository;
 
 import com.moemoe.mongo.config.MongoConfig;
 import com.moemoe.mongo.config.MongoTestConfig;
+import com.moemoe.mongo.constant.ProductCondition;
 import com.moemoe.mongo.entity.Product;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.DisplayName;
@@ -31,8 +32,8 @@ class ProductEntityRepositoryTest {
                 Product.Location.of(37.5665, 126.9780, "Seoul"),
                 1000,
                 List.of("image1.jpg", "image2.jpg"),
-                List.of("tag1", "tag2")
-        );
+                List.of("tag1", "tag2"),
+                ProductCondition.NEW);
 
         // when
         Product savedProduct = productEntityRepository.save(product);
@@ -56,5 +57,7 @@ class ProductEntityRepositoryTest {
                 .isEqualTo(product.getImageUrlList());
         assertThat(savedProduct.getTagIdList())
                 .isEqualTo(product.getTagIdList());
+        assertThat(savedProduct.getCondition())
+                .isEqualTo(product.getCondition());
     }
 }

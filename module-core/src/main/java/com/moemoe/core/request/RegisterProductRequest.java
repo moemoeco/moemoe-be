@@ -1,5 +1,6 @@
 package com.moemoe.core.request;
 
+import com.moemoe.mongo.constant.ProductCondition;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -25,6 +26,8 @@ public class RegisterProductRequest {
     @NotNull
     @Size(max = 5, message = "Tags can include up to 5 items only.")
     private List<String> tagIdList;
+    @NotNull
+    private ProductCondition condition;
 
     public double getLatitude() {
         return this.location.getLatitude();

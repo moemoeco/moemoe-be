@@ -60,7 +60,8 @@ public class ProductService {
                 Product.Location.of(request.getLatitude(), request.getLongitude(), request.getDetailAddress()),
                 request.getPrice(),
                 imageUrlList,
-                request.getTagIdList());
+                request.getTagIdList(),
+                request.getCondition());
     }
 
     private void validateSellerExists(ObjectId sellerId) {

@@ -22,6 +22,7 @@ public class RegisterProductRequest {
     private Location location;
     @Min(value = 0)
     private long price;
+    @NotNull
     @Size(max = 5, message = "Tags can include up to 5 items only.")
     private List<String> tagIdList;
 

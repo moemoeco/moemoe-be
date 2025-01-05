@@ -1,21 +1,19 @@
 spring:
-  profiles:
-    active: ${ACTIVE_PROFILE}
   security:
     oauth2:
       client:
         registration:
           kakao:
-            client-id: ${KAKAO_CLIENT_ID}
-            client-secret: ${KAKAO_CLIENT_SECRET}
-            redirect-uri: ${KAKAO_REDIRECT_URI}
+            client-id: 1
+            client-secret: 1
+            redirect-uri: 1
             client-authentication-method: client_secret_post
             authorization-grant-type: authorization_code
             scope: profile_nickname,profile_image,account_email,name,gender,birthday,birthyear
           naver:
-            client-id: ${NAVER_CLIENT_ID}
-            client-secret: ${NAVER_CLIENT_SECRET}
-            redirect-uri: ${NAVER_REDIRECT_URI}
+            client-id: 1
+            client-secret: 1
+            redirect-uri: 1
             client-name: Naver
             authorization-grant-type: authorization_code
         provider:
@@ -32,8 +30,8 @@ server:
   port: 9000
 service:
   jwt:
-    issuer: ${JWT_ISSUER}
-    secret-key: ${JWT_SECRET_KEY}
+    issuer: ${JWT_ISSUER:moemoe}
+    secret-key: ${JWT_SECRET_KEY:3v6Gc1yQ_wQD9pbV1vCj3E2qE8-RLdljM2xU6yWg7ZI}
     access-expiration: 1800000 # 30분 (30 * 60 * 1000 밀리초)
     refresh-expiration: 108000000 # 30일 (30 * 60 * 60 * 1000 밀리초)
 springdoc:
@@ -47,7 +45,15 @@ springdoc:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
+de:
+  flapdoodle:
+    mongodb:
+      embedded:
+        version: 4.4.18
+        storage:
+          repl-set-name: rs0
 logging:
   level:
+    de.flapdoodle.embed.mongo.spring.autoconfigure.EmbeddedMongo: OFF
     org.springframework.security: DEBUG
 

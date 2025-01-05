@@ -1,22 +1,13 @@
 package com.moemoe.api.controller;
 
-import com.moemoe.api.ResponseConvertUtil;
-import com.moemoe.api.config.filter.JwtAuthenticationFilter;
-import com.moemoe.api.config.web.SecurityConfig;
-import com.moemoe.api.config.web.WebConfig;
+import com.moemoe.api.AbstractControllerTest;
 import com.moemoe.core.response.AuthorizationResponse;
 import com.moemoe.core.response.LoginTokenResponse;
 import com.moemoe.core.service.oauth.KakaoOAuthService;
 import com.moemoe.core.service.oauth.NaverOAuthService;
 import com.moemoe.mongo.repository.UserEntityRepository;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,13 +18,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(controllers = OAuthController.class,
-        excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = JwtAuthenticationFilter.class),
-        excludeAutoConfiguration = {SecurityConfig.class, WebConfig.class})
-@AutoConfigureMockMvc(addFilters = false)
-class OAuthControllerTest {
-    @Autowired
-    private MockMvc mockMvc;
+class OAuthControllerTest extends AbstractControllerTest {
     @MockBean
     private UserEntityRepository userEntityRepository;
     @MockBean
@@ -56,7 +41,7 @@ class OAuthControllerTest {
                 .andExpect(status().isOk())
                 .andDo(print());
 
-        AuthorizationResponse actualResponse = ResponseConvertUtil.convertResponseToClass(resultActions, AuthorizationResponse.class);
+        AuthorizationResponse actualResponse = convertResponseToClass(resultActions, AuthorizationResponse.class);
 
         // then
         assertThat(actualResponse)
@@ -82,7 +67,7 @@ class OAuthControllerTest {
         ResultActions resultActions = mockMvc.perform(get("/oauth/naver/login-page"))
                 .andExpect(status().isOk())
                 .andDo(print());
-        AuthorizationResponse actualResponse = ResponseConvertUtil.convertResponseToClass(resultActions, AuthorizationResponse.class);
+        AuthorizationResponse actualResponse = convertResponseToClass(resultActions, AuthorizationResponse.class);
 
         // then
         assertThat(actualResponse)
@@ -115,7 +100,7 @@ class OAuthControllerTest {
                 .andExpect(status().isOk())
                 .andDo(print());
 
-        LoginTokenResponse actualResponse = ResponseConvertUtil.convertResponseToClass(resultActions, LoginTokenResponse.class);
+        LoginTokenResponse actualResponse = convertResponseToClass(resultActions, LoginTokenResponse.class);
 
         // then
         assertThat(actualResponse)
@@ -147,7 +132,7 @@ class OAuthControllerTest {
                 .andExpect(status().isOk())
                 .andDo(print());
 
-        LoginTokenResponse actualResponse = ResponseConvertUtil.convertResponseToClass(resultActions, LoginTokenResponse.class);
+        LoginTokenResponse actualResponse = convertResponseToClass(resultActions, LoginTokenResponse.class);
 
         // then
         assertThat(actualResponse)

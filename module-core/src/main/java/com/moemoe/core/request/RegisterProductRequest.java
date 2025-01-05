@@ -42,7 +42,7 @@ public class RegisterProductRequest {
     }
 
     @Getter
-    private static class Location {
+    public static class Location {
         private double latitude;
         private double longitude;
         private String detailAddress;

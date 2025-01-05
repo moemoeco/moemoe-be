@@ -6,9 +6,11 @@ dependencies {
 
     implementation project(':module-core')
     implementation project(':module-domain-mongo')
+    implementation project(':module-client')
 
     testImplementation 'org.springframework.security:spring-security-test'
-    testImplementation project(':module-client')
+    testImplementation platform('software.amazon.awssdk:bom:2.29.37')
+    testImplementation 'software.amazon.awssdk:s3'
 }
 
 tasks.named('test') {

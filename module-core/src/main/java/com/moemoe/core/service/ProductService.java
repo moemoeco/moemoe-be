@@ -1,6 +1,7 @@
 package com.moemoe.core.service;
 
 import com.moemoe.client.aws.AwsS3Client;
+import com.moemoe.client.exception.ClientRuntimeException;
 import com.moemoe.core.request.RegisterProductRequest;
 import com.moemoe.mongo.entity.Product;
 import com.moemoe.mongo.repository.ProductEntityRepository;
@@ -37,6 +38,8 @@ public class ProductService {
                 String imageUrl = awsS3Client.upload(s3Client, Path.of(request.getSellerId().toHexString(), getFileName(image)).toString(), image);
                 imageUrlList.add(imageUrl);
             }
+        } catch (Exception e) {
+            throw new ClientRuntimeException(e.getMessage());
         }
 
         Product productEntity = createProductEntity(request, imageUrlList);

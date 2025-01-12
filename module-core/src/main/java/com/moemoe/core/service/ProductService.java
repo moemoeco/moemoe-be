@@ -3,6 +3,7 @@ package com.moemoe.core.service;
 import com.moemoe.client.aws.AwsS3Client;
 import com.moemoe.client.exception.ClientRuntimeException;
 import com.moemoe.core.request.RegisterProductRequest;
+import com.moemoe.core.response.GetProductsResponse;
 import com.moemoe.core.response.IdResponse;
 import com.moemoe.mongo.entity.Product;
 import com.moemoe.mongo.repository.ProductEntityRepository;
@@ -19,6 +20,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -27,6 +29,36 @@ public class ProductService {
     private final UserEntityRepository userEntityRepository;
     private final ProductEntityRepository productEntityRepository;
     private final AwsS3Client awsS3Client;
+
+    @Transactional(readOnly = true)
+    public GetProductsResponse findAll(
+            String oldNextId,
+            int pageSize
+    ) {
+        if (invalidProductId(oldNextId)) {
+            throw new IllegalArgumentException("old next id is invalid");
+        }
+
+        List<Product> productList = productEntityRepository.findAll(oldNextId, pageSize);
+        List<GetProductsResponse.Product> contents = productList
+                .stream()
+                .map(product ->
+                        GetProductsResponse.Product.builder()
+                                .id(product.getStringId())
+                                .title(product.getTitle())
+                                .detailAddress(product.getDetailedAddress())
+                                .price(product.getPrice())
+                                .tagIdList(product.getTagIdList())
+                                .thumbnailUrl(product.getThumbnailUrl())
+                                .createAt(product.getCreatedDate())
+                                .build())
+                .collect(Collectors.toList());
+        return new GetProductsResponse(contents, pageSize);
+    }
+
+    private boolean invalidProductId(String oldNextId) {
+        return !productEntityRepository.existsById(new ObjectId(oldNextId));
+    }
 
     @Transactional
     public IdResponse register(RegisterProductRequest request,

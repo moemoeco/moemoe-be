@@ -15,8 +15,8 @@ public class GetProductsResponse {
 
     public GetProductsResponse(List<Product> contents, int pageSize) {
         if (contents.size() > pageSize) {
-            this.contents = contents.subList(0, contents.size() - 2);
-            this.nextId = contents.get(contents.size() - 2).getId();
+            this.contents = contents.subList(0, contents.size() - 1);
+            this.nextId = this.contents.getLast().getId();
             this.hasNext = true;
         } else {
             this.contents = contents;

@@ -31,17 +31,17 @@ public class GetProductsResponse {
         private final String title;
         private final List<String> tagIdList;
         private final String thumbnailUrl;
-        private final String detailAddress;
+        private final String detailedAddress;
         private final long price;
         private final String createAt;
 
         @Builder
-        public Product(String id, String title, List<String> tagIdList, String thumbnailUrl, String detailAddress, LocalDateTime createAt, long price) {
+        public Product(String id, String title, List<String> tagIdList, String thumbnailUrl, String detailedAddress, LocalDateTime createAt, long price) {
             this.id = id;
             this.title = title;
             this.tagIdList = tagIdList;
             this.thumbnailUrl = thumbnailUrl;
-            this.detailAddress = detailAddress;
+            this.detailedAddress = detailedAddress;
             this.createAt = createAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss"));
             this.price = price;
         }

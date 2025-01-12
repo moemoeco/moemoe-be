@@ -20,7 +20,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -46,13 +45,13 @@ public class ProductService {
                         GetProductsResponse.Product.builder()
                                 .id(product.getStringId())
                                 .title(product.getTitle())
-                                .detailAddress(product.getDetailedAddress())
+                                .detailedAddress(product.getDetailedAddress())
                                 .price(product.getPrice())
                                 .tagIdList(product.getTagIdList())
                                 .thumbnailUrl(product.getThumbnailUrl())
                                 .createAt(product.getCreatedDate())
                                 .build())
-                .collect(Collectors.toList());
+                .toList();
         return new GetProductsResponse(contents, pageSize);
     }
 

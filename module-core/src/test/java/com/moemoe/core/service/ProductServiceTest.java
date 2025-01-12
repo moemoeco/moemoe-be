@@ -239,7 +239,7 @@ class ProductServiceTest {
                 .containsExactly(expectedProductEntityList.get(1).getId().toHexString(), true);
         assertThat(actual.getContents())
                 .hasSize(expectedPageSize)
-                .extracting(GetProductsResponse.Product::getTitle, GetProductsResponse.Product::getDetailAddress, GetProductsResponse.Product::getThumbnailUrl)
+                .extracting(GetProductsResponse.Product::getTitle, GetProductsResponse.Product::getDetailedAddress, GetProductsResponse.Product::getThumbnailUrl)
                 .containsExactly(
                         Tuple.tuple(expectedProductEntityList.get(0).getTitle(), expectedProductEntityList.get(0).getDetailedAddress(), expectedProductEntityList.get(0).getThumbnailUrl()),
                         Tuple.tuple(expectedProductEntityList.get(1).getTitle(), expectedProductEntityList.get(1).getDetailedAddress(), expectedProductEntityList.get(1).getThumbnailUrl())
@@ -272,7 +272,7 @@ class ProductServiceTest {
                 .containsExactly("", false);
         assertThat(actual.getContents())
                 .hasSize(expectedPageSize)
-                .extracting(GetProductsResponse.Product::getTitle, GetProductsResponse.Product::getDetailAddress, GetProductsResponse.Product::getThumbnailUrl)
+                .extracting(GetProductsResponse.Product::getTitle, GetProductsResponse.Product::getDetailedAddress, GetProductsResponse.Product::getThumbnailUrl)
                 .containsExactly(
                         Tuple.tuple(expectedProductEntityList.get(0).getTitle(), expectedProductEntityList.get(0).getDetailedAddress(), expectedProductEntityList.get(0).getThumbnailUrl()),
                         Tuple.tuple(expectedProductEntityList.get(1).getTitle(), expectedProductEntityList.get(1).getDetailedAddress(), expectedProductEntityList.get(1).getThumbnailUrl())

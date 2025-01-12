@@ -3,10 +3,12 @@ package com.moemoe.core.service;
 import com.moemoe.client.aws.AwsS3Client;
 import com.moemoe.client.exception.ClientRuntimeException;
 import com.moemoe.core.request.RegisterProductRequest;
+import com.moemoe.core.response.GetProductsResponse;
 import com.moemoe.mongo.constant.ProductCondition;
 import com.moemoe.mongo.entity.Product;
 import com.moemoe.mongo.repository.ProductEntityRepository;
 import com.moemoe.mongo.repository.UserEntityRepository;
+import org.assertj.core.groups.Tuple;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.services.s3.S3Client;
 
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -207,5 +210,97 @@ class ProductServiceTest {
         ReflectionTestUtils.setField(expectedRequest, "price", 1000L);
         ReflectionTestUtils.setField(expectedRequest, "tagIdList", List.of("tag1", "tag2"));
         ReflectionTestUtils.setField(expectedRequest, "condition", ProductCondition.DAMAGED);
+    }
+
+    @Test
+    @DisplayName("정상 케이스 : 다음 페이지가 존재하는 경우")
+    void findAll() {
+        // given
+        String expectedOldNextId = new ObjectId().toHexString();
+        int expectedPageSize = 2;
+        List<Product> expectedProductEntityList = List.of(
+                getProductEntity("0", "detailedAddress1", "thumbnail1"),
+                getProductEntity("1", "detailedAddress2", "thumbnail2"),
+                getProductEntity("2", "detailedAddress3", "thumbnail3"));
+
+        ObjectId expectedOldNextObjectId = new ObjectId(expectedOldNextId);
+        given(productEntityRepository.existsById(expectedOldNextObjectId)).willReturn(true);
+        given(productEntityRepository.findAll(expectedOldNextId, expectedPageSize))
+                .willReturn(expectedProductEntityList);
+
+        // when
+        GetProductsResponse actual = productService.findAll(expectedOldNextId, expectedPageSize);
+
+        // then
+        verify(productEntityRepository, times(1)).existsById(expectedOldNextObjectId);
+        verify(productEntityRepository, times(1)).findAll(expectedOldNextId, expectedPageSize);
+        assertThat(actual)
+                .extracting(GetProductsResponse::getNextId, GetProductsResponse::isHasNext)
+                .containsExactly(expectedProductEntityList.get(1).getId().toHexString(), true);
+        assertThat(actual.getContents())
+                .hasSize(expectedPageSize)
+                .extracting(GetProductsResponse.Product::getTitle, GetProductsResponse.Product::getDetailAddress, GetProductsResponse.Product::getThumbnailUrl)
+                .containsExactly(
+                        Tuple.tuple(expectedProductEntityList.get(0).getTitle(), expectedProductEntityList.get(0).getDetailedAddress(), expectedProductEntityList.get(0).getThumbnailUrl()),
+                        Tuple.tuple(expectedProductEntityList.get(1).getTitle(), expectedProductEntityList.get(1).getDetailedAddress(), expectedProductEntityList.get(1).getThumbnailUrl())
+                );
+    }
+
+    @Test
+    @DisplayName("정상 케이스2 : 다음 페이지가 존재하지 않는 경우")
+    void findAllLastPage() {
+        // given
+        String expectedOldNextId = new ObjectId().toHexString();
+        int expectedPageSize = 2;
+        List<Product> expectedProductEntityList = List.of(
+                getProductEntity("0", "detailedAddress1", "thumbnail1"),
+                getProductEntity("1", "detailedAddress2", "thumbnail2"));
+
+        ObjectId expectedOldNextObjectId = new ObjectId(expectedOldNextId);
+        given(productEntityRepository.existsById(expectedOldNextObjectId)).willReturn(true);
+        given(productEntityRepository.findAll(expectedOldNextId, expectedPageSize))
+                .willReturn(expectedProductEntityList);
+
+        // when
+        GetProductsResponse actual = productService.findAll(expectedOldNextId, expectedPageSize);
+
+        // then
+        verify(productEntityRepository, times(1)).existsById(expectedOldNextObjectId);
+        verify(productEntityRepository, times(1)).findAll(expectedOldNextId, expectedPageSize);
+        assertThat(actual)
+                .extracting(GetProductsResponse::getNextId, GetProductsResponse::isHasNext)
+                .containsExactly("", false);
+        assertThat(actual.getContents())
+                .hasSize(expectedPageSize)
+                .extracting(GetProductsResponse.Product::getTitle, GetProductsResponse.Product::getDetailAddress, GetProductsResponse.Product::getThumbnailUrl)
+                .containsExactly(
+                        Tuple.tuple(expectedProductEntityList.get(0).getTitle(), expectedProductEntityList.get(0).getDetailedAddress(), expectedProductEntityList.get(0).getThumbnailUrl()),
+                        Tuple.tuple(expectedProductEntityList.get(1).getTitle(), expectedProductEntityList.get(1).getDetailedAddress(), expectedProductEntityList.get(1).getThumbnailUrl())
+                );
+    }
+
+    @Test
+    @DisplayName("실패 케이스 : ID를 가진 데이터가 존재하지 않는 경우")
+    void findAllInvalidOldId() {
+        // given
+        String expectedOldNextId = new ObjectId().toHexString();
+        int expectedPageSize = 2;
+        ObjectId expectedOldNextObjectId = new ObjectId(expectedOldNextId);
+        given(productEntityRepository.existsById(expectedOldNextObjectId)).willReturn(false);
+
+        // when
+        assertThatThrownBy(() -> productService.findAll(expectedOldNextId, expectedPageSize))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        // then
+        verify(productEntityRepository, times(1)).existsById(expectedOldNextObjectId);
+        verify(productEntityRepository, times(0)).findAll(expectedOldNextId, expectedPageSize);
+    }
+
+    private Product getProductEntity(String title, String detailedAddress, String thumbnailUrl) {
+        Product product = Product.of(new ObjectId(), title, null, Product.Location.of(0, 0, detailedAddress), 1, List.of(thumbnailUrl, "test1", "test2"), null, null);
+        ReflectionTestUtils.setField(product, "id", new ObjectId());
+        ReflectionTestUtils.setField(product, "createdDate", LocalDateTime.now());
+        return product;
     }
 }

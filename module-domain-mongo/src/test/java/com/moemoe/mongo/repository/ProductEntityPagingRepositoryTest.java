@@ -16,10 +16,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class ProductEntityPagingRepositoryTest extends AbstractMongoDbTest {
     @Autowired
-    private ProductEntityPagingRepository productEntityPagingRepository;
-    @Autowired
     private ProductEntityRepository productEntityRepository;
-    private List<Product> products = new LinkedList<>();
+    private final List<Product> products = new LinkedList<>();
 
     @BeforeEach
     void init() {
@@ -38,7 +36,7 @@ class ProductEntityPagingRepositoryTest extends AbstractMongoDbTest {
     @DisplayName("정상 케이스 : 첫 페이지 조회")
     void findAll() {
         // when
-        List<Product> actualProducts = productEntityPagingRepository.findAll("", 3);
+        List<Product> actualProducts = productEntityRepository.findAll("", 3);
 
         // then
         assertThat(actualProducts)
@@ -53,7 +51,7 @@ class ProductEntityPagingRepositoryTest extends AbstractMongoDbTest {
         // when
         // 4번 상품
         ObjectId nextId = products.get(4).getId();
-        List<Product> actualProducts = productEntityPagingRepository.findAll(nextId.toHexString(), 3);
+        List<Product> actualProducts = productEntityRepository.findAll(nextId.toHexString(), 3);
 
         // then
         assertThat(actualProducts)
@@ -68,7 +66,7 @@ class ProductEntityPagingRepositoryTest extends AbstractMongoDbTest {
         // when
         // 4번 상품
         ObjectId nextId = products.get(1).getId();
-        List<Product> actualProducts = productEntityPagingRepository.findAll(nextId.toHexString(), 3);
+        List<Product> actualProducts = productEntityRepository.findAll(nextId.toHexString(), 3);
 
         // then
         assertThat(actualProducts)

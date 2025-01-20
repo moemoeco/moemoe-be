@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -39,20 +40,24 @@ public class ProductService {
         }
 
         List<Product> productList = productEntityRepository.findAll(oldNextId, pageSize);
-        List<GetProductsResponse.Product> contents = productList
-                .stream()
-                .map(product ->
-                        GetProductsResponse.Product.builder()
-                                .id(product.getStringId())
-                                .title(product.getTitle())
-                                .detailedAddress(product.getDetailedAddress())
-                                .price(product.getPrice())
-                                .tagIdList(product.getTagIdList())
-                                .thumbnailUrl(product.getThumbnailUrl())
-                                .createAt(product.getCreatedDate())
-                                .build())
-                .toList();
+        List<GetProductsResponse.Product> contents = getProductContents(productList);
         return new GetProductsResponse(contents, pageSize);
+    }
+
+    private List<GetProductsResponse.Product> getProductContents(List<Product> productList) {
+        try (S3Presigner s3Presigner = awsS3Client.getS3Presigner();) {
+            return productList.stream()
+                    .map(product -> GetProductsResponse.Product.builder()
+                            .id(product.getStringId())
+                            .title(product.getTitle())
+                            .detailedAddress(product.getDetailedAddress())
+                            .price(product.getPrice())
+                            .tagIdList(product.getTagIdList())
+                            .thumbnailUrl(awsS3Client.getPreSignedUrl(s3Presigner, product.getThumbnailUrl()))
+                            .createAt(product.getCreatedDate())
+                            .build())
+                    .toList();
+        }
     }
 
     private boolean invalidProductId(String oldNextId) {

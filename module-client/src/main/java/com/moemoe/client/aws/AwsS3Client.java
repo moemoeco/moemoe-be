@@ -12,9 +12,13 @@ import software.amazon.awssdk.http.SdkHttpResponse;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Duration;
 
 @Slf4j
 @Component
@@ -58,14 +62,38 @@ public class AwsS3Client {
         }
     }
 
+    public String getPreSignedUrl(S3Presigner s3Presigner, String s3ObjectKey) {
+        GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                .signatureDuration(Duration.ofMinutes(10))
+                .getObjectRequest(builder -> builder
+                        .bucket(awsProperty.getBucketName())
+                        .key(s3ObjectKey))
+                .build();
+
+        PresignedGetObjectRequest presignedRequest = s3Presigner.presignGetObject(presignRequest);
+        return presignedRequest.url().toString();
+    }
+
+    public S3Presigner getS3Presigner() {
+        AwsBasicCredentials awsBasicCredentials = getAwsBasicCredentials();
+        return S3Presigner.builder()
+                .credentialsProvider(StaticCredentialsProvider.create(awsBasicCredentials))
+                .region(awsProperty.getRegion())
+                .build();
+    }
+
     public S3Client getS3Client() {
-        AwsBasicCredentials awsBasicCredentials = AwsBasicCredentials.create(
-                awsProperty.getAccessKey(),
-                awsProperty.getSecretKey()
-        );
+        AwsBasicCredentials awsBasicCredentials = getAwsBasicCredentials();
         return S3Client.builder()
                 .credentialsProvider(StaticCredentialsProvider.create(awsBasicCredentials))
                 .region(awsProperty.getRegion())
                 .build();
+    }
+
+    private AwsBasicCredentials getAwsBasicCredentials() {
+        return AwsBasicCredentials.create(
+                awsProperty.getAccessKey(),
+                awsProperty.getSecretKey()
+        );
     }
 }

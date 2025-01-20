@@ -1,23 +1,18 @@
 package com.moemoe.mongo.repository;
 
-import com.moemoe.mongo.config.MongoConfig;
-import com.moemoe.mongo.config.MongoTestConfig;
+import com.moemoe.mongo.AbstractMongoDbTest;
 import com.moemoe.mongo.constant.ProductCondition;
 import com.moemoe.mongo.entity.Product;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
-import org.springframework.test.context.ContextConfiguration;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DataMongoTest
-@ContextConfiguration(classes = {MongoConfig.class, MongoTestConfig.class})
-class ProductEntityRepositoryTest {
+class ProductEntityRepositoryTest extends AbstractMongoDbTest {
     @Autowired
     private ProductEntityRepository productEntityRepository;
 

@@ -4,5 +4,5 @@ import com.moemoe.mongo.entity.Product;
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
-public interface ProductEntityRepository extends MongoRepository<Product, ObjectId> {
+public interface ProductEntityRepository extends MongoRepository<Product, ObjectId>, ProductEntityPagingRepository {
 }

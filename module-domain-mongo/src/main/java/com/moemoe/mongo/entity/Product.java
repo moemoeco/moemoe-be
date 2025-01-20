@@ -38,6 +38,18 @@ public class Product {
     @LastModifiedDate
     private LocalDateTime modifiedDate;
 
+    public String getStringId(){
+        return this.id.toHexString();
+    }
+
+    public String getDetailedAddress() {
+        return this.location.detailedAddress;
+    }
+
+    public String getThumbnailUrl() {
+        return this.imageUrlList.getFirst();
+    }
+
     public static Product of(ObjectId sellerId,
                              String title,
                              String description,

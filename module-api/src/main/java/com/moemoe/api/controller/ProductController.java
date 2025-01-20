@@ -2,6 +2,7 @@ package com.moemoe.api.controller;
 
 
 import com.moemoe.core.request.RegisterProductRequest;
+import com.moemoe.core.response.GetProductsResponse;
 import com.moemoe.core.response.IdResponse;
 import com.moemoe.core.service.ProductService;
 import jakarta.validation.Valid;
@@ -9,10 +10,7 @@ import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -23,6 +21,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductController {
     private final ProductService productService;
+
+    @GetMapping
+    public GetProductsResponse findAll(
+            @RequestParam("nextId") String nextId,
+            @RequestParam("pageSize") int pageSize
+    ) {
+        return productService.findAll(nextId, pageSize);
+    }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public IdResponse register(

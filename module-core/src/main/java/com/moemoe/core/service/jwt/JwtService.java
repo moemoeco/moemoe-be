@@ -1,8 +1,12 @@
 package com.moemoe.core.service.jwt;
 
+import com.moemoe.core.service.jwt.exception.JwtExpiredException;
+import com.moemoe.core.service.jwt.exception.JwtMalformedException;
 import com.moemoe.mongo.constant.UserRole;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -66,15 +70,21 @@ public class JwtService {
     }
 
     public boolean isValidToken(String token, String userName) {
-        Claims claims = extractClaims(token);
-        if (!claims.containsKey("role")) {
-            UserRole.valueOf(claims.get("role", String.class));
-            return false;
-        }
-        if (!claims.containsKey("email")) return false;
+        try {
+            Claims claims = extractClaims(token);
+            if (!claims.containsKey("role")) {
+                UserRole.valueOf(claims.get("role", String.class));
+                return false;
+            }
+            if (!claims.containsKey("email")) return false;
 
-        String subject = claims.getSubject();
-        return userName.equals(subject) && !isExpiredToken(token);
+            String subject = claims.getSubject();
+            return userName.equals(subject) && !isExpiredToken(token);
+        } catch (MalformedJwtException e) {
+            throw new JwtMalformedException(e.getMessage(), e);
+        } catch (ExpiredJwtException e) {
+            throw new JwtExpiredException(e.getMessage(), e);
+        }
     }
 
     private boolean isExpiredToken(String token) {

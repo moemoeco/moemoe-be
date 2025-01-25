@@ -61,7 +61,7 @@ subprojects {
     def moduleDependencyGroups = [
             'module-domain-mongo': ['oauth', 'mongo', 'mongoTest'],
             'module-core'        : ['oauth', 'mongo', 'redis', 'jwt'],
-            'module-api'         : ['oauth', 'mongo', 'mongoTest', 'jwt', 'localstack'],
+            'module-api'         : ['oauth'],
             'module-domain-redis': ['redis'],
             'module-client'      : ['localstack']
     ]

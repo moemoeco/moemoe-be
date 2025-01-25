@@ -10,10 +10,11 @@ import lombok.Getter;
 import org.bson.types.ObjectId;
 
 import java.util.List;
+import java.util.Objects;
 
 @Getter
 public class RegisterProductRequest {
-    @NotNull(message = "Seller Id must not be null")
+    @NotEmpty(message = "Seller Id must not be empty")
     @Getter(AccessLevel.NONE)
     private String sellerId;
     @NotEmpty(message = "Title must not be empty")
@@ -50,5 +51,29 @@ public class RegisterProductRequest {
         private double latitude;
         private double longitude;
         private String detailAddress;
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            Location location = (Location) o;
+            return Double.compare(getLatitude(), location.getLatitude()) == 0 && Double.compare(getLongitude(), location.getLongitude()) == 0 && Objects.equals(getDetailAddress(), location.getDetailAddress());
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(getLatitude(), getLongitude(), getDetailAddress());
+        }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        RegisterProductRequest request = (RegisterProductRequest) o;
+        return getPrice() == request.getPrice() && Objects.equals(getSellerId(), request.getSellerId()) && Objects.equals(getTitle(), request.getTitle()) && Objects.equals(getDescription(), request.getDescription()) && Objects.equals(getLocation(), request.getLocation()) && Objects.equals(getTagIdList(), request.getTagIdList()) && getCondition() == request.getCondition();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getSellerId(), getTitle(), getDescription(), getLocation(), getPrice(), getTagIdList(), getCondition());
     }
 }

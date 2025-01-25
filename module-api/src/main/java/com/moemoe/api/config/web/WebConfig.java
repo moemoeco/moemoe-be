@@ -3,7 +3,7 @@ package com.moemoe.api.config.web;
 
 import com.moemoe.api.config.filter.RequestLoggingFilter;
 import com.moemoe.api.constant.OAuthPlatformConverter;
-import com.moemoe.mongo.repository.UserEntityRepository;
+import com.moemoe.core.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -14,16 +14,23 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.util.NoSuchElementException;
+
 @EnableWebMvc
 @Configuration
 @RequiredArgsConstructor
 public class WebConfig implements WebMvcConfigurer {
-    private final UserEntityRepository userEntityRepository;
+    private final UserService userService;
 
     @Bean
     public UserDetailsService userDetailsService() {
-        return (userName -> userEntityRepository.findByEmail(userName)
-                .orElseThrow(() -> new UsernameNotFoundException("Not found user name")));
+        return (email -> {
+            try {
+                return userService.getUser(email);
+            } catch (NoSuchElementException e) {
+                throw new UsernameNotFoundException("User(" + email + ") not found.", e);
+            }
+        });
     }
 
     @Override

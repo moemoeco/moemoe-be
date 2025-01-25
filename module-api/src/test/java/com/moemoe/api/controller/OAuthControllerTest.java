@@ -5,8 +5,8 @@ import com.moemoe.core.response.AuthorizationResponse;
 import com.moemoe.core.response.LoginTokenResponse;
 import com.moemoe.core.service.oauth.KakaoOAuthService;
 import com.moemoe.core.service.oauth.NaverOAuthService;
-import com.moemoe.mongo.repository.UserEntityRepository;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.ResultActions;
 
@@ -18,9 +18,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@WebMvcTest(controllers = OAuthController.class)
 class OAuthControllerTest extends AbstractControllerTest {
-    @MockBean
-    private UserEntityRepository userEntityRepository;
     @MockBean
     private KakaoOAuthService kakaoOAuthService;
     @MockBean

@@ -1,10 +1,10 @@
 package com.moemoe.api.config.filter;
 
 import com.moemoe.core.service.jwt.JwtService;
+import com.moemoe.core.service.jwt.exception.JwtExpiredException;
+import com.moemoe.core.service.jwt.exception.JwtMalformedException;
 import com.moemoe.mongo.constant.UserRole;
 import com.moemoe.mongo.entity.User;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.MalformedJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -62,9 +62,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
-        } catch (MalformedJwtException exception) {
+        } catch (JwtMalformedException exception) {
             log.error(exception.getMessage());
-        } catch (ExpiredJwtException exception) {
+        } catch (JwtExpiredException exception) {
             log.info("Expired access token! Trying to reissue new access token using refresh token.");
 
             // 리프레시 토큰을 Redis에서 조회하여 존재하는지 확인

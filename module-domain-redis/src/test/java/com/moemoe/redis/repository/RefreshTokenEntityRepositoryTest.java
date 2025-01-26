@@ -61,4 +61,22 @@ class RefreshTokenEntityRepositoryTest {
         assertThat(actualRefreshToken)
                 .isEmpty();
     }
+
+    @Test
+    @DisplayName("성공 케이스 : refresh token token 값으로 조회")
+    void findByToken() {
+        // given
+        refreshTokenEntityRepository.deleteAll();
+        String expectedEmail = "test@example.com";
+        String expectedRefreshToken = "expectedRefreshToken2";
+        refreshTokenEntityRepository.save(RefreshToken.of(expectedEmail, expectedRefreshToken));
+
+        // when
+        RefreshToken byToken = refreshTokenEntityRepository.findByToken(expectedRefreshToken);
+
+        // then
+        assertThat(byToken)
+                .extracting(RefreshToken::getEmail, RefreshToken::getToken)
+                .containsExactly(expectedEmail, expectedRefreshToken);
+    }
 }

@@ -3,6 +3,8 @@ package com.moemoe.redis.repository;
 import com.moemoe.redis.config.EmbeddedRedisConfig;
 import com.moemoe.redis.config.RedisConfig;
 import com.moemoe.redis.entity.RefreshToken;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.redis.DataRedisTest;
@@ -18,6 +20,11 @@ import static org.junit.jupiter.api.Assertions.fail;
 class RefreshTokenEntityRepositoryTest {
     @Autowired
     private RefreshTokenEntityRepository refreshTokenEntityRepository;
+
+    @AfterEach
+    void destroy() {
+        refreshTokenEntityRepository.deleteAll();
+    }
 
     @Test
     void crud() {

@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.TimeToLive;
+import org.springframework.data.redis.core.index.Indexed;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -14,6 +15,7 @@ import org.springframework.data.redis.core.TimeToLive;
 public class RefreshToken {
     @Id
     private String email;
+    @Indexed
     private String token;
     @TimeToLive
     private long expirationInSeconds;

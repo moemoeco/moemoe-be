@@ -19,7 +19,7 @@ import java.util.Map;
 
 @Slf4j
 @Disabled
-@AutoConfigureMockMvc(addFilters = false)
+@AutoConfigureMockMvc
 @WithMockUser
 public abstract class AbstractControllerTest {
     @MockBean

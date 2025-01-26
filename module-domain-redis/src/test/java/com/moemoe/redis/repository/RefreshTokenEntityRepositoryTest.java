@@ -27,6 +27,7 @@ class RefreshTokenEntityRepositoryTest {
     }
 
     @Test
+    @DisplayName("성공 케이스 : refresh token 생성, 조회")
     void crud() {
         String expectedEmail = "test@example.com";
         String expectedRefreshToken = "expectedRefreshToken";
@@ -44,6 +45,7 @@ class RefreshTokenEntityRepositoryTest {
     }
 
     @Test
+    @DisplayName("성공 케이스 : refresh token ttl")
     void ttl() {
         String expectedEmail = "test@example.com";
         String expectedRefreshToken = "expectedRefreshToken";

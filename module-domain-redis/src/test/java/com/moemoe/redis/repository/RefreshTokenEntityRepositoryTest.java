@@ -72,7 +72,8 @@ class RefreshTokenEntityRepositoryTest {
         refreshTokenEntityRepository.save(RefreshToken.of(expectedEmail, expectedRefreshToken));
 
         // when
-        RefreshToken byToken = refreshTokenEntityRepository.findByToken(expectedRefreshToken);
+        RefreshToken byToken = refreshTokenEntityRepository.findByToken(expectedRefreshToken)
+                .orElseThrow();
 
         // then
         assertThat(byToken)

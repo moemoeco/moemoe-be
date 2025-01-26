@@ -4,6 +4,7 @@ import com.moemoe.client.http.dto.TokenResponse;
 import com.moemoe.client.http.dto.UserInfoResponse;
 import com.moemoe.core.response.AuthorizationResponse;
 import com.moemoe.core.response.LoginTokenResponse;
+import com.moemoe.core.service.jwt.ClaimsFactory;
 import com.moemoe.core.service.jwt.JwtService;
 import com.moemoe.mongo.entity.User;
 import com.moemoe.mongo.repository.UserEntityRepository;
@@ -12,7 +13,6 @@ import com.moemoe.redis.repository.RefreshTokenEntityRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
 import java.util.Map;
 
 
@@ -37,12 +37,9 @@ public abstract class OAuthTemplate {
         UserInfoResponse userInfo = getUserInfo(token);
         User userEntity = getUserEntity(userInfo);
 
-        Map<String, String> claims = new HashMap<>();
-        claims.put("email", userEntity.getEmail());
-        claims.put("role", userEntity.getRole().name());
-
-        final String accessToken = jwtService.createAccessToken(claims, userEntity);
-        final String refreshToken = jwtService.createRefreshToken(claims, userEntity);
+        Map<String, String> userClaims = ClaimsFactory.getUserClaims(userEntity);
+        final String accessToken = jwtService.createAccessToken(userClaims, userEntity);
+        final String refreshToken = jwtService.createRefreshToken(userClaims, userEntity);
 
         refreshTokenEntityRepository.save(RefreshToken.of(userEntity.getEmail(), refreshToken));
         log.info("OAuth login service done.");

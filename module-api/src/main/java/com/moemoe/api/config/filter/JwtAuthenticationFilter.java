@@ -11,10 +11,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -38,12 +39,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             // 특정 경로 제외
             if (!isDoNotFilteredUri(requestURI)) {
-                log.info("Authentication header is invalid.");
+                log.error("Authentication header is invalid.");
             }
             filterChain.doFilter(request, response);
             return;
         }
-
         String token = authHeader.split(" ")[1];
         try {
             String email = jwtService.getEmail(token);
@@ -59,17 +59,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         null,
                         userDetails.getAuthorities()
                 );
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         } catch (JwtMalformedException exception) {
-            log.error(exception.getMessage());
+            log.error("Malformed JWT Token: {}", exception.getMessage());
+            response.setStatus(HttpStatus.FORBIDDEN.value());
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            return;
         } catch (JwtExpiredException exception) {
             log.info("Expired access token! Trying to reissue new access token using refresh token.");
-
-            // 리프레시 토큰을 Redis에서 조회하여 존재하는지 확인
-            // 리프레시 토큰 유효 기간이 살아있는 경우 - (Exception)
-            // 리프레시 토큰 유효 기간이 지난 경우 - logout api redirect
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            return;
         }
         filterChain.doFilter(request, response);
     }

@@ -25,6 +25,7 @@ import java.util.Map;
 
 @Service
 public class JwtService {
+    public static final String AUTHENTICATION_HEADER = "Authorization";
     private final RefreshTokenEntityRepository refreshTokenEntityRepository;
     private final UserEntityRepository userEntityRepository;
 

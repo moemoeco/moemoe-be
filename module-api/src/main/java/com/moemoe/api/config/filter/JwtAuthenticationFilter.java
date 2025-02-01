@@ -22,11 +22,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+import static com.moemoe.core.service.jwt.JwtService.AUTHENTICATION_HEADER;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private static final String AUTHENTICATION_HEADER = "Authorization";
     private final JwtService jwtService;
 
     @Override

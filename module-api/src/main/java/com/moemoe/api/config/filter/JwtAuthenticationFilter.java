@@ -1,5 +1,7 @@
 package com.moemoe.api.config.filter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.moemoe.api.config.handler.ErrorResponseBody;
 import com.moemoe.core.service.jwt.JwtService;
 import com.moemoe.core.service.jwt.exception.JwtExpiredException;
 import com.moemoe.core.service.jwt.exception.JwtMalformedException;
@@ -29,6 +31,7 @@ import static com.moemoe.core.service.jwt.JwtService.AUTHENTICATION_HEADER;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
+    private final ObjectMapper objectMapper;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -42,7 +45,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (!isDoNotFilteredUri(requestURI)) {
                 response.setStatus(HttpStatus.UNAUTHORIZED.value());
                 response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                log.error("Authentication header is empty.");
+                response.getWriter().write(objectMapper.writeValueAsString(ErrorResponseBody.of("EMPTY_AUTH_HEADER", "Authorization header is missing or empty.")));
+                log.error("Authorization header is missing or empty.");
                 return;
             }
             filterChain.doFilter(request, response);
@@ -69,11 +73,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             log.error("Malformed JWT Token: {}", exception.getMessage());
             response.setStatus(HttpStatus.FORBIDDEN.value());
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.getWriter().write(objectMapper.writeValueAsString(ErrorResponseBody.of("INVALID_AUTH_HEADER", "The provided token is invalid or malformed.")));
             return;
         } catch (JwtExpiredException exception) {
-            log.info("Expired access token! Trying to reissue new access token using refresh token.");
+            log.info("Expired access token: {}", exception.getMessage());
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.getWriter().write(objectMapper.writeValueAsString(ErrorResponseBody.of("EXPIRED_AUTH_HEADER", "The access token has expired. Please refresh your token.")));
             return;
         }
         filterChain.doFilter(request, response);

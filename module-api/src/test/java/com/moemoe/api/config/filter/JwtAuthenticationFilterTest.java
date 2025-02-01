@@ -1,5 +1,6 @@
 package com.moemoe.api.config.filter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moemoe.core.service.jwt.JwtService;
 import com.moemoe.core.service.jwt.exception.JwtExpiredException;
 import com.moemoe.core.service.jwt.exception.JwtMalformedException;
@@ -7,10 +8,7 @@ import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -33,6 +31,8 @@ class JwtAuthenticationFilterTest {
     private JwtAuthenticationFilter jwtAuthenticationFilter;
     @Mock
     private JwtService jwtService;
+    @Spy
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
     @DisplayName("성공 케이스 : API 요청에 유효한 Access Token 포함")

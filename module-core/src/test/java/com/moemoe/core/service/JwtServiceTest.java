@@ -1,7 +1,6 @@
 package com.moemoe.core.service;
 
 import com.moemoe.core.response.LoginTokenResponse;
-import com.moemoe.core.service.jwt.ClaimsFactory;
 import com.moemoe.core.service.jwt.JwtService;
 import com.moemoe.core.service.jwt.exception.JwtExpiredException;
 import com.moemoe.mongo.constant.UserRole;
@@ -15,7 +14,6 @@ import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -33,6 +31,7 @@ import java.util.Optional;
 import static com.nimbusds.jose.JWSAlgorithm.HS256;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
@@ -66,7 +65,6 @@ class JwtServiceTest {
     void refresh() {
         // given
         String expectedRefreshToken = "refreshToken";
-        String expectedAccessToken = "accessToken";
         String expectedEmail = "user@moemoe.com";
         RefreshToken refreshTokenEntity = RefreshToken.of(expectedEmail, expectedRefreshToken);
         User userEntity = User.builder()
@@ -78,17 +76,18 @@ class JwtServiceTest {
         given(userEntityRepository.findByEmail(expectedEmail))
                 .willReturn(Optional.of(userEntity));
 
-        Map<String, String> userClaims = ClaimsFactory.getUserClaims(userEntity);
-        given(jwtService.createAccessToken(userClaims, userEntity))
-                .willReturn(expectedAccessToken);
-
         // when
         LoginTokenResponse loginTokenResponse = jwtService.refresh(expectedRefreshToken);
 
         // then
         assertThat(loginTokenResponse)
-                .extracting(LoginTokenResponse::accessToken, LoginTokenResponse::refreshToken)
-                .containsExactly(expectedAccessToken, expectedRefreshToken);
+                .extracting(LoginTokenResponse::refreshToken)
+                .isEqualTo(expectedRefreshToken);
+        assertDoesNotThrow(() -> Jwts.parser()
+                .verifyWith(Keys.hmacShaKeyFor(Decoders.BASE64URL.decode(secretKey)))
+                .build()
+                .parse(loginTokenResponse.accessToken())
+                .getPayload());
         verify(refreshTokenEntityRepository, times(1))
                 .findByToken(expectedRefreshToken);
         verify(userEntityRepository, times(1))

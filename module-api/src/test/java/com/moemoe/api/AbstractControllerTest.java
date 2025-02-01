@@ -20,10 +20,10 @@ import java.util.Map;
 @Slf4j
 @Disabled
 @AutoConfigureMockMvc
-@WithMockUser
+@WithMockUser(username = "user@moemoe.com", roles = "USER")
 public abstract class AbstractControllerTest {
     @MockBean
-    private JwtService jwtService;
+    protected JwtService jwtService;
     @MockBean
     private UserService userService;
     @Autowired

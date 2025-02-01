@@ -18,6 +18,7 @@ import java.io.InputStreamReader;
 @EnableRedisRepositories(basePackages = "com.moemoe.redis")
 public class EmbeddedRedisConfig {
     private static final int REDIS_PORT = 6379;
+    private static final String REDIS_BINARY_PATH = "binary/redis-server";
     private RedisServer redisServer;
 
     @PostConstruct
@@ -42,7 +43,7 @@ public class EmbeddedRedisConfig {
         if (isMac()) {
             return new RedisServer(
                     RedisExecProvider.defaultProvider()
-                            .override(OS.MAC_OS_X, Architecture.x86_64, "binary/redis-server"),
+                            .override(OS.MAC_OS_X, Architecture.x86_64, REDIS_BINARY_PATH),
                     port);
         } else {
             return new RedisServer(port);

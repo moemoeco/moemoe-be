@@ -1,11 +1,13 @@
 package com.moemoe.api.config.handler;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
+@NoArgsConstructor
 public class ErrorResponseBody {
-    private final String type;
-    private final String message;
+    private String type;
+    private String message;
 
     private ErrorResponseBody(String type, String message) {
         this.type = type;

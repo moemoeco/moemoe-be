@@ -22,11 +22,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+import static com.moemoe.core.service.jwt.JwtService.AUTHENTICATION_HEADER;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private static final String AUTHENTICATION_HEADER = "Authorization";
     private final JwtService jwtService;
 
     @Override
@@ -39,7 +40,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             // 특정 경로 제외
             if (!isDoNotFilteredUri(requestURI)) {
-                log.error("Authentication header is invalid.");
+                response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                log.error("Authentication header is empty.");
+                return;
             }
             filterChain.doFilter(request, response);
             return;

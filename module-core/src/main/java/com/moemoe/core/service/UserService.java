@@ -1,42 +1,18 @@
 package com.moemoe.core.service;
 
-import com.moemoe.core.response.LoginTokenResponse;
-import com.moemoe.core.service.jwt.ClaimsFactory;
-import com.moemoe.core.service.jwt.JwtService;
 import com.moemoe.mongo.entity.User;
 import com.moemoe.mongo.repository.UserEntityRepository;
-import com.moemoe.redis.entity.RefreshToken;
-import com.moemoe.redis.repository.RefreshTokenEntityRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Map;
 
 @Slf4j
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class UserService {
-    private final JwtService jwtService;
-    private final RefreshTokenEntityRepository refreshTokenEntityRepository;
     private final UserEntityRepository userEntityRepository;
-
-    public LoginTokenResponse refresh(String refreshToken) {
-        RefreshToken refreshTokenEntity = refreshTokenEntityRepository.findByToken(refreshToken)
-                .orElseThrow();
-        User userEntity = userEntityRepository.findByEmail(refreshTokenEntity.getEmail())
-                .orElseThrow();
-
-        Map<String, String> userClaims = ClaimsFactory.getUserClaims(userEntity);
-        final String accessToken = jwtService.createAccessToken(userClaims, userEntity);
-
-        return LoginTokenResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .build();
-    }
 
     public User getUser(String email) {
         return userEntityRepository.findByEmail(email)

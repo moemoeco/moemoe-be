@@ -4,6 +4,7 @@ import com.moemoe.client.exception.ClientRuntimeException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
@@ -17,7 +18,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(ErrorResponseBody.of(exception), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @ExceptionHandler(value = HandlerMethodValidationException.class)
+    @ExceptionHandler(value = {HandlerMethodValidationException.class, MethodArgumentNotValidException.class})
     protected ResponseEntity<ErrorResponseBody> handleBadRequestError(Exception exception) {
         log.error("Handling bad request error.");
         return new ResponseEntity<>(ErrorResponseBody.of(exception), HttpStatus.BAD_REQUEST);

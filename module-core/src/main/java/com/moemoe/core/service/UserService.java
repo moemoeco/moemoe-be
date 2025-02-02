@@ -1,5 +1,6 @@
 package com.moemoe.core.service;
 
+import com.moemoe.core.request.RefreshAccessTokenRequest;
 import com.moemoe.core.response.LoginTokenResponse;
 import com.moemoe.core.service.jwt.ClaimsFactory;
 import com.moemoe.core.service.jwt.JwtService;
@@ -24,7 +25,8 @@ public class UserService {
     private final JwtService jwtService;
 
     @Transactional(readOnly = true)
-    public LoginTokenResponse refresh(String refreshToken) {
+    public LoginTokenResponse refresh(RefreshAccessTokenRequest request) {
+        String refreshToken = request.getRefreshToken();
         RefreshToken refreshTokenEntity = refreshTokenEntityRepository.findByToken(refreshToken)
                 .orElseThrow();
         User userEntity = userEntityRepository.findByEmail(refreshTokenEntity.getEmail())

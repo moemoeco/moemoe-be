@@ -1,0 +1,4 @@
+logging:
+  level:
+    org.springframework.data.redis: DEBUG  # Spring Data Redis의 로그 출력
+    io.lettuce.core: TRACE  # Lettuce 클라이언트 사용 시 상세 로그 출력

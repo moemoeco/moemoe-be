@@ -15,7 +15,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
-@DataRedisTest
+@DataRedisTest(properties = "application.yml")
 @ContextConfiguration(classes = {RedisConfig.class, EmbeddedRedisConfig.class})
 class RefreshTokenEntityRepositoryTest {
     @Autowired
@@ -28,7 +28,7 @@ class RefreshTokenEntityRepositoryTest {
 
     @Test
     @DisplayName("성공 케이스 : refresh token 생성, 조회")
-    void crud() {
+    void create_select() {
         String expectedEmail = "test@example.com";
         String expectedRefreshToken = "expectedRefreshToken";
 
@@ -79,5 +79,22 @@ class RefreshTokenEntityRepositoryTest {
         assertThat(byToken)
                 .extracting(RefreshToken::getEmail, RefreshToken::getToken)
                 .containsExactly(expectedEmail, expectedRefreshToken);
+    }
+
+    @Test
+    @DisplayName("성공 케이스 : refresh token 삭제")
+    void delete() {
+        // given
+        refreshTokenEntityRepository.deleteAll();
+        String expectedEmail = "test@example.com";
+        String expectedRefreshToken = "expectedRefreshToken2";
+        RefreshToken save = refreshTokenEntityRepository.save(RefreshToken.of(expectedEmail, expectedRefreshToken));
+
+        // when
+        refreshTokenEntityRepository.delete(save);
+
+        // then
+        assertThat(refreshTokenEntityRepository.findByToken(expectedRefreshToken))
+                .isEmpty();
     }
 }

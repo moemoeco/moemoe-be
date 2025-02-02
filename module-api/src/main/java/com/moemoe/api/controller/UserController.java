@@ -1,12 +1,14 @@
 package com.moemoe.api.controller;
 
 
+import com.moemoe.core.request.RefreshAccessTokenRequest;
 import com.moemoe.core.response.LoginTokenResponse;
 import com.moemoe.core.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -17,11 +19,10 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
     private final UserService userService;
 
-    @GetMapping("/refresh")
+    @PostMapping("/refresh")
     public LoginTokenResponse refresh(
-            @RequestHeader(name = "Authorization") String authorization
+            @Valid @RequestBody RefreshAccessTokenRequest request
     ) {
-        String refreshToken = authorization.split(" ")[1];
-        return userService.refresh(refreshToken);
+        return userService.refresh(request);
     }
 }

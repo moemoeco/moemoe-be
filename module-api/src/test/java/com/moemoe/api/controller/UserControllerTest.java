@@ -1,23 +1,30 @@
 package com.moemoe.api.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.moemoe.api.AbstractControllerTest;
 import com.moemoe.api.config.handler.ErrorResponseBody;
+import com.moemoe.core.request.RefreshAccessTokenRequest;
 import com.moemoe.core.response.LoginTokenResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = UserController.class)
 class UserControllerTest extends AbstractControllerTest {
     @Test
-    @DisplayName("성공 케이스 : 헤더에 Authorization 이 포함된 경우")
+    @DisplayName("성공 케이스 : Refresh Token 을 이용하여 AccessToken 재발급")
     void refresh() {
         // given
         String expectedRefreshToken = "expectedRefreshToken";
@@ -26,7 +33,9 @@ class UserControllerTest extends AbstractControllerTest {
                 .refreshToken(expectedRefreshToken)
                 .accessToken(expectedAccessToken)
                 .build();
-        given(userService.refresh(expectedRefreshToken))
+        RefreshAccessTokenRequest refreshAccessTokenRequest = new RefreshAccessTokenRequest();
+        ReflectionTestUtils.setField(refreshAccessTokenRequest, "refreshToken", expectedAccessToken);
+        given(userService.refresh(argThat(req -> expectedAccessToken.equals(req.getRefreshToken()))))
                 .willReturn(response);
         given(jwtService.getEmail(expectedAccessToken))
                 .willReturn("user@moemoe.com");
@@ -36,8 +45,10 @@ class UserControllerTest extends AbstractControllerTest {
                 .willReturn(true);
 
         // when
-        MockHttpServletRequestBuilder builder = get("/users/refresh")
-                .header("Authorization", "Bearer " + expectedRefreshToken);
+        String requestToJson = convertRequestToJson(refreshAccessTokenRequest);
+        MockHttpServletRequestBuilder builder = post("/users/refresh")
+                .content(requestToJson)
+                .contentType(MediaType.APPLICATION_JSON_VALUE);
         MvcResult invoke = invoke(builder, status().isOk(), false);
         LoginTokenResponse actualResponse = convertResponseToClass(invoke, LoginTokenResponse.class);
 
@@ -47,15 +58,24 @@ class UserControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    @DisplayName("실패 케이스 : 헤더에 Authorization 이 포함되지 않은 경우")
-    void refreshWithoutToken() {
+    @DisplayName("실패 케이스 : Refresh Token이 빈 문자열 인 경우")
+    void refreshWithoutToken() throws JsonProcessingException {
         // when
-        MockHttpServletRequestBuilder builder = get("/users/refresh");
+        RefreshAccessTokenRequest refreshAccessTokenRequest = new RefreshAccessTokenRequest();
+        ReflectionTestUtils.setField(refreshAccessTokenRequest, "refreshToken", "refreshToken");
+        String requestToJson = convertRequestToJson(refreshAccessTokenRequest);
 
-        MvcResult invoke = invoke(builder, status().isUnauthorized(), false);
+        ObjectNode objectNode = (ObjectNode) objectMapper.readTree(requestToJson);
+        objectNode.put("refreshToken", "");
+        requestToJson = objectMapper.writeValueAsString(objectNode);
+        MockHttpServletRequestBuilder builder = post("/users/refresh")
+                .content(requestToJson)
+                .contentType(MediaType.APPLICATION_JSON_VALUE);
+
+        MvcResult invoke = invoke(builder, status().isBadRequest(), false);
         ErrorResponseBody actualErrorResponse = convertResponseToClass(invoke, ErrorResponseBody.class);
         assertThat(actualErrorResponse)
-                .extracting(ErrorResponseBody::getType, ErrorResponseBody::getMessage)
-                .containsExactly("EMPTY_AUTH_HEADER", "Authorization header is missing or empty.");
+                .extracting(ErrorResponseBody::getType)
+                .isEqualTo(MethodArgumentNotValidException.class.getSimpleName());
     }
 }

@@ -17,4 +17,8 @@ public class ErrorResponseBody {
     public static ErrorResponseBody of(Exception ex) {
         return new ErrorResponseBody(ex.getClass().getSimpleName(), ex.getMessage());
     }
+
+    public static ErrorResponseBody of(String type, String message) {
+        return new ErrorResponseBody(type, message);
+    }
 }

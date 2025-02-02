@@ -5,17 +5,18 @@ import com.moemoe.core.response.AuthorizationResponse;
 import com.moemoe.core.response.LoginTokenResponse;
 import com.moemoe.core.service.oauth.KakaoOAuthService;
 import com.moemoe.core.service.oauth.NaverOAuthService;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = OAuthController.class)
@@ -26,7 +27,8 @@ class OAuthControllerTest extends AbstractControllerTest {
     private NaverOAuthService naverOAuthService;
 
     @Test
-    void loginPageWithKakao() throws Exception {
+    @DisplayName("성공 케이스 : 카카오 로그인 페이지 URL 반환")
+    void loginPageWithKakao() {
         String expectedUrl = "http://example.com";
 
         // given
@@ -36,11 +38,9 @@ class OAuthControllerTest extends AbstractControllerTest {
                 .willReturn(expectedResponse);
 
         // when
-        ResultActions resultActions = mockMvc.perform(get("/oauth/kakao/login-page"))
-                .andExpect(status().isOk())
-                .andDo(print());
-
-        AuthorizationResponse actualResponse = convertResponseToClass(resultActions, AuthorizationResponse.class);
+        MockHttpServletRequestBuilder builder = get("/oauth/kakao/login-page");
+        MvcResult invoke = invoke(builder, status().isOk(), false);
+        AuthorizationResponse actualResponse = convertResponseToClass(invoke, AuthorizationResponse.class);
 
         // then
         assertThat(actualResponse)
@@ -53,7 +53,8 @@ class OAuthControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    void loginPageWithNaver() throws Exception {
+    @DisplayName("성공 케이스 : 네이버 로그인 페이지 URL 반환")
+    void loginPageWithNaver() {
         String expectedUrl = "http://example.com";
 
         // given
@@ -63,10 +64,9 @@ class OAuthControllerTest extends AbstractControllerTest {
                 .willReturn(expectedResponse);
 
         // when
-        ResultActions resultActions = mockMvc.perform(get("/oauth/naver/login-page"))
-                .andExpect(status().isOk())
-                .andDo(print());
-        AuthorizationResponse actualResponse = convertResponseToClass(resultActions, AuthorizationResponse.class);
+        MockHttpServletRequestBuilder builder = get("/oauth/naver/login-page");
+        MvcResult invoke = invoke(builder, status().isOk(), false);
+        AuthorizationResponse actualResponse = convertResponseToClass(invoke, AuthorizationResponse.class);
 
         // then
         assertThat(actualResponse)
@@ -81,7 +81,8 @@ class OAuthControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    void loginWithKakao() throws Exception {
+    @DisplayName("성공 케이스 : 카카오 로그인 호출")
+    void loginWithKakao() {
         // given
         String kakaoExpectedCode = "kakao";
         String kakaoExpectedState = "";
@@ -93,13 +94,11 @@ class OAuthControllerTest extends AbstractControllerTest {
                 .willReturn(expectedLoginTokenResponse);
 
         // when
-        ResultActions resultActions = mockMvc.perform(get("/oauth/kakao/login")
-                        .param("code", kakaoExpectedCode)
-                        .param("state", kakaoExpectedState))
-                .andExpect(status().isOk())
-                .andDo(print());
-
-        LoginTokenResponse actualResponse = convertResponseToClass(resultActions, LoginTokenResponse.class);
+        MockHttpServletRequestBuilder builder = get("/oauth/kakao/login")
+                .param("code", kakaoExpectedCode)
+                .param("state", kakaoExpectedState);
+        MvcResult invoke = invoke(builder, status().isOk(), false);
+        LoginTokenResponse actualResponse = convertResponseToClass(invoke, LoginTokenResponse.class);
 
         // then
         assertThat(actualResponse)
@@ -113,7 +112,8 @@ class OAuthControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    void loginWithNaver() throws Exception {
+    @DisplayName("성공 케이스 : 네이버 로그인 호출")
+    void loginWithNaver() {
         // given
         String naverExpectedCode = "naver";
         String naverExpectedState = "";
@@ -125,13 +125,11 @@ class OAuthControllerTest extends AbstractControllerTest {
                 .willReturn(expectedLoginTokenResponse);
 
         // when
-        ResultActions resultActions = mockMvc.perform(get("/oauth/naver/login")
-                        .param("code", naverExpectedCode)
-                        .param("state", naverExpectedState))
-                .andExpect(status().isOk())
-                .andDo(print());
-
-        LoginTokenResponse actualResponse = convertResponseToClass(resultActions, LoginTokenResponse.class);
+        MockHttpServletRequestBuilder builder = get("/oauth/naver/login")
+                .param("code", naverExpectedCode)
+                .param("state", naverExpectedState);
+        MvcResult invoke = invoke(builder, status().isOk(), false);
+        LoginTokenResponse actualResponse = convertResponseToClass(invoke, LoginTokenResponse.class);
 
         // then
         assertThat(actualResponse)

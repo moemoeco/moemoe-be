@@ -1,5 +1,6 @@
 package com.moemoe.core.service;
 
+import com.moemoe.core.request.LogoutRequest;
 import com.moemoe.core.request.RefreshAccessTokenRequest;
 import com.moemoe.core.response.LoginTokenResponse;
 import com.moemoe.core.service.jwt.JwtService;
@@ -28,6 +29,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -125,5 +127,49 @@ class UserServiceTest {
                 .findByToken(expectedRefreshToken);
         verify(userEntityRepository, times(1))
                 .findByEmail(expectedEmail);
+    }
+
+    @Test
+    @DisplayName("성공 케이스 : 로그아웃 성공")
+    void logout() {
+        // given
+        String expectedRefreshToken = "refreshToken";
+        String expectedEmail = "user@moemoe.com";
+        RefreshToken refreshTokenEntity = RefreshToken.of(expectedEmail, expectedRefreshToken);
+        given(refreshTokenEntityRepository.findByToken(expectedRefreshToken))
+                .willReturn(Optional.of(refreshTokenEntity));
+        willDoNothing().given(refreshTokenEntityRepository)
+                .delete(refreshTokenEntity);
+
+        // when
+        LogoutRequest logoutRequest = new LogoutRequest();
+        ReflectionTestUtils.setField(logoutRequest, "refreshToken", expectedRefreshToken);
+        userService.logout(logoutRequest);
+
+        // then
+        verify(refreshTokenEntityRepository, times(1))
+                .findByToken(expectedRefreshToken);
+        verify(refreshTokenEntityRepository, times(1))
+                .delete(refreshTokenEntity);
+    }
+
+    @Test
+    @DisplayName("성공 케이스 : 로그아웃 시 RefreshToken 데이터가 없는 경우")
+    void logoutWithoutRefreshTokenEntity() {
+        // given
+        String expectedRefreshToken = "refreshToken";
+        given(refreshTokenEntityRepository.findByToken(expectedRefreshToken))
+                .willReturn(Optional.empty());
+
+        // when
+        LogoutRequest logoutRequest = new LogoutRequest();
+        ReflectionTestUtils.setField(logoutRequest, "refreshToken", expectedRefreshToken);
+        userService.logout(logoutRequest);
+
+        // then
+        verify(refreshTokenEntityRepository, times(1))
+                .findByToken(expectedRefreshToken);
+        verify(refreshTokenEntityRepository, times(0))
+                .delete(any(RefreshToken.class));
     }
 }

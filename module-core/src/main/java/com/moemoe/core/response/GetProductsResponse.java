@@ -2,16 +2,18 @@ package com.moemoe.core.response;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Getter
+@NoArgsConstructor
 public class GetProductsResponse {
-    private final List<Product> contents;
-    private final String nextId;
-    private final boolean hasNext;
+    private List<Product> contents;
+    private String nextId;
+    private boolean hasNext;
 
     public GetProductsResponse(List<Product> contents, int pageSize) {
         if (contents.size() > pageSize) {
@@ -26,14 +28,15 @@ public class GetProductsResponse {
     }
 
     @Getter
+    @NoArgsConstructor
     public static class Product {
-        private final String id;
-        private final String title;
-        private final List<String> tagIdList;
-        private final String thumbnailUrl;
-        private final String detailedAddress;
-        private final long price;
-        private final String createAt;
+        private String id;
+        private String title;
+        private List<String> tagIdList;
+        private String thumbnailUrl;
+        private String detailedAddress;
+        private long price;
+        private String createAt;
 
         @Builder
         public Product(String id, String title, List<String> tagIdList, String thumbnailUrl, String detailedAddress, LocalDateTime createAt, long price) {

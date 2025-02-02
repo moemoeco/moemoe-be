@@ -1,13 +1,8 @@
 package com.moemoe.core.service.jwt;
 
-import com.moemoe.core.response.LoginTokenResponse;
 import com.moemoe.core.service.jwt.exception.JwtExpiredException;
 import com.moemoe.core.service.jwt.exception.JwtMalformedException;
 import com.moemoe.mongo.constant.UserRole;
-import com.moemoe.mongo.entity.User;
-import com.moemoe.mongo.repository.UserEntityRepository;
-import com.moemoe.redis.entity.RefreshToken;
-import com.moemoe.redis.repository.RefreshTokenEntityRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -17,7 +12,6 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
@@ -26,8 +20,6 @@ import java.util.Map;
 @Service
 public class JwtService {
     public static final String AUTHENTICATION_HEADER = "Authorization";
-    private final RefreshTokenEntityRepository refreshTokenEntityRepository;
-    private final UserEntityRepository userEntityRepository;
 
     @Value("${service.jwt.issuer}")
     private String issuer;
@@ -37,28 +29,8 @@ public class JwtService {
     private long refreshExpiration;
     private final SecretKey secretKey;
 
-    public JwtService(RefreshTokenEntityRepository refreshTokenEntityRepository,
-                      UserEntityRepository userEntityRepository,
-                      @Value("${service.jwt.secret-key}") String secretKey) {
-        this.refreshTokenEntityRepository = refreshTokenEntityRepository;
-        this.userEntityRepository = userEntityRepository;
+    public JwtService(@Value("${service.jwt.secret-key}") String secretKey) {
         this.secretKey = Keys.hmacShaKeyFor(Decoders.BASE64URL.decode(secretKey));
-    }
-
-    @Transactional(readOnly = true)
-    public LoginTokenResponse refresh(String refreshToken) {
-        RefreshToken refreshTokenEntity = refreshTokenEntityRepository.findByToken(refreshToken)
-                .orElseThrow();
-        User userEntity = userEntityRepository.findByEmail(refreshTokenEntity.getEmail())
-                .orElseThrow();
-
-        Map<String, String> userClaims = ClaimsFactory.getUserClaims(userEntity);
-        final String accessToken = createAccessToken(userClaims, userEntity);
-
-        return LoginTokenResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .build();
     }
 
     public String createAccessToken(Map<String, String> claims, UserDetails userDetails) {

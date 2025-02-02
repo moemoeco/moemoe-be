@@ -1,13 +1,9 @@
 package com.moemoe.core.service;
 
-import com.moemoe.core.response.LoginTokenResponse;
 import com.moemoe.core.service.jwt.JwtService;
 import com.moemoe.core.service.jwt.exception.JwtExpiredException;
 import com.moemoe.mongo.constant.UserRole;
 import com.moemoe.mongo.entity.User;
-import com.moemoe.mongo.repository.UserEntityRepository;
-import com.moemoe.redis.entity.RefreshToken;
-import com.moemoe.redis.repository.RefreshTokenEntityRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -15,7 +11,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -25,17 +20,10 @@ import org.springframework.util.ReflectionUtils;
 import javax.crypto.SecretKey;
 import java.lang.reflect.Field;
 import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Optional;
 
 import static com.nimbusds.jose.JWSAlgorithm.HS256;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 
 @ExtendWith(SpringExtension.class)
@@ -55,86 +43,6 @@ class JwtServiceTest {
     private long accessExpiration;
     @Value("${service.jwt.refresh-expiration}")
     private long refreshExpiration;
-    @MockBean
-    private UserEntityRepository userEntityRepository;
-    @MockBean
-    private RefreshTokenEntityRepository refreshTokenEntityRepository;
-
-    @Test
-    @DisplayName("성공 케이스 : Access Token 재발행")
-    void refresh() {
-        // given
-        String expectedRefreshToken = "refreshToken";
-        String expectedEmail = "user@moemoe.com";
-        RefreshToken refreshTokenEntity = RefreshToken.of(expectedEmail, expectedRefreshToken);
-        User userEntity = User.builder()
-                .email(expectedEmail)
-                .role(UserRole.USER)
-                .build();
-        given(refreshTokenEntityRepository.findByToken(expectedRefreshToken))
-                .willReturn(Optional.of(refreshTokenEntity));
-        given(userEntityRepository.findByEmail(expectedEmail))
-                .willReturn(Optional.of(userEntity));
-
-        // when
-        LoginTokenResponse loginTokenResponse = jwtService.refresh(expectedRefreshToken);
-
-        // then
-        assertThat(loginTokenResponse)
-                .extracting(LoginTokenResponse::refreshToken)
-                .isEqualTo(expectedRefreshToken);
-        assertDoesNotThrow(() -> Jwts.parser()
-                .verifyWith(Keys.hmacShaKeyFor(Decoders.BASE64URL.decode(secretKey)))
-                .build()
-                .parse(loginTokenResponse.accessToken())
-                .getPayload());
-        verify(refreshTokenEntityRepository, times(1))
-                .findByToken(expectedRefreshToken);
-        verify(userEntityRepository, times(1))
-                .findByEmail(expectedEmail);
-    }
-
-    @Test
-    @DisplayName("실패 케이스 : Refresh Token Entity 데이터가 없는 경우")
-    void refreshNoRefreshTokenEntity() {
-        // given
-        String expectedRefreshToken = "refreshToken";
-        given(refreshTokenEntityRepository.findByToken(expectedRefreshToken))
-                .willReturn(Optional.empty());
-
-        // when
-        assertThatThrownBy(() -> jwtService.refresh(expectedRefreshToken))
-                .isInstanceOf(NoSuchElementException.class);
-
-        // then
-        verify(refreshTokenEntityRepository, times(1))
-                .findByToken(expectedRefreshToken);
-        verify(userEntityRepository, times(0))
-                .findByEmail(any());
-    }
-
-    @Test
-    @DisplayName("실패 케이스 : User Entity 데이터가 없는 경우")
-    void refreshNoUserEntity() {
-        // given
-        String expectedRefreshToken = "refreshToken";
-        String expectedEmail = "user@moemoe.com";
-        RefreshToken refreshTokenEntity = RefreshToken.of(expectedEmail, expectedRefreshToken);
-        given(refreshTokenEntityRepository.findByToken(expectedRefreshToken))
-                .willReturn(Optional.of(refreshTokenEntity));
-        given(userEntityRepository.findByEmail(expectedEmail))
-                .willReturn(Optional.empty());
-
-        // when
-        assertThatThrownBy(() -> jwtService.refresh(expectedRefreshToken))
-                .isInstanceOf(NoSuchElementException.class);
-
-        // then
-        verify(refreshTokenEntityRepository, times(1))
-                .findByToken(expectedRefreshToken);
-        verify(userEntityRepository, times(1))
-                .findByEmail(expectedEmail);
-    }
 
     @Test
     @DisplayName("성공 케이스 : Access Token 생성")

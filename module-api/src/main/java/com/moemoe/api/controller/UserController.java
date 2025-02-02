@@ -2,7 +2,7 @@ package com.moemoe.api.controller;
 
 
 import com.moemoe.core.response.LoginTokenResponse;
-import com.moemoe.core.service.jwt.JwtService;
+import com.moemoe.core.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,13 +15,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/users")
 @RequiredArgsConstructor
 public class UserController {
-    private final JwtService jwtService;
+    private final UserService userService;
 
     @GetMapping("/refresh")
     public LoginTokenResponse refresh(
             @RequestHeader(name = "Authorization") String authorization
     ) {
         String refreshToken = authorization.split(" ")[1];
-        return jwtService.refresh(refreshToken);
+        return userService.refresh(refreshToken);
     }
 }

@@ -18,7 +18,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,10 +31,8 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ProductController.class)
@@ -47,7 +45,7 @@ class ProductControllerTest extends AbstractControllerTest {
     class ProductsFindAll {
         @Test
         @DisplayName("성공 케이스 : 상품 목록 조회")
-        void findAll() throws Exception {
+        void findAll() {
             // given
             String expectedOldNextId = "nextId";
             int pageSize = 5;
@@ -64,18 +62,23 @@ class ProductControllerTest extends AbstractControllerTest {
                         .createAt(now)
                         .build());
             }
-
-            GetProductsResponse getProductsResponse = new GetProductsResponse(contents, 5);
+            GetProductsResponse expectedResponse = new GetProductsResponse(contents, 5);
             given(productService.findAll(expectedOldNextId, pageSize))
-                    .willReturn(getProductsResponse);
+                    .willReturn(expectedResponse);
 
             // when then
-            mockMvc.perform(get("/products")
-                            .param("nextId", expectedOldNextId)
-                            .param("pageSize", String.valueOf(pageSize)))
-                    .andExpect(status().isOk())
-                    .andDo(print())
-                    .andReturn();
+            MockHttpServletRequestBuilder mockHttpServletRequestBuilder = get("/products")
+                    .param("nextId", expectedOldNextId)
+                    .param("pageSize", String.valueOf(pageSize));
+            MvcResult invoke = invoke(mockHttpServletRequestBuilder, status().isOk(), true);
+            GetProductsResponse actualResponse = convertResponseToClass(invoke, GetProductsResponse.class);
+            assertThat(actualResponse)
+                    .extracting(GetProductsResponse::getNextId, GetProductsResponse::isHasNext)
+                    .containsExactly(expectedResponse.getNextId(), expectedResponse.isHasNext());
+            assertThat(actualResponse.getContents())
+                    .hasSize(5)
+                    .usingRecursiveFieldByFieldElementComparator()
+                    .isEqualTo(expectedResponse.getContents());
         }
     }
 
@@ -131,9 +134,7 @@ class ProductControllerTest extends AbstractControllerTest {
             );
             MockHttpServletRequestBuilder builder = multipart("/products")
                     .file(requestPart)
-                    .file(file)
-                    .secure(false)
-                    .with(csrf()); 
+                    .file(file);
 
             IdResponse response = new IdResponse();
             String productId = "productId";
@@ -142,11 +143,9 @@ class ProductControllerTest extends AbstractControllerTest {
                     .willReturn(response);
 
             // when then
-            ResultActions resultActions = mockMvc.perform(builder)
-                    .andExpect(status().isOk())
-                    .andDo(print());
-            IdResponse response1 = convertResponseToClass(resultActions, IdResponse.class);
-            assertThat(response1)
+            MvcResult invoke = invoke(builder, status().isOk(), true);
+            IdResponse actualResponse = convertResponseToClass(invoke, IdResponse.class);
+            assertThat(actualResponse)
                     .isEqualTo(response);
         }
 
@@ -174,9 +173,7 @@ class ProductControllerTest extends AbstractControllerTest {
             );
             MockHttpServletRequestBuilder builder = multipart("/products")
                     .file(requestPart)
-                    .file(file)
-                    .secure(false)
-                    .with(csrf()); 
+                    .file(file);
 
             IdResponse response = new IdResponse();
             String productId = "productId";
@@ -185,10 +182,8 @@ class ProductControllerTest extends AbstractControllerTest {
                     .willReturn(response);
 
             // when then
-            ResultActions resultActions = mockMvc.perform(builder)
-                    .andExpect(status().isBadRequest())
-                    .andDo(print());
-            ErrorResponseBody errorResponseBody = convertResponseToClass(resultActions, ErrorResponseBody.class);
+            MvcResult invoke = invoke(builder, status().isBadRequest(), true);
+            ErrorResponseBody errorResponseBody = convertResponseToClass(invoke, ErrorResponseBody.class);
             assertThat(errorResponseBody)
                     .extracting(ErrorResponseBody::getType)
                     .isEqualTo(HandlerMethodValidationException.class.getSimpleName());
@@ -218,9 +213,7 @@ class ProductControllerTest extends AbstractControllerTest {
             );
             MockHttpServletRequestBuilder builder = multipart("/products")
                     .file(requestPart)
-                    .file(file)
-                    .secure(false)
-                    .with(csrf()); 
+                    .file(file);
 
             IdResponse response = new IdResponse();
             String productId = "productId";
@@ -229,10 +222,8 @@ class ProductControllerTest extends AbstractControllerTest {
                     .willReturn(response);
 
             // when then
-            ResultActions resultActions = mockMvc.perform(builder)
-                    .andExpect(status().isBadRequest())
-                    .andDo(print());
-            ErrorResponseBody errorResponseBody = convertResponseToClass(resultActions, ErrorResponseBody.class);
+            MvcResult invoke = invoke(builder, status().isBadRequest(), true);
+            ErrorResponseBody errorResponseBody = convertResponseToClass(invoke, ErrorResponseBody.class);
             assertThat(errorResponseBody)
                     .extracting(ErrorResponseBody::getType)
                     .isEqualTo(HandlerMethodValidationException.class.getSimpleName());
@@ -262,9 +253,7 @@ class ProductControllerTest extends AbstractControllerTest {
             );
             MockHttpServletRequestBuilder builder = multipart("/products")
                     .file(requestPart)
-                    .file(file)
-                    .secure(false)
-                    .with(csrf()); 
+                    .file(file);
 
             IdResponse response = new IdResponse();
             String productId = "productId";
@@ -274,10 +263,8 @@ class ProductControllerTest extends AbstractControllerTest {
 
 
             // when then
-            ResultActions resultActions = mockMvc.perform(builder)
-                    .andExpect(status().isBadRequest())
-                    .andDo(print());
-            ErrorResponseBody errorResponseBody = convertResponseToClass(resultActions, ErrorResponseBody.class);
+            MvcResult invoke = invoke(builder, status().isBadRequest(), true);
+            ErrorResponseBody errorResponseBody = convertResponseToClass(invoke, ErrorResponseBody.class);
             assertThat(errorResponseBody)
                     .extracting(ErrorResponseBody::getType)
                     .isEqualTo(HandlerMethodValidationException.class.getSimpleName());
@@ -308,9 +295,7 @@ class ProductControllerTest extends AbstractControllerTest {
             );
             MockHttpServletRequestBuilder builder = multipart("/products")
                     .file(requestPart)
-                    .file(file)
-                    .secure(false)
-                    .with(csrf()); 
+                    .file(file);
 
             IdResponse response = new IdResponse();
             String productId = "productId";
@@ -320,10 +305,8 @@ class ProductControllerTest extends AbstractControllerTest {
 
 
             // when then
-            ResultActions resultActions = mockMvc.perform(builder)
-                    .andExpect(status().isBadRequest())
-                    .andDo(print());
-            ErrorResponseBody errorResponseBody = convertResponseToClass(resultActions, ErrorResponseBody.class);
+            MvcResult invoke = invoke(builder, status().isBadRequest(), true);
+            ErrorResponseBody errorResponseBody = convertResponseToClass(invoke, ErrorResponseBody.class);
             assertThat(errorResponseBody)
                     .extracting(ErrorResponseBody::getType)
                     .isEqualTo(HandlerMethodValidationException.class.getSimpleName());
@@ -353,9 +336,7 @@ class ProductControllerTest extends AbstractControllerTest {
             );
             MockHttpServletRequestBuilder builder = multipart("/products")
                     .file(requestPart)
-                    .file(file)
-                    .secure(false)
-                    .with(csrf()); 
+                    .file(file);
 
             IdResponse response = new IdResponse();
             String productId = "productId";
@@ -365,10 +346,8 @@ class ProductControllerTest extends AbstractControllerTest {
 
 
             // when then
-            ResultActions resultActions = mockMvc.perform(builder)
-                    .andExpect(status().isBadRequest())
-                    .andDo(print());
-            ErrorResponseBody errorResponseBody = convertResponseToClass(resultActions, ErrorResponseBody.class);
+            MvcResult invoke = invoke(builder, status().isBadRequest(), true);
+            ErrorResponseBody errorResponseBody = convertResponseToClass(invoke, ErrorResponseBody.class);
             assertThat(errorResponseBody)
                     .extracting(ErrorResponseBody::getType)
                     .isEqualTo(HandlerMethodValidationException.class.getSimpleName());
@@ -404,9 +383,7 @@ class ProductControllerTest extends AbstractControllerTest {
             );
             MockHttpServletRequestBuilder builder = multipart("/products")
                     .file(requestPart)
-                    .file(file)
-                    .secure(false)
-                    .with(csrf()); 
+                    .file(file);
 
             IdResponse response = new IdResponse();
             String productId = "productId";
@@ -415,10 +392,8 @@ class ProductControllerTest extends AbstractControllerTest {
                     .willReturn(response);
 
             // when then
-            ResultActions resultActions = mockMvc.perform(builder)
-                    .andExpect(status().isBadRequest())
-                    .andDo(print());
-            ErrorResponseBody errorResponseBody = convertResponseToClass(resultActions, ErrorResponseBody.class);
+            MvcResult invoke = invoke(builder, status().isBadRequest(), true);
+            ErrorResponseBody errorResponseBody = convertResponseToClass(invoke, ErrorResponseBody.class);
             assertThat(errorResponseBody)
                     .extracting(ErrorResponseBody::getType)
                     .isEqualTo(HandlerMethodValidationException.class.getSimpleName());
@@ -457,9 +432,7 @@ class ProductControllerTest extends AbstractControllerTest {
                     .file((MockMultipartFile) files.get(7))
                     .file((MockMultipartFile) files.get(8))
                     .file((MockMultipartFile) files.get(9))
-                    .file((MockMultipartFile) files.get(10))
-                    .secure(false)
-                    .with(csrf()); 
+                    .file((MockMultipartFile) files.get(10));
 
             IdResponse response = new IdResponse();
             String productId = "productId";
@@ -469,10 +442,8 @@ class ProductControllerTest extends AbstractControllerTest {
 
 
             // when then
-            ResultActions resultActions = mockMvc.perform(builder)
-                    .andExpect(status().isBadRequest())
-                    .andDo(print());
-            ErrorResponseBody errorResponseBody = convertResponseToClass(resultActions, ErrorResponseBody.class);
+            MvcResult invoke = invoke(builder, status().isBadRequest(), true);
+            ErrorResponseBody errorResponseBody = convertResponseToClass(invoke, ErrorResponseBody.class);
             assertThat(errorResponseBody)
                     .extracting(ErrorResponseBody::getType)
                     .isEqualTo(HandlerMethodValidationException.class.getSimpleName());
@@ -498,9 +469,7 @@ class ProductControllerTest extends AbstractControllerTest {
             );
             MockHttpServletRequestBuilder builder = multipart("/products")
                     .file(requestPart)
-                    .file(file)
-                    .secure(false)
-                    .with(csrf()); 
+                    .file(file);
 
             IdResponse response = new IdResponse();
             String productId = "productId";
@@ -509,10 +478,8 @@ class ProductControllerTest extends AbstractControllerTest {
                     .willThrow(IllegalArgumentException.class);
 
             // when
-            ResultActions resultActions = mockMvc.perform(builder)
-                    .andExpect(status().isInternalServerError())
-                    .andDo(print());
-            ErrorResponseBody errorResponseBody = convertResponseToClass(resultActions, ErrorResponseBody.class);
+            MvcResult invoke = invoke(builder, status().isInternalServerError(), true);
+            ErrorResponseBody errorResponseBody = convertResponseToClass(invoke, ErrorResponseBody.class);
             assertThat(errorResponseBody)
                     .extracting(ErrorResponseBody::getType)
                     .isEqualTo(IllegalArgumentException.class.getSimpleName());
@@ -537,9 +504,7 @@ class ProductControllerTest extends AbstractControllerTest {
             );
             MockHttpServletRequestBuilder builder = multipart("/products")
                     .file(requestPart)
-                    .file(file)
-                    .secure(false)
-                    .with(csrf()); 
+                    .file(file);
 
             IdResponse response = new IdResponse();
             String productId = "productId";
@@ -549,10 +514,8 @@ class ProductControllerTest extends AbstractControllerTest {
 
 
             // when then
-            ResultActions resultActions = mockMvc.perform(builder)
-                    .andExpect(status().isInternalServerError())
-                    .andDo(print());
-            ErrorResponseBody errorResponseBody = convertResponseToClass(resultActions, ErrorResponseBody.class);
+            MvcResult invoke = invoke(builder, status().isInternalServerError(), true);
+            ErrorResponseBody errorResponseBody = convertResponseToClass(invoke, ErrorResponseBody.class);
             assertThat(errorResponseBody)
                     .extracting(ErrorResponseBody::getType)
                     .isEqualTo(ClientRuntimeException.class.getSimpleName());

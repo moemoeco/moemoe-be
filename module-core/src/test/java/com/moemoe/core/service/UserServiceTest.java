@@ -1,5 +1,6 @@
 package com.moemoe.core.service;
 
+import com.moemoe.core.request.RefreshAccessTokenRequest;
 import com.moemoe.core.response.LoginTokenResponse;
 import com.moemoe.core.service.jwt.JwtService;
 import com.moemoe.mongo.constant.UserRole;
@@ -17,6 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -59,7 +61,9 @@ class UserServiceTest {
                 .willReturn(Optional.of(userEntity));
 
         // when
-        LoginTokenResponse loginTokenResponse = userService.refresh(expectedRefreshToken);
+        RefreshAccessTokenRequest refreshAccessTokenRequest = new RefreshAccessTokenRequest();
+        ReflectionTestUtils.setField(refreshAccessTokenRequest, "refreshToken", expectedRefreshToken);
+        LoginTokenResponse loginTokenResponse = userService.refresh(refreshAccessTokenRequest);
 
         // then
         assertThat(loginTokenResponse)
@@ -86,7 +90,9 @@ class UserServiceTest {
                 .willReturn(Optional.empty());
 
         // when
-        assertThatThrownBy(() -> userService.refresh(expectedRefreshToken))
+        RefreshAccessTokenRequest refreshAccessTokenRequest = new RefreshAccessTokenRequest();
+        ReflectionTestUtils.setField(refreshAccessTokenRequest, "refreshToken", expectedRefreshToken);
+        assertThatThrownBy(() -> userService.refresh(refreshAccessTokenRequest))
                 .isInstanceOf(NoSuchElementException.class);
 
         // then
@@ -109,7 +115,9 @@ class UserServiceTest {
                 .willReturn(Optional.empty());
 
         // when
-        assertThatThrownBy(() -> userService.refresh(expectedRefreshToken))
+        RefreshAccessTokenRequest refreshAccessTokenRequest = new RefreshAccessTokenRequest();
+        ReflectionTestUtils.setField(refreshAccessTokenRequest, "refreshToken", expectedRefreshToken);
+        assertThatThrownBy(() -> userService.refresh(refreshAccessTokenRequest))
                 .isInstanceOf(NoSuchElementException.class);
 
         // then

@@ -4,10 +4,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.moemoe.api.AbstractControllerTest;
 import com.moemoe.api.config.handler.ErrorResponseBody;
+import com.moemoe.core.request.LogoutRequest;
 import com.moemoe.core.request.RefreshAccessTokenRequest;
 import com.moemoe.core.response.LoginTokenResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -18,6 +20,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -58,7 +62,7 @@ class UserControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    @DisplayName("실패 케이스 : Refresh Token이 빈 문자열 인 경우")
+    @DisplayName("실패 케이스 : Access Token 갱신 시 Refresh Token이 빈 문자열 인 경우")
     void refreshWithoutToken() throws JsonProcessingException {
         // when
         RefreshAccessTokenRequest refreshAccessTokenRequest = new RefreshAccessTokenRequest();
@@ -77,5 +81,62 @@ class UserControllerTest extends AbstractControllerTest {
         assertThat(actualErrorResponse)
                 .extracting(ErrorResponseBody::getType)
                 .isEqualTo(MethodArgumentNotValidException.class.getSimpleName());
+    }
+
+    @Test
+    @DisplayName("성공 케이스 : Refresh Token 을 이용한 로그아웃")
+    void logout() {
+        // given
+        String expectedRefreshToken = "expectedRefreshToken";
+        LogoutRequest logoutRequest = new LogoutRequest();
+        ReflectionTestUtils.setField(logoutRequest, "refreshToken", expectedRefreshToken);
+
+        String requestToJson = convertRequestToJson(logoutRequest);
+
+        // when
+        MockHttpServletRequestBuilder builder = post("/users/logout")
+                .content(requestToJson)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        invoke(builder, status().isOk(), false);
+
+        // then
+        ArgumentCaptor<LogoutRequest> captor = ArgumentCaptor.forClass(LogoutRequest.class);
+        verify(userService, times(1))
+                .logout(captor.capture());
+        LogoutRequest capturedRequest = captor.getValue();
+        assertThat(capturedRequest.getRefreshToken())
+                .isEqualTo(expectedRefreshToken);
+    }
+
+    @Test
+    @DisplayName("실패 케이스 : 로그아웃 시 Refresh Token이 빈 문자열 인 경우")
+    void logoutWithoutRefreshToken() throws JsonProcessingException {
+        // given
+        String expectedRefreshToken = "expectedRefreshToken";
+        LogoutRequest logoutRequest = new LogoutRequest();
+        ReflectionTestUtils.setField(logoutRequest, "refreshToken", expectedRefreshToken);
+
+        String requestToJson = convertRequestToJson(logoutRequest);
+
+        ObjectNode objectNode = (ObjectNode) objectMapper.readTree(requestToJson);
+        objectNode.put("refreshToken", "");
+        requestToJson = objectMapper.writeValueAsString(objectNode);
+
+        // when
+        MockHttpServletRequestBuilder builder = post("/users/logout")
+                .content(requestToJson)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        MvcResult invoke = invoke(builder, status().isBadRequest(), false);
+        ErrorResponseBody actualErrorResponse = convertResponseToClass(invoke, ErrorResponseBody.class);
+        assertThat(actualErrorResponse)
+                .extracting(ErrorResponseBody::getType)
+                .isEqualTo(MethodArgumentNotValidException.class.getSimpleName());
+
+        // then
+        ArgumentCaptor<LogoutRequest> captor = ArgumentCaptor.forClass(LogoutRequest.class);
+        verify(userService, times(0))
+                .logout(captor.capture());
     }
 }

@@ -1,26 +1,24 @@
 package com.moemoe.api.controller;
 
 import com.moemoe.api.AbstractControllerTest;
+import com.moemoe.api.config.handler.ErrorResponseBody;
 import com.moemoe.core.response.LoginTokenResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = UserController.class)
 class UserControllerTest extends AbstractControllerTest {
-
     @Test
     @DisplayName("성공 케이스 : 헤더에 Authorization 이 포함된 경우")
-    void refresh() throws Exception {
+    void refresh() {
         // given
         String expectedRefreshToken = "expectedRefreshToken";
         String expectedAccessToken = "expectedAccessToken";
@@ -28,7 +26,7 @@ class UserControllerTest extends AbstractControllerTest {
                 .refreshToken(expectedRefreshToken)
                 .accessToken(expectedAccessToken)
                 .build();
-        given(jwtService.refresh(expectedRefreshToken))
+        given(userService.refresh(expectedRefreshToken))
                 .willReturn(response);
         given(jwtService.getEmail(expectedAccessToken))
                 .willReturn("user@moemoe.com");
@@ -38,25 +36,26 @@ class UserControllerTest extends AbstractControllerTest {
                 .willReturn(true);
 
         // when
-        ResultActions resultActions = mockMvc.perform(get("/users/refresh")
-                        .header("Authorization", "Bearer " + expectedRefreshToken))
-                .andExpect(status().isOk())
-                .andDo(print());
-        LoginTokenResponse actualResponse = convertResponseToClass(resultActions, LoginTokenResponse.class);
+        MockHttpServletRequestBuilder builder = get("/users/refresh")
+                .header("Authorization", "Bearer " + expectedRefreshToken);
+        MvcResult invoke = invoke(builder, status().isOk(), false);
+        LoginTokenResponse actualResponse = convertResponseToClass(invoke, LoginTokenResponse.class);
 
         // then
         assertThat(actualResponse)
                 .isEqualTo(response);
-        verify(jwtService, times(1))
-                .refresh(expectedRefreshToken);
     }
 
     @Test
     @DisplayName("실패 케이스 : 헤더에 Authorization 이 포함되지 않은 경우")
-    void refreshWithoutToken() throws Exception {
+    void refreshWithoutToken() {
         // when
-        mockMvc.perform(get("/users/refresh"))
-                .andExpect(status().isUnauthorized())
-                .andDo(print());
+        MockHttpServletRequestBuilder builder = get("/users/refresh");
+
+        MvcResult invoke = invoke(builder, status().isUnauthorized(), false);
+        ErrorResponseBody actualErrorResponse = convertResponseToClass(invoke, ErrorResponseBody.class);
+        assertThat(actualErrorResponse)
+                .extracting(ErrorResponseBody::getType, ErrorResponseBody::getMessage)
+                .containsExactly("EMPTY_AUTH_HEADER", "Authorization header is missing or empty.");
     }
 }

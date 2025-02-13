@@ -35,7 +35,7 @@ class TagEntityRepositoryTest extends AbstractMongoDbTest {
                 .isEqualTo(0L);
 
         // when
-        tagEntityRepository.incrementProductsCount(name, 5L);
+        tagEntityRepository.incrementProductsCount(name);
 
         // then
         Optional<Tag> byId = tagEntityRepository.findById(name);
@@ -45,7 +45,36 @@ class TagEntityRepositoryTest extends AbstractMongoDbTest {
             assertThat(byId)
                     .get()
                     .extracting(Tag::getProductsCount)
-                    .isEqualTo(5L);
+                    .isEqualTo(1L);
+        }
+    }
+
+
+    @Test
+    @DisplayName("성공 케이스 : Products Count 감소")
+    void decrementProductsCount() {
+        // given
+        Tag tag = Tag.of("test", 5L);
+        Tag savedTag = tagEntityRepository.save(tag);
+        String name = savedTag.getName();
+        assertThat(tagEntityRepository.findAll())
+                .hasSize(1)
+                .first()
+                .extracting(Tag::getProductsCount)
+                .isEqualTo(5L);
+
+        // when
+        tagEntityRepository.decrementProductsCount(name);
+
+        // then
+        Optional<Tag> byId = tagEntityRepository.findById(name);
+        if (byId.isEmpty()) {
+            fail("테스트 실패");
+        } else {
+            assertThat(byId)
+                    .get()
+                    .extracting(Tag::getProductsCount)
+                    .isEqualTo(4L);
         }
     }
 }

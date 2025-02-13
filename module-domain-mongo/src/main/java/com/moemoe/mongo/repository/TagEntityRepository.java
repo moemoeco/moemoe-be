@@ -8,6 +8,10 @@ import org.springframework.data.mongodb.repository.Update;
 
 public interface TagEntityRepository extends MongoRepository<Tag, String> {
     @Query("{ 'name': ?0 }")
-    @Update("{ '$inc': { 'productsCount': ?1 } }")
-    void incrementProductsCount(String name, long increment);
+    @Update("{ '$inc': { 'productsCount': 1 } }")
+    void incrementProductsCount(String name);
+
+    @Query("{ 'name': ?0 }")
+    @Update("{ '$inc': { 'productsCount': -1 } }")
+    void decrementProductsCount(String name);
 }

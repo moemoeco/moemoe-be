@@ -93,7 +93,7 @@ class ProductControllerTest extends AbstractControllerTest {
             String expectedTitle = "title";
             String expectedDescription = "description";
             long expectedPrice = 1000L;
-            List<String> expectedTagIdList = List.of("tag1");
+            List<String> expectedTagNameList = List.of("tag1");
             ProductCondition expectedCondition = ProductCondition.NEW;
             RegisterProductRequest.Location expectedLocation = new RegisterProductRequest.Location();
             ReflectionTestUtils.setField(expectedLocation, "latitude", expectedLatitude);
@@ -104,7 +104,7 @@ class ProductControllerTest extends AbstractControllerTest {
             ReflectionTestUtils.setField(request, "title", expectedTitle);
             ReflectionTestUtils.setField(request, "description", expectedDescription);
             ReflectionTestUtils.setField(request, "price", expectedPrice);
-            ReflectionTestUtils.setField(request, "tagIdList", expectedTagIdList);
+            ReflectionTestUtils.setField(request, "tagNameList", expectedTagNameList);
             ReflectionTestUtils.setField(request, "condition", expectedCondition);
             ReflectionTestUtils.setField(request, "location", expectedLocation);
 
@@ -321,7 +321,7 @@ class ProductControllerTest extends AbstractControllerTest {
 
             // empty tag id list
             ObjectNode objectNode = (ObjectNode) objectMapper.readTree(requestJson);
-            objectNode.remove("tagIdList");
+            objectNode.remove("tagNameList");
             requestJson = objectMapper.writeValueAsString(objectNode);
 
             MockMultipartFile requestPart = new MockMultipartFile("request",
@@ -362,7 +362,7 @@ class ProductControllerTest extends AbstractControllerTest {
 
             // tag id list 6개
             ObjectNode objectNode = (ObjectNode) objectMapper.readTree(requestJson);
-            objectNode.putArray("tagIdList")
+            objectNode.putArray("tagNameList")
                     .add("tag1")
                     .add("tag2")
                     .add("tag3")

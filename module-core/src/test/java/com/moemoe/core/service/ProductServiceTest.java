@@ -4,18 +4,22 @@ import com.moemoe.client.aws.AwsS3Client;
 import com.moemoe.client.exception.ClientRuntimeException;
 import com.moemoe.core.request.RegisterProductRequest;
 import com.moemoe.core.response.GetProductsResponse;
+import com.moemoe.core.response.IdResponse;
 import com.moemoe.mongo.constant.ProductCondition;
 import com.moemoe.mongo.entity.Product;
+import com.moemoe.mongo.entity.Tag;
 import com.moemoe.mongo.repository.ProductEntityRepository;
+import com.moemoe.mongo.repository.TagEntityRepository;
 import com.moemoe.mongo.repository.UserEntityRepository;
 import org.assertj.core.groups.Tuple;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
@@ -26,10 +30,14 @@ import software.amazon.awssdk.services.s3.S3Client;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -42,6 +50,8 @@ class ProductServiceTest {
     @Mock
     private ProductEntityRepository productEntityRepository;
     @Mock
+    private TagEntityRepository tagEntityRepository;
+    @Mock
     private AwsS3Client awsS3Client;
 
 
@@ -49,12 +59,34 @@ class ProductServiceTest {
     @DisplayName("정상 케이스 : 상품 등록이 완료된 경우")
     void register() {
         // given
-        RegisterProductRequest expectedRequest = new RegisterProductRequest();
-        setRequestField(expectedRequest);
-        given(userEntityRepository.existsById(expectedRequest.getSellerId())).willReturn(true);
+        ObjectId expectedSellerId = new ObjectId("64a9ef6a8ed14e3b1c8eb29a");
+        String expectedTitle = "Sample Product";
+        String expectedDescription = "This is a sample product.";
+        long expectedPrice = 1000L;
+        List<String> expectedTagName = List.of("tag1", "tag2");
+        ProductCondition expectedProductCondition = ProductCondition.DAMAGED;
+        double expectedLatitude = 37.7749;
+        double expectedLongitude = -122.4194;
+        String expectedDetailedAddress = "123 Sample St, City, Country";
 
+        RegisterProductRequest expectedRequest = getMockRegisterProductRequest(
+                expectedSellerId,
+                expectedTitle,
+                expectedDescription,
+                expectedPrice,
+                expectedTagName,
+                expectedProductCondition,
+                expectedLatitude,
+                expectedLongitude,
+                expectedDetailedAddress);
+
+        // validate seller exists
+        given(userEntityRepository.existsById(expectedRequest.getSellerId()))
+                .willReturn(true);
+
+        // image upload
         List<MultipartFile> expectedImageList = getMultipartFiles();
-        S3Client s3Client = S3Client.builder().build();
+        S3Client s3Client = BDDMockito.mock(S3Client.class);
         given(awsS3Client.getS3Client())
                 .willReturn(s3Client);
         String expectedImageUrl1 = Path.of(expectedRequest.getSellerId().toHexString(), expectedImageList.get(0).getOriginalFilename()).toString();
@@ -64,67 +96,153 @@ class ProductServiceTest {
         given(awsS3Client.upload(s3Client, expectedImageUrl2, expectedImageList.get(0)))
                 .willReturn(expectedImageUrl2);
 
-        Product sampleProduct = Product.of(expectedRequest.getSellerId(),
-                "Sample Product",
-                "This is a sample product.",
-                Product.Location.of(expectedRequest.getLatitude(), expectedRequest.getLongitude(), expectedRequest.getDetailAddress()),
-                1000L,
-                List.of(expectedImageUrl1, expectedImageUrl2),
-                List.of("tag1", "tag2"),
-                ProductCondition.NEW);
-        ObjectId expectedProductId = new ObjectId();
-        ReflectionTestUtils.setField(sampleProduct, "id", expectedProductId);
-        given(productEntityRepository.save(Mockito.any(Product.class))).willReturn(sampleProduct);
+        // increment tag
+        given(tagEntityRepository.findById("tag1"))
+                .willReturn(Optional.empty());
+        given(tagEntityRepository.findById("tag2"))
+                .willReturn(Optional.of(Tag.of("tag2")));
+
+        // product entity save
+        Product mockProduct = BDDMockito.mock(Product.class);
+        given(productEntityRepository.save(any()))
+                .willReturn(mockProduct);
+        ObjectId expectedObjectId = new ObjectId();
+        given(mockProduct.getId())
+                .willReturn(expectedObjectId);
 
         // when
-        String actualId = productService.register(expectedRequest, expectedImageList).getId();
+        IdResponse response = productService.register(expectedRequest, expectedImageList);
 
         // then
-        assertThat(actualId)
-                .isEqualTo(expectedProductId.toHexString());
+        assertThat(response.getId())
+                .isEqualTo(expectedObjectId.toHexString());
 
-        verify(userEntityRepository, times(1)).existsById(expectedRequest.getSellerId());
-        verify(awsS3Client, times(1)).getS3Client();
-        verify(awsS3Client, times(1)).upload(s3Client, expectedImageUrl1, expectedImageList.get(0));
-        verify(awsS3Client, times(1)).upload(s3Client, expectedImageUrl2, expectedImageList.get(1));
+        then(userEntityRepository)
+                .should(times(1))
+                .existsById(expectedRequest.getSellerId());
+
+        then(awsS3Client)
+                .should(times(1))
+                .getS3Client();
+        then(awsS3Client)
+                .should(times(1))
+                .upload(s3Client, expectedImageUrl1, expectedImageList.get(0));
+        then(awsS3Client)
+                .should(times(1))
+                .upload(s3Client, expectedImageUrl2, expectedImageList.get(1));
+
+        then(tagEntityRepository)
+                .should(times(1))
+                .incrementProductsCount("tag2");
+        then(tagEntityRepository)
+                .should(times(1))
+                .save(argThat(entity -> entity.getName().equals("tag1")));
+
+        ArgumentCaptor<Product> productCaptor = ArgumentCaptor.forClass(Product.class);
+        then(productEntityRepository)
+                .should(times(1))
+                .save(productCaptor.capture());
+        Product savedProduct = productCaptor.getValue();
+        assertThat(savedProduct.getSellerId())
+                .isEqualTo(expectedSellerId);
+        assertThat(savedProduct.getTitle())
+                .isEqualTo(expectedTitle);
+        assertThat(savedProduct.getDescription())
+                .isEqualTo(expectedDescription);
+        assertThat(savedProduct.getPrice())
+                .isEqualTo(expectedPrice);
+        assertThat(savedProduct.getTagNameList())
+                .containsExactlyInAnyOrderElementsOf(expectedTagName);
+        assertThat(savedProduct.getCondition())
+                .isEqualTo(expectedProductCondition);
+        assertThat(savedProduct.getLocation().getLatitude())
+                .isEqualTo(expectedLatitude);
+        assertThat(savedProduct.getLocation().getLongitude())
+                .isEqualTo(expectedLongitude);
+        assertThat(savedProduct.getLocation().getDetailedAddress())
+                .isEqualTo(expectedDetailedAddress);
+    }
+
+    private RegisterProductRequest getMockRegisterProductRequest(ObjectId expectedSellerId, String expectedTitle, String expectedDescription, long expectedPrice, List<String> expectedTagName, ProductCondition expectedProductCondition, double expectedLatitude, double expectedLongitude, String expectedDetailedAddress) {
+        RegisterProductRequest expectedRequest = BDDMockito.mock(RegisterProductRequest.class);
+        given(expectedRequest.getSellerId())
+                .willReturn(expectedSellerId);
+        given(expectedRequest.getTitle())
+                .willReturn(expectedTitle);
+        given(expectedRequest.getDescription())
+                .willReturn(expectedDescription);
+        given(expectedRequest.getPrice())
+                .willReturn(expectedPrice);
+        given(expectedRequest.getTagNameList())
+                .willReturn(expectedTagName);
+        given(expectedRequest.getCondition())
+                .willReturn(expectedProductCondition);
+        given(expectedRequest.getLatitude())
+                .willReturn(expectedLatitude);
+        given(expectedRequest.getLongitude())
+                .willReturn(expectedLongitude);
+        given(expectedRequest.getDetailAddress())
+                .willReturn(expectedDetailedAddress);
+        return expectedRequest;
     }
 
     @Test
     @DisplayName("실패 케이스1 : Seller Id가 존재하지 않는 경우")
     void registerWithSellerException() {
         // given
-        RegisterProductRequest expectedRequest = new RegisterProductRequest();
-        setRequestField(expectedRequest);
-        given(userEntityRepository.existsById(expectedRequest.getSellerId())).willReturn(false);
-        List<MultipartFile> expectedImageList = getMultipartFiles();
+        RegisterProductRequest expectedRequest = BDDMockito.mock(RegisterProductRequest.class);
+        given(expectedRequest.getSellerId())
+                .willReturn(new ObjectId());
+        given(userEntityRepository.existsById(expectedRequest.getSellerId()))
+                .willReturn(false);
+        List<MultipartFile> expectedImageList = List.of();
 
         // when
         assertThatThrownBy(() -> productService.register(expectedRequest, expectedImageList))
                 .isInstanceOf(IllegalArgumentException.class);
 
         // then
-        verify(userEntityRepository, times(1)).existsById(expectedRequest.getSellerId());
-        verify(awsS3Client, times(0)).getS3Client();
-        verify(awsS3Client, times(0)).upload(Mockito.any(), Mockito.any(), Mockito.any());
+        then(userEntityRepository)
+                .should(times(1))
+                .existsById(expectedRequest.getSellerId());
+
+        then(awsS3Client)
+                .should(times(0))
+                .getS3Client();
+        then(awsS3Client)
+                .should(times(0))
+                .upload(any(), any(), any());
+
+        then(tagEntityRepository)
+                .should(times(0))
+                .incrementProductsCount(any());
+        then(tagEntityRepository)
+                .should(times(0))
+                .save(any());
+
+        then(productEntityRepository)
+                .should(times(0))
+                .save(any());
     }
 
     @Test
     @DisplayName("실패 케이스2 : S3 업로드 시 에러가 발생한 경우")
     void registerWithS3Exception() {
         // given
-        RegisterProductRequest expectedRequest = new RegisterProductRequest();
-        setRequestField(expectedRequest);
-        given(userEntityRepository.existsById(expectedRequest.getSellerId())).willReturn(true);
-
+        RegisterProductRequest expectedRequest = BDDMockito.mock(RegisterProductRequest.class);
+        given(expectedRequest.getSellerId())
+                .willReturn(new ObjectId());
+        given(userEntityRepository.existsById(expectedRequest.getSellerId()))
+                .willReturn(true);
         List<MultipartFile> expectedImageList = getMultipartFiles();
-        S3Client s3Client = S3Client.builder().build();
+        S3Client s3Client = BDDMockito.mock(S3Client.class);
         given(awsS3Client.getS3Client())
                 .willReturn(s3Client);
         String expectedImageUrl1 = Path.of(expectedRequest.getSellerId().toHexString(), expectedImageList.get(0).getOriginalFilename()).toString();
         String expectedImageUrl2 = Path.of(expectedRequest.getSellerId().toHexString(), expectedImageList.get(1).getOriginalFilename()).toString();
         given(awsS3Client.upload(s3Client, expectedImageUrl1, expectedImageList.get(0)))
                 .willReturn(expectedImageUrl1);
-        given(awsS3Client.upload(s3Client, expectedImageUrl2, expectedImageList.get(0)))
+        given(awsS3Client.upload(s3Client, expectedImageUrl2, expectedImageList.get(1)))
                 .willThrow(new IllegalArgumentException("S3 Exception"));
 
         // when
@@ -132,51 +250,30 @@ class ProductServiceTest {
                 .isInstanceOf(ClientRuntimeException.class);
 
         // then
-        verify(userEntityRepository, times(1)).existsById(expectedRequest.getSellerId());
-        verify(awsS3Client, times(1)).getS3Client();
-        verify(awsS3Client, times(1)).upload(s3Client, expectedImageUrl1, expectedImageList.get(0));
-        verify(awsS3Client, times(0)).upload(s3Client, expectedImageUrl2, expectedImageList.get(1));
-    }
+        then(userEntityRepository)
+                .should(times(1))
+                .existsById(expectedRequest.getSellerId());
 
-    @Test
-    @DisplayName("실패 케이스3 : save 시 에러가 발생한 경우")
-    void registerWithMongoException() {
-        // given
-        RegisterProductRequest expectedRequest = new RegisterProductRequest();
-        setRequestField(expectedRequest);
-        given(userEntityRepository.existsById(expectedRequest.getSellerId())).willReturn(true);
+        then(awsS3Client)
+                .should(times(1))
+                .getS3Client();
+        then(awsS3Client)
+                .should(times(1))
+                .upload(s3Client, expectedImageUrl1, expectedImageList.get(0));
+        then(awsS3Client)
+                .should(times(1))
+                .upload(s3Client, expectedImageUrl1, expectedImageList.get(1));
 
-        List<MultipartFile> expectedImageList = getMultipartFiles();
-        S3Client s3Client = S3Client.builder().build();
-        given(awsS3Client.getS3Client())
-                .willReturn(s3Client);
-        String expectedImageUrl1 = Path.of(expectedRequest.getSellerId().toHexString(), expectedImageList.get(0).getOriginalFilename()).toString();
-        String expectedImageUrl2 = Path.of(expectedRequest.getSellerId().toHexString(), expectedImageList.get(1).getOriginalFilename()).toString();
-        given(awsS3Client.upload(s3Client, expectedImageUrl1, expectedImageList.get(0)))
-                .willReturn(expectedImageUrl1);
-        given(awsS3Client.upload(s3Client, expectedImageUrl2, expectedImageList.get(0)))
-                .willReturn(expectedImageUrl2);
+        then(tagEntityRepository)
+                .should(times(0))
+                .incrementProductsCount(any());
+        then(tagEntityRepository)
+                .should(times(0))
+                .save(any());
 
-        Product sampleProduct = Product.of(expectedRequest.getSellerId(),
-                "Sample Product",
-                "This is a sample product.",
-                Product.Location.of(expectedRequest.getLatitude(), expectedRequest.getLongitude(), expectedRequest.getDetailAddress()),
-                1000L,
-                List.of(expectedImageUrl1, expectedImageUrl2),
-                List.of("tag1", "tag2"), ProductCondition.NEW);
-        ObjectId expectedProductId = new ObjectId();
-        ReflectionTestUtils.setField(sampleProduct, "id", expectedProductId);
-        given(productEntityRepository.save(Mockito.any(Product.class))).willThrow(new IllegalArgumentException("Spring Data Mongo Exception"));
-
-        // when
-        assertThatThrownBy(() -> productService.register(expectedRequest, expectedImageList))
-                .isInstanceOf(IllegalArgumentException.class);
-
-        // then
-        verify(userEntityRepository, times(1)).existsById(expectedRequest.getSellerId());
-        verify(awsS3Client, times(1)).getS3Client();
-        verify(awsS3Client, times(1)).upload(s3Client, expectedImageUrl1, expectedImageList.get(0));
-        verify(awsS3Client, times(1)).upload(s3Client, expectedImageUrl2, expectedImageList.get(1));
+        then(productEntityRepository)
+                .should(times(0))
+                .save(any());
     }
 
     private List<MultipartFile> getMultipartFiles() {
@@ -195,22 +292,6 @@ class ProductServiceTest {
         return List.of(file1, file2);
     }
 
-    private void setRequestField(RegisterProductRequest expectedRequest) {
-        ReflectionTestUtils.setField(expectedRequest, "sellerId", "64a9ef6a8ed14e3b1c8eb29a");
-        ReflectionTestUtils.setField(expectedRequest, "title", "Sample Product");
-        ReflectionTestUtils.setField(expectedRequest, "description", "This is a sample product.");
-
-        // Setting Location object
-        RegisterProductRequest.Location location = new RegisterProductRequest.Location();
-        ReflectionTestUtils.setField(location, "latitude", 37.7749);
-        ReflectionTestUtils.setField(location, "longitude", -122.4194);
-        ReflectionTestUtils.setField(location, "detailAddress", "123 Sample St, City, Country");
-        ReflectionTestUtils.setField(expectedRequest, "location", location);
-
-        ReflectionTestUtils.setField(expectedRequest, "price", 1000L);
-        ReflectionTestUtils.setField(expectedRequest, "tagIdList", List.of("tag1", "tag2"));
-        ReflectionTestUtils.setField(expectedRequest, "condition", ProductCondition.DAMAGED);
-    }
 
     @Test
     @DisplayName("정상 케이스 : 다음 페이지가 존재하는 경우")

@@ -6,7 +6,9 @@ import com.moemoe.core.request.RegisterProductRequest;
 import com.moemoe.core.response.GetProductsResponse;
 import com.moemoe.core.response.IdResponse;
 import com.moemoe.mongo.entity.Product;
+import com.moemoe.mongo.entity.Tag;
 import com.moemoe.mongo.repository.ProductEntityRepository;
+import com.moemoe.mongo.repository.TagEntityRepository;
 import com.moemoe.mongo.repository.UserEntityRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +30,7 @@ import java.util.Optional;
 public class ProductService {
     private final UserEntityRepository userEntityRepository;
     private final ProductEntityRepository productEntityRepository;
+    private final TagEntityRepository tagEntityRepository;
     private final AwsS3Client awsS3Client;
 
     @Transactional(readOnly = true)
@@ -52,7 +55,7 @@ public class ProductService {
                             .title(product.getTitle())
                             .detailedAddress(product.getDetailedAddress())
                             .price(product.getPrice())
-                            .tagIdList(product.getTagIdList())
+                            .tagIdList(product.getTagNameList())
                             .thumbnailUrl(awsS3Client.getPreSignedUrl(s3Presigner, product.getThumbnailUrl()))
                             .createAt(product.getCreatedDate())
                             .build())
@@ -68,7 +71,6 @@ public class ProductService {
     public IdResponse register(RegisterProductRequest request,
                                List<MultipartFile> imageList) {
         validateSellerExists(request.getSellerId());
-
         List<String> imageUrlList = new ArrayList<>();
         try (S3Client s3Client = awsS3Client.getS3Client()) {
             for (MultipartFile image : imageList) {
@@ -79,8 +81,20 @@ public class ProductService {
             throw new ClientRuntimeException(e.getMessage());
         }
 
+        incrementTag(request);
         Product productEntity = createProductEntity(request, imageUrlList);
         return new IdResponse(productEntityRepository.save(productEntity).getId());
+    }
+
+    private void incrementTag(RegisterProductRequest request) {
+        for (String tagName : request.getTagNameList()) {
+            Optional<Tag> optionalTag = tagEntityRepository.findById(tagName);
+            if (optionalTag.isPresent()) {
+                tagEntityRepository.incrementProductsCount(tagName);
+            } else {
+                tagEntityRepository.save(Tag.of(tagName, 1L));
+            }
+        }
     }
 
     private String getFileName(MultipartFile image) {
@@ -96,7 +110,7 @@ public class ProductService {
                 Product.Location.of(request.getLatitude(), request.getLongitude(), request.getDetailAddress()),
                 request.getPrice(),
                 imageUrlList,
-                request.getTagIdList(),
+                request.getTagNameList(),
                 request.getCondition());
     }
 

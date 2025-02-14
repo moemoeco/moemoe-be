@@ -29,7 +29,7 @@ public class Product {
     private long viewCount;
     private Location location;
     private List<String> imageUrlList;
-    private List<String> tagIdList;
+    private List<String> tagNameList;
     private ProductStatus status;
     private ProductCondition condition;
 
@@ -56,9 +56,9 @@ public class Product {
                              Location location,
                              long price,
                              List<String> imageUrlList,
-                             List<String> tagIdList,
+                             List<String> tagNameList,
                              ProductCondition condition) {
-        return new Product(sellerId, title, description, price, location, imageUrlList, tagIdList, condition);
+        return new Product(sellerId, title, description, price, location, imageUrlList, tagNameList, condition);
     }
 
     private Product(ObjectId sellerId,
@@ -67,7 +67,7 @@ public class Product {
                     long price,
                     Location location,
                     List<String> imageUrlList,
-                    List<String> tagIdList,
+                    List<String> tagNameList,
                     ProductCondition condition) {
         this.sellerId = sellerId;
         this.title = title;
@@ -76,7 +76,7 @@ public class Product {
         this.viewCount = 0;
         this.location = location;
         this.imageUrlList = ObjectUtils.isEmpty(imageUrlList) ? new ArrayList<>() : imageUrlList;
-        this.tagIdList = ObjectUtils.isEmpty(tagIdList) ? new ArrayList<>() : tagIdList;
+        this.tagNameList = ObjectUtils.isEmpty(tagNameList) ? new ArrayList<>() : tagNameList;
         this.condition = condition;
         this.status = ProductStatus.ON_SALE;
     }

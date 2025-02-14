@@ -26,7 +26,7 @@ public class RegisterProductRequest {
     private long price;
     @NotNull
     @Size(max = 5, message = "Tags can include up to 5 items only.")
-    private List<String> tagIdList;
+    private List<String> tagNameList;
     @NotNull
     private ProductCondition condition;
 
@@ -69,11 +69,11 @@ public class RegisterProductRequest {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         RegisterProductRequest request = (RegisterProductRequest) o;
-        return getPrice() == request.getPrice() && Objects.equals(getSellerId(), request.getSellerId()) && Objects.equals(getTitle(), request.getTitle()) && Objects.equals(getDescription(), request.getDescription()) && Objects.equals(getLocation(), request.getLocation()) && Objects.equals(getTagIdList(), request.getTagIdList()) && getCondition() == request.getCondition();
+        return getPrice() == request.getPrice() && Objects.equals(getSellerId(), request.getSellerId()) && Objects.equals(getTitle(), request.getTitle()) && Objects.equals(getDescription(), request.getDescription()) && Objects.equals(getLocation(), request.getLocation()) && Objects.equals(getTagNameList(), request.getTagNameList()) && getCondition() == request.getCondition();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getSellerId(), getTitle(), getDescription(), getLocation(), getPrice(), getTagIdList(), getCondition());
+        return Objects.hash(getSellerId(), getTitle(), getDescription(), getLocation(), getPrice(), getTagNameList(), getCondition());
     }
 }

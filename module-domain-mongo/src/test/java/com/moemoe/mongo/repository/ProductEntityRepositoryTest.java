@@ -50,8 +50,8 @@ class ProductEntityRepositoryTest extends AbstractMongoDbTest {
                 .isEqualTo(product.getPrice());
         assertThat(savedProduct.getImageUrlList())
                 .isEqualTo(product.getImageUrlList());
-        assertThat(savedProduct.getTagIdList())
-                .isEqualTo(product.getTagIdList());
+        assertThat(savedProduct.getTagNameList())
+                .isEqualTo(product.getTagNameList());
         assertThat(savedProduct.getCondition())
                 .isEqualTo(product.getCondition());
     }

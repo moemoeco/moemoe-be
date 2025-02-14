@@ -6,7 +6,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -76,5 +78,34 @@ class TagEntityRepositoryTest extends AbstractMongoDbTest {
                     .extracting(Tag::getProductsCount)
                     .isEqualTo(4L);
         }
+    }
+
+    @Test
+    @DisplayName("성공 케이스 : 특정 이름으로 시작하는 상위 20개 태그 조회")
+    void findTop20ByNameStartingWith() {
+        // given
+        String prefix = "mongo";
+        for (int i = 0; i < 60; i++) {
+            String name;
+            if (i % 3 == 0) {
+                name = "postgresql";
+            } else if (i % 3 == 1) {
+                name = "monkey";
+            } else {
+                name = "mongo";
+            }
+            tagEntityRepository.save(Tag.of(name + i, i));
+        }
+        assertThat(tagEntityRepository.findAll())
+                .hasSize(60);
+
+        // when
+        Sort sort = Sort.by(Sort.Order.desc("productsCount"), Sort.Order.asc("name"));
+        List<Tag> top20ByNameStartingWith = tagEntityRepository.findTop20ByNameStartingWith(prefix, sort);
+
+        // then
+        assertThat(top20ByNameStartingWith)
+                .hasSize(20)
+                .allMatch(entity -> entity.getName().startsWith(prefix));
     }
 }

@@ -1,5 +1,6 @@
 package com.moemoe.core.service;
 
+import com.moemoe.core.request.LogoutRequest;
 import com.moemoe.core.request.RefreshAccessTokenRequest;
 import com.moemoe.core.response.LoginTokenResponse;
 import com.moemoe.core.service.jwt.ClaimsFactory;
@@ -24,7 +25,6 @@ public class UserService {
     private final UserEntityRepository userEntityRepository;
     private final JwtService jwtService;
 
-    @Transactional(readOnly = true)
     public LoginTokenResponse refresh(RefreshAccessTokenRequest request) {
         String refreshToken = request.getRefreshToken();
         RefreshToken refreshTokenEntity = refreshTokenEntityRepository.findByToken(refreshToken)
@@ -39,6 +39,14 @@ public class UserService {
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
+    }
+
+    @Transactional
+    public void logout(LogoutRequest request) {
+        String refreshToken = request.getRefreshToken();
+        refreshTokenEntityRepository.findByToken(refreshToken)
+                .ifPresent(refreshTokenEntityRepository::delete);
+        log.info("User logged out.");
     }
 
     public User getUser(String email) {

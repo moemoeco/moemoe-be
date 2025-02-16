@@ -1,6 +1,7 @@
 package com.moemoe.api.controller;
 
 
+import com.moemoe.core.request.LogoutRequest;
 import com.moemoe.core.request.RefreshAccessTokenRequest;
 import com.moemoe.core.response.LoginTokenResponse;
 import com.moemoe.core.service.UserService;
@@ -24,5 +25,12 @@ public class UserController {
             @Valid @RequestBody RefreshAccessTokenRequest request
     ) {
         return userService.refresh(request);
+    }
+
+    @PostMapping("/logout")
+    public void logout(
+            @Valid @RequestBody LogoutRequest request
+    ) {
+        userService.logout(request);
     }
 }

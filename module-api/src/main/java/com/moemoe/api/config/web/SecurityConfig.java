@@ -60,7 +60,7 @@ public class SecurityConfig {
                 .cors(withDefaults()) // CORS 설정 추가
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/oauth/**", "/users/refresh").permitAll()
+                        .requestMatchers("/oauth/**", "/users/refresh", "/users/logout").permitAll()
                         .requestMatchers("/swagger-ui/**", "/api-docs/**", "/swagger-ui.html/**").permitAll()  // Swagger 관련 경로 모두 허용
                         .anyRequest().hasAnyAuthority("user")
                 )

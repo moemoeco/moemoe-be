@@ -2,6 +2,7 @@ package com.moemoe.core.service;
 
 import com.moemoe.client.aws.AwsS3Client;
 import com.moemoe.client.exception.ClientRuntimeException;
+import com.moemoe.core.repository.ProductRepository;
 import com.moemoe.core.request.RegisterProductRequest;
 import com.moemoe.core.response.GetProductsResponse;
 import com.moemoe.core.response.IdResponse;
@@ -32,6 +33,7 @@ public class ProductService {
     private final ProductEntityRepository productEntityRepository;
     private final TagEntityRepository tagEntityRepository;
     private final AwsS3Client awsS3Client;
+    private final ProductRepository productRepository;
 
     @Transactional(readOnly = true)
     public GetProductsResponse findAll(
@@ -117,6 +119,19 @@ public class ProductService {
     private void validateSellerExists(ObjectId sellerId) {
         if (!userEntityRepository.existsById(sellerId)) {
             throw new IllegalArgumentException("Seller with ID " + sellerId + " does not exist");
+        }
+    }
+
+    public void delete(String productId) {
+        ObjectId id = new ObjectId(productId);
+        Product product = productEntityRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("product not found."));
+
+        List<String> s3ObjectKeyList = product.getImageUrlList();
+        productRepository.delete(product);
+
+        try (S3Client s3Client = awsS3Client.getS3Client()) {
+            awsS3Client.delete(s3Client, s3ObjectKeyList);
         }
     }
 }

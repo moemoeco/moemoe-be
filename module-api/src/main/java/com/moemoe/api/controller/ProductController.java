@@ -37,4 +37,11 @@ public class ProductController {
     ) {
         return productService.register(request, imageList);
     }
+
+    @DeleteMapping
+    public void delete(
+            @RequestParam("productId") String productId
+    ) {
+        productService.delete(productId);
+    }
 }

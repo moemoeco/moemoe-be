@@ -65,7 +65,8 @@ public class OAuthController {
     private Cookie getCookie(String key, String value, int expiry) {
         Cookie cookie = new Cookie(key, value);
         cookie.setHttpOnly(true);
-        cookie.setSecure(true);
+        // todo : 개발을 위해 secure 옵션 제거
+//        cookie.setSecure(true);
         cookie.setPath("/");
         cookie.setMaxAge(expiry);
         return cookie;

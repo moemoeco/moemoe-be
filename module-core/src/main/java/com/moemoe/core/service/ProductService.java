@@ -119,4 +119,31 @@ public class ProductService {
             throw new IllegalArgumentException("Seller with ID " + sellerId + " does not exist");
         }
     }
+
+    @Transactional
+    public void delete(String productId) {
+        ObjectId objectId = new ObjectId(productId);
+        Optional<Product> optionalProduct = productEntityRepository.findById(objectId);
+        if (optionalProduct.isEmpty()) {
+            return;
+        }
+
+        Product product = optionalProduct.get();
+        List<String> tagNameList = product.getTagNameList();
+        List<Tag> tagEntities = tagEntityRepository.findAllById(tagNameList);
+
+        for (Tag tagEntity : tagEntities) {
+            if (tagEntity.getProductsCount() > 0) {
+                tagEntityRepository.decrementProductsCount(tagEntity.getName());
+            }
+        }
+        productEntityRepository.delete(product);
+
+        try (S3Client s3Client = awsS3Client.getS3Client()) {
+            List<String> s3ObjectKeyList = product.getImageUrlList();
+            awsS3Client.delete(s3Client, s3ObjectKeyList);
+        } catch (ClientRuntimeException e){
+            log.info("Failed to delete product images.");
+        }
+    }
 }

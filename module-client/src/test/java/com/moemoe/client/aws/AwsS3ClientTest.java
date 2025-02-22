@@ -24,7 +24,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.URI;
 import java.net.URL;
 import java.util.List;
 
@@ -209,4 +208,62 @@ class AwsS3ClientTest {
             throw new IllegalArgumentException("An error occurred during file upload: " + e.getMessage(), e);
         }
     }
+
+    @Test
+    void delete() throws IOException {
+        // given
+        String fileName = "image.jpg";
+        byte[] fileContent = "test content".getBytes();
+        MockMultipartFile mockMultipartFile1 = new MockMultipartFile(
+                "file",
+                fileName + 1,
+                IMAGE_JPEG_VALUE,
+                new ByteArrayInputStream(fileContent)
+        );
+        MockMultipartFile mockMultipartFile2 = new MockMultipartFile(
+                "file",
+                fileName + 2,
+                IMAGE_JPEG_VALUE,
+                new ByteArrayInputStream(fileContent)
+        );
+
+        String s3ObjectKey1 = "uploads/" + fileName + 1;
+        uploadMultipartFile(s3ObjectKey1, mockMultipartFile1);
+        String s3ObjectKey2 = "uploads/" + fileName + 2;
+        uploadMultipartFile(s3ObjectKey2, mockMultipartFile2);
+
+        boolean existsBeforeDelete1 = isObjectExist(s3ObjectKey1);
+        assertThat(existsBeforeDelete1)
+                .isTrue();
+        boolean existsBeforeDelete2 = isObjectExist(s3ObjectKey2);
+        assertThat(existsBeforeDelete2)
+                .isTrue();
+
+        // when
+        awsS3Client.delete(s3Client, List.of(s3ObjectKey1, s3ObjectKey2));
+
+        // then
+        boolean existsAfterDelete1 = isObjectExist(s3ObjectKey1);
+        assertThat(existsAfterDelete1)
+                .isFalse();
+        boolean existsAfterDelete2 = isObjectExist(s3ObjectKey2);
+        assertThat(existsAfterDelete2)
+                .isFalse();
+    }
+
+    /**
+     * S3 버킷에 특정 객체가 존재하는지 확인하는 메서드
+     */
+    private boolean isObjectExist(String objectKey) {
+        try {
+            s3Client.headObject(HeadObjectRequest.builder()
+                    .bucket(awsProperty.getBucketName())
+                    .key(objectKey)
+                    .build());
+            return true;
+        } catch (S3Exception e) {
+            return false;
+        }
+    }
+
 }

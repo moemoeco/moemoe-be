@@ -36,8 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -53,7 +52,6 @@ class ProductServiceTest {
     private TagEntityRepository tagEntityRepository;
     @Mock
     private AwsS3Client awsS3Client;
-
 
     @Test
     @DisplayName("정상 케이스 : 상품 등록이 완료된 경우")
@@ -383,5 +381,54 @@ class ProductServiceTest {
         ReflectionTestUtils.setField(product, "id", new ObjectId());
         ReflectionTestUtils.setField(product, "createdDate", LocalDateTime.now());
         return product;
+    }
+
+    @Test
+    @DisplayName("성공 케이스 : 상품 삭제")
+    void delete() {
+        // given
+        ObjectId productObjectId = new ObjectId();
+        List<String> imageUrlList = List.of("imageUrl1", "imageUrl2");
+        List<String> tagNameList = List.of("tag1");
+        Product product = Product.of(
+                new ObjectId(),
+                "",
+                "",
+                Product.Location.of(10.0, 10.0, ""),
+                1000L,
+                imageUrlList,
+                tagNameList,
+                ProductCondition.HEAVY_SIGNS_OF_USE
+        );
+
+        given(productEntityRepository.findById(productObjectId))
+                .willReturn(Optional.of(product));
+        Tag tag = Tag.of("tag1", 1L);
+        List<Tag> tagList = List.of(tag);
+        given(tagEntityRepository.findAllById(tagNameList))
+                .willReturn(tagList);
+        S3Client s3Client = S3Client.builder()
+                .build();
+        given(awsS3Client.getS3Client())
+                .willReturn(s3Client);
+        willDoNothing()
+                .given(awsS3Client)
+                .delete(s3Client, imageUrlList);
+
+        // when
+        String productId = productObjectId.toHexString();
+        productService.delete(productId);
+
+        // then
+        verify(productEntityRepository, times(1))
+                .findById(productObjectId);
+        verify(tagEntityRepository, times(1))
+                .findAllById(tagNameList);
+        verify(awsS3Client, times(1))
+                .getS3Client();
+        verify(awsS3Client, times(1))
+                .delete(s3Client, imageUrlList);
+        verify(productEntityRepository, times(1))
+                .delete(product);
     }
 }

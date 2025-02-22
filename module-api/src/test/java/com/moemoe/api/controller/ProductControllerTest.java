@@ -20,6 +20,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,6 +32,9 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willDoNothing;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -519,6 +523,41 @@ class ProductControllerTest extends AbstractControllerTest {
             assertThat(errorResponseBody)
                     .extracting(ErrorResponseBody::getType)
                     .isEqualTo(ClientRuntimeException.class.getSimpleName());
+        }
+    }
+
+    @Nested
+    @DisplayName("상품 삭제 API")
+    class DeleteProduct {
+        @Test
+        @DisplayName("성공 케이스 : 상품 삭제")
+        void delete() {
+            // given
+            String productId = "objectId";
+            willDoNothing()
+                    .given(productService)
+                    .delete(productId);
+
+            // when
+            MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.delete("/products")
+                    .param("productId", productId);
+            invoke(builder, status().isOk(), true);
+
+            // then
+            verify(productService, times(1))
+                    .delete(productId);
+        }
+
+        @Test
+        @DisplayName("실패 케이스 : 상품 ID를 포함하지 않는 경우")
+        void deleteWithoutId(){
+            // when
+            MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.delete("/products");
+            invoke(builder, status().isBadRequest(), true);
+
+            // then
+            verify(productService, times(0))
+                    .delete(any());
         }
     }
 }

@@ -33,7 +33,7 @@ public class OAuthController {
 
     @GetMapping("/{platformType}/login-page")
     public AuthorizationResponse loginPage(
-            @PathVariable OAuthPlatform platformType) {
+            @PathVariable(value = "platformType") OAuthPlatform platformType) {
         log.info("Login page");
         OAuthTemplate oAuthTemplate = getOAuthTemplate(platformType);
         return oAuthTemplate.authorize("");
@@ -41,7 +41,7 @@ public class OAuthController {
 
     @GetMapping("/{platformType}/login")
     public void login(
-            @PathVariable OAuthPlatform platformType,
+            @PathVariable(value = "platformType") OAuthPlatform platformType,
             @RequestParam("code") String code,
             @RequestParam(value = "state") String state,
             HttpServletResponse response) {

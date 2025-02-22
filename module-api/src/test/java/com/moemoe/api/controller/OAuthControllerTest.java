@@ -5,10 +5,12 @@ import com.moemoe.core.response.AuthorizationResponse;
 import com.moemoe.core.response.LoginTokenResponse;
 import com.moemoe.core.service.oauth.KakaoOAuthService;
 import com.moemoe.core.service.oauth.NaverOAuthService;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
@@ -97,13 +99,21 @@ class OAuthControllerTest extends AbstractControllerTest {
         MockHttpServletRequestBuilder builder = get("/oauth/kakao/login")
                 .param("code", kakaoExpectedCode)
                 .param("state", kakaoExpectedState);
-        MvcResult invoke = invoke(builder, status().isOk(), false);
-        LoginTokenResponse actualResponse = convertResponseToClass(invoke, LoginTokenResponse.class);
+        MvcResult invoke = invoke(builder, status().isFound(), false);
+        MockHttpServletResponse response = invoke.getResponse();
+        String redirectedUrl = response.getRedirectedUrl();
+        Cookie refreshToken = response.getCookie("refreshToken");
+        Cookie accessToken = response.getCookie("accessToken");
 
         // then
-        assertThat(actualResponse)
-                .extracting(LoginTokenResponse::refreshToken, LoginTokenResponse::accessToken)
-                .containsExactly(expectedLoginTokenResponse.refreshToken(), expectedLoginTokenResponse.accessToken());
+        assertThat(refreshToken)
+                .extracting(Cookie::getValue)
+                .isEqualTo(expectedLoginTokenResponse.refreshToken());
+        assertThat(accessToken)
+                .extracting(Cookie::getValue)
+                .isEqualTo(expectedLoginTokenResponse.accessToken());
+        assertThat(redirectedUrl)
+                .isEqualTo("http://localhost:8081?redirectedFromSocialLogin=true");
 
         verify(kakaoOAuthService, times(1))
                 .login(anyString(), anyString());
@@ -128,13 +138,21 @@ class OAuthControllerTest extends AbstractControllerTest {
         MockHttpServletRequestBuilder builder = get("/oauth/naver/login")
                 .param("code", naverExpectedCode)
                 .param("state", naverExpectedState);
-        MvcResult invoke = invoke(builder, status().isOk(), false);
-        LoginTokenResponse actualResponse = convertResponseToClass(invoke, LoginTokenResponse.class);
+        MvcResult invoke = invoke(builder, status().isFound(), false);
+        MockHttpServletResponse response = invoke.getResponse();
+        String redirectedUrl = response.getRedirectedUrl();
+        Cookie refreshToken = response.getCookie("refreshToken");
+        Cookie accessToken = response.getCookie("accessToken");
 
         // then
-        assertThat(actualResponse)
-                .extracting(LoginTokenResponse::refreshToken, LoginTokenResponse::accessToken)
-                .containsExactly(expectedLoginTokenResponse.refreshToken(), expectedLoginTokenResponse.accessToken());
+        assertThat(refreshToken)
+                .extracting(Cookie::getValue)
+                .isEqualTo(expectedLoginTokenResponse.refreshToken());
+        assertThat(accessToken)
+                .extracting(Cookie::getValue)
+                .isEqualTo(expectedLoginTokenResponse.accessToken());
+        assertThat(redirectedUrl)
+                .isEqualTo("http://localhost:8081?redirectedFromSocialLogin=true");
 
         verify(kakaoOAuthService, never())
                 .login(anyString(), anyString());

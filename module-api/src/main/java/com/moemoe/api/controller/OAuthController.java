@@ -7,9 +7,13 @@ import com.moemoe.core.response.LoginTokenResponse;
 import com.moemoe.core.service.oauth.KakaoOAuthService;
 import com.moemoe.core.service.oauth.NaverOAuthService;
 import com.moemoe.core.service.oauth.OAuthTemplate;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.Map;
 
 @Slf4j
@@ -36,12 +40,35 @@ public class OAuthController {
     }
 
     @GetMapping("/{platformType}/login")
-    public LoginTokenResponse login(
+    public void login(
             @PathVariable OAuthPlatform platformType,
             @RequestParam("code") String code,
-            @RequestParam(value = "state") String state) {
+            @RequestParam(value = "state") String state,
+            HttpServletResponse response) {
         OAuthTemplate oAuthTemplate = getOAuthTemplate(platformType);
-        return oAuthTemplate.login(code, state);
+        LoginTokenResponse tokenResponse = oAuthTemplate.login(code, state);
+
+        try {
+            String refreshToken = tokenResponse.refreshToken();
+            String accessToken = tokenResponse.accessToken();
+            Cookie accessTokenCookie = getCookie("accessToken", accessToken, 60 * 60);
+            Cookie refreshTokenCookie = getCookie("refreshToken", refreshToken, 60 * 60 * 24 * 7);
+            response.addCookie(accessTokenCookie);
+            response.addCookie(refreshTokenCookie);
+            response.setStatus(HttpStatus.OK.value());
+            response.sendRedirect("http://localhost:8081?redirectedFromSocialLogin=true");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Cookie getCookie(String key, String value, int expiry) {
+        Cookie cookie = new Cookie(key, value);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(expiry);
+        return cookie;
     }
 
     private OAuthTemplate getOAuthTemplate(OAuthPlatform platformType) {

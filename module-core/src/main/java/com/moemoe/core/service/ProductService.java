@@ -122,16 +122,19 @@ public class ProductService {
 
     @Transactional
     public void delete(String productId) {
-        ObjectId id = new ObjectId(productId);
-        Product product = productEntityRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("product not found."));
+        ObjectId objectId = new ObjectId(productId);
+        Optional<Product> optionalProduct = productEntityRepository.findById(objectId);
+        if (optionalProduct.isEmpty()) {
+            return;
+        }
 
+        Product product = optionalProduct.get();
         List<String> tagNameList = product.getTagNameList();
-        for (String tagName : tagNameList) {
-            Tag tagEntity = tagEntityRepository.findById(tagName)
-                    .orElseThrow(() -> new IllegalArgumentException("tag name not found."));
+        List<Tag> tagEntities = tagEntityRepository.findAllById(tagNameList);
+
+        for (Tag tagEntity : tagEntities) {
             if (tagEntity.getProductsCount() > 0) {
-                tagEntityRepository.decrementProductsCount(tagName);
+                tagEntityRepository.decrementProductsCount(tagEntity.getName());
             }
         }
         productEntityRepository.delete(product);
@@ -139,6 +142,8 @@ public class ProductService {
         try (S3Client s3Client = awsS3Client.getS3Client()) {
             List<String> s3ObjectKeyList = product.getImageUrlList();
             awsS3Client.delete(s3Client, s3ObjectKeyList);
+        } catch (ClientRuntimeException e){
+            log.info("Failed to delete product images.");
         }
     }
 }

@@ -17,14 +17,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ProductEntityPagingRepositoryTest extends AbstractMongoDbTest {
     @Autowired
     private ProductEntityRepository productEntityRepository;
-    private final List<ProductEntity> productEntities = new LinkedList<>();
+    private final List<ProductEntity> productEntityList = new LinkedList<>();
 
     @BeforeEach
     void init() {
         for (int i = 0; i < 10; i++) {
-            productEntities.add(ProductEntity.of(new ObjectId(), String.valueOf(i), null, null, 1L, null, null, null));
+            productEntityList.add(ProductEntity.of(new ObjectId(), String.valueOf(i), null, null, 1L, null, null, null));
         }
-        productEntityRepository.saveAll(productEntities);
+        productEntityRepository.saveAll(productEntityList);
     }
 
     @AfterEach
@@ -36,10 +36,10 @@ class ProductEntityPagingRepositoryTest extends AbstractMongoDbTest {
     @DisplayName("정상 케이스 : 첫 페이지 조회")
     void findAll() {
         // when
-        List<ProductEntity> actualProductEntities = productEntityRepository.findAll("", 3);
+        List<ProductEntity> actualProductEntityList = productEntityRepository.findAll("", 3);
 
         // then
-        assertThat(actualProductEntities)
+        assertThat(actualProductEntityList)
                 .hasSize(4)
                 .extracting(ProductEntity::getTitle)
                 .containsExactly("9", "8", "7", "6");
@@ -50,11 +50,11 @@ class ProductEntityPagingRepositoryTest extends AbstractMongoDbTest {
     void findAllWithNextId() {
         // when
         // 4번 상품
-        ObjectId nextId = productEntities.get(4).getId();
-        List<ProductEntity> actualProductEntities = productEntityRepository.findAll(nextId.toHexString(), 3);
+        ObjectId nextId = productEntityList.get(4).getId();
+        List<ProductEntity> actualProductEntityList = productEntityRepository.findAll(nextId.toHexString(), 3);
 
         // then
-        assertThat(actualProductEntities)
+        assertThat(actualProductEntityList)
                 .hasSize(4)
                 .extracting(ProductEntity::getTitle)
                 .containsExactly("3", "2", "1", "0");
@@ -65,11 +65,11 @@ class ProductEntityPagingRepositoryTest extends AbstractMongoDbTest {
     void findAllWithLastId() {
         // when
         // 4번 상품
-        ObjectId nextId = productEntities.get(1).getId();
-        List<ProductEntity> actualProductEntities = productEntityRepository.findAll(nextId.toHexString(), 3);
+        ObjectId nextId = productEntityList.get(1).getId();
+        List<ProductEntity> actualProductEntityList = productEntityRepository.findAll(nextId.toHexString(), 3);
 
         // then
-        assertThat(actualProductEntities)
+        assertThat(actualProductEntityList)
                 .hasSize(1)
                 .extracting(ProductEntity::getTitle)
                 .containsExactly("0");

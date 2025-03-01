@@ -130,9 +130,9 @@ public class ProductService {
 
         ProductEntity productEntity = optionalProduct.get();
         List<String> tagNameList = productEntity.getTagNameList();
-        List<TagEntity> tagEntityEntities = tagEntityRepository.findAllById(tagNameList);
+        List<TagEntity> tagEntityEntityList = tagEntityRepository.findAllById(tagNameList);
 
-        for (TagEntity tagEntity : tagEntityEntities) {
+        for (TagEntity tagEntity : tagEntityEntityList) {
             if (tagEntity.getProductsCount() > 0) {
                 tagEntityRepository.decrementProductsCount(tagEntity.getName());
             }

@@ -26,7 +26,7 @@ public class WebConfig implements WebMvcConfigurer {
     public UserDetailsService userDetailsService() {
         return (email -> {
             try {
-                return userService.getUser(email);
+                return userService.getUserEntity(email);
             } catch (NoSuchElementException e) {
                 throw new UsernameNotFoundException("User(" + email + ") not found.", e);
             }

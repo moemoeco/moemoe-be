@@ -6,9 +6,9 @@ import com.moemoe.core.response.AuthorizationResponse;
 import com.moemoe.core.response.LoginTokenResponse;
 import com.moemoe.core.service.jwt.ClaimsFactory;
 import com.moemoe.core.service.jwt.JwtService;
-import com.moemoe.mongo.entity.User;
+import com.moemoe.mongo.entity.UserEntity;
 import com.moemoe.mongo.repository.UserEntityRepository;
-import com.moemoe.redis.entity.RefreshToken;
+import com.moemoe.redis.entity.RefreshTokenEntity;
 import com.moemoe.redis.repository.RefreshTokenEntityRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,13 +35,13 @@ public abstract class OAuthTemplate {
         log.info("OAuth login service started.");
         TokenResponse token = getToken(code, state);
         UserInfoResponse userInfo = getUserInfo(token);
-        User userEntity = getUserEntity(userInfo);
+        UserEntity userEntity = getUserEntity(userInfo);
 
         Map<String, String> userClaims = ClaimsFactory.getUserClaims(userEntity);
         final String accessToken = jwtService.createAccessToken(userClaims, userEntity);
         final String refreshToken = jwtService.createRefreshToken(userClaims, userEntity);
 
-        refreshTokenEntityRepository.save(RefreshToken.of(userEntity.getEmail(), refreshToken));
+        refreshTokenEntityRepository.save(RefreshTokenEntity.of(userEntity.getEmail(), refreshToken));
         log.info("OAuth login service done.");
         return LoginTokenResponse.builder()
                 .accessToken(accessToken)
@@ -55,5 +55,5 @@ public abstract class OAuthTemplate {
 
     protected abstract UserInfoResponse getUserInfo(TokenResponse token);
 
-    protected abstract User getUserEntity(UserInfoResponse userInfo);
+    protected abstract UserEntity getUserEntity(UserInfoResponse userInfo);
 }

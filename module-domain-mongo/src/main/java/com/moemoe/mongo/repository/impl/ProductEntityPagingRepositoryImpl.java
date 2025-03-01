@@ -1,6 +1,6 @@
 package com.moemoe.mongo.repository.impl;
 
-import com.moemoe.mongo.entity.Product;
+import com.moemoe.mongo.entity.ProductEntity;
 import com.moemoe.mongo.repository.ProductEntityPagingRepository;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
@@ -21,7 +21,7 @@ public class ProductEntityPagingRepositoryImpl implements ProductEntityPagingRep
     private final MongoTemplate mongoTemplate;
 
     @Override
-    public List<Product> findAll(String nextId, int pageSize) {
+    public List<ProductEntity> findAll(String nextId, int pageSize) {
         Query query = new Query();
 
         if (!ObjectUtils.isEmpty(nextId)) {
@@ -31,6 +31,6 @@ public class ProductEntityPagingRepositoryImpl implements ProductEntityPagingRep
         query
                 .limit(pageSize + 1)
                 .with(Sort.by(Sort.Direction.DESC, "_id"));
-        return mongoTemplate.find(query, Product.class);
+        return mongoTemplate.find(query, ProductEntity.class);
     }
 }

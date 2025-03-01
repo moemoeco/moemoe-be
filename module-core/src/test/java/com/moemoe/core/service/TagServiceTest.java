@@ -1,7 +1,7 @@
 package com.moemoe.core.service;
 
 import com.moemoe.core.response.GetTagsResponse;
-import com.moemoe.mongo.entity.Tag;
+import com.moemoe.mongo.entity.TagEntity;
 import com.moemoe.mongo.repository.TagEntityRepository;
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.DisplayName;
@@ -29,15 +29,15 @@ class TagServiceTest {
     void findTop20TagsByPrefix() {
         // given
         String prefix = "mongo";
-        List<Tag> expectedTagList = List.of(
-                Tag.of("tag1", 10L),
-                Tag.of("tag2", 6L),
-                Tag.of("tag4", 5L),
-                Tag.of("tag3", 4L),
-                Tag.of("tag5", 4L)
+        List<TagEntity> expectedTagEntityList = List.of(
+                TagEntity.of("tag1", 10L),
+                TagEntity.of("tag2", 6L),
+                TagEntity.of("tag4", 5L),
+                TagEntity.of("tag3", 4L),
+                TagEntity.of("tag5", 4L)
         );
         given(tagEntityRepository.findTop20ByNameStartingWith(prefix, Sort.by(Sort.Order.desc("productsCount"), Sort.Order.asc("name"))))
-                .willReturn(expectedTagList);
+                .willReturn(expectedTagEntityList);
 
         // when
         GetTagsResponse actual = tagService.findTop20TagsByPrefix(prefix);

@@ -11,7 +11,7 @@ import com.moemoe.core.service.builder.KakaoUrlBuilder;
 import com.moemoe.core.service.builder.UrlBuilder;
 import com.moemoe.core.service.jwt.JwtService;
 import com.moemoe.mongo.constant.UserRole;
-import com.moemoe.mongo.entity.User;
+import com.moemoe.mongo.entity.UserEntity;
 import com.moemoe.mongo.repository.UserEntityRepository;
 import com.moemoe.redis.repository.RefreshTokenEntityRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -44,12 +44,12 @@ public class KakaoOAuthService extends OAuthTemplate {
     }
 
     @Override
-    protected User getUserEntity(UserInfoResponse userInfo) {
+    protected UserEntity getUserEntity(UserInfoResponse userInfo) {
         KakaoUserInfoResponse kakaoUserInfo = (KakaoUserInfoResponse) userInfo;
         KakaoUserInfoResponse.KakaoAccount kakaoAccount = kakaoUserInfo.kakaoAccount();
         KakaoUserInfoResponse.KakaoAccount.Profile profile = kakaoAccount.profile();
         return userEntityRepository.findByEmail(kakaoAccount.email())
-                .orElseGet(() -> userEntityRepository.save(User.builder()
+                .orElseGet(() -> userEntityRepository.save(UserEntity.builder()
                         .socialId(String.valueOf(kakaoUserInfo.id()))
                         .email(kakaoAccount.email())
                         .name(kakaoAccount.name())

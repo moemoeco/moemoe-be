@@ -19,7 +19,7 @@ import java.util.List;
 @Getter
 @Document(collection = "users")
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class User implements UserDetails {
+public class UserEntity implements UserDetails {
     @Id
     private ObjectId id;
     private UserRole role;
@@ -33,14 +33,14 @@ public class User implements UserDetails {
     private String profileImageUrl;
 
     @Builder
-    public User(String socialId,
-                String name,
-                UserRole role,
-                String email,
-                String gender,
-                String birthyear,
-                String birthday,
-                String profileImageUrl) {
+    public UserEntity(String socialId,
+                      String name,
+                      UserRole role,
+                      String email,
+                      String gender,
+                      String birthyear,
+                      String birthday,
+                      String profileImageUrl) {
         this.socialId = socialId;
         this.name = name;
         this.email = email;

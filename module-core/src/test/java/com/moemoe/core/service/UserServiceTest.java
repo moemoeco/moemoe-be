@@ -5,9 +5,9 @@ import com.moemoe.core.request.RefreshAccessTokenRequest;
 import com.moemoe.core.response.LoginTokenResponse;
 import com.moemoe.core.service.jwt.JwtService;
 import com.moemoe.mongo.constant.UserRole;
-import com.moemoe.mongo.entity.User;
+import com.moemoe.mongo.entity.UserEntity;
 import com.moemoe.mongo.repository.UserEntityRepository;
-import com.moemoe.redis.entity.RefreshToken;
+import com.moemoe.redis.entity.RefreshTokenEntity;
 import com.moemoe.redis.repository.RefreshTokenEntityRepository;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -52,8 +52,8 @@ class UserServiceTest {
         // given
         String expectedRefreshToken = "refreshToken";
         String expectedEmail = "user@moemoe.com";
-        RefreshToken refreshTokenEntity = RefreshToken.of(expectedEmail, expectedRefreshToken);
-        User userEntity = User.builder()
+        RefreshTokenEntity refreshTokenEntity = RefreshTokenEntity.of(expectedEmail, expectedRefreshToken);
+        UserEntity userEntity = UserEntity.builder()
                 .email(expectedEmail)
                 .role(UserRole.USER)
                 .build();
@@ -110,7 +110,7 @@ class UserServiceTest {
         // given
         String expectedRefreshToken = "refreshToken";
         String expectedEmail = "user@moemoe.com";
-        RefreshToken refreshTokenEntity = RefreshToken.of(expectedEmail, expectedRefreshToken);
+        RefreshTokenEntity refreshTokenEntity = RefreshTokenEntity.of(expectedEmail, expectedRefreshToken);
         given(refreshTokenEntityRepository.findByToken(expectedRefreshToken))
                 .willReturn(Optional.of(refreshTokenEntity));
         given(userEntityRepository.findByEmail(expectedEmail))
@@ -135,7 +135,7 @@ class UserServiceTest {
         // given
         String expectedRefreshToken = "refreshToken";
         String expectedEmail = "user@moemoe.com";
-        RefreshToken refreshTokenEntity = RefreshToken.of(expectedEmail, expectedRefreshToken);
+        RefreshTokenEntity refreshTokenEntity = RefreshTokenEntity.of(expectedEmail, expectedRefreshToken);
         given(refreshTokenEntityRepository.findByToken(expectedRefreshToken))
                 .willReturn(Optional.of(refreshTokenEntity));
         willDoNothing().given(refreshTokenEntityRepository)
@@ -170,6 +170,6 @@ class UserServiceTest {
         verify(refreshTokenEntityRepository, times(1))
                 .findByToken(expectedRefreshToken);
         verify(refreshTokenEntityRepository, times(0))
-                .delete(any(RefreshToken.class));
+                .delete(any(RefreshTokenEntity.class));
     }
 }

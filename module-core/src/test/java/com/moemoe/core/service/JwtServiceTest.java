@@ -3,7 +3,7 @@ package com.moemoe.core.service;
 import com.moemoe.core.service.jwt.JwtService;
 import com.moemoe.core.service.jwt.exception.JwtExpiredException;
 import com.moemoe.mongo.constant.UserRole;
-import com.moemoe.mongo.entity.User;
+import com.moemoe.mongo.entity.UserEntity;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -51,10 +51,10 @@ class JwtServiceTest {
         String email = "test@example.com";
         String role = UserRole.USER.name();
         Map<String, String> claims = Map.of("email", email, "role", role);
-        User user = User.builder().email(email).build();
+        UserEntity userEntity = UserEntity.builder().email(email).build();
 
         // when
-        String accessToken = jwtService.createAccessToken(claims, user);
+        String accessToken = jwtService.createAccessToken(claims, userEntity);
 
         // then
         assertThat(accessToken)
@@ -89,10 +89,10 @@ class JwtServiceTest {
         String email = "test@example.com";
         String role = UserRole.USER.name();
         Map<String, String> claims = Map.of("email", email, "role", role);
-        User user = User.builder().email(email).build();
+        UserEntity userEntity = UserEntity.builder().email(email).build();
 
         // when
-        String refreshToken = jwtService.createRefreshToken(claims, user);
+        String refreshToken = jwtService.createRefreshToken(claims, userEntity);
 
         // then
         assertThat(refreshToken)
@@ -127,7 +127,7 @@ class JwtServiceTest {
         String email = "test@example.com";
         String role = UserRole.USER.name();
         Map<String, String> claims = Map.of("email", email, "role", role);
-        com.moemoe.mongo.entity.User user = User.builder().email(email).build();
+        UserEntity userEntity = UserEntity.builder().email(email).build();
 
         Field accessExpirationField = ReflectionUtils.findField(jwtService.getClass(), "accessExpiration");
         assert accessExpirationField != null;
@@ -136,7 +136,7 @@ class JwtServiceTest {
         ReflectionUtils.setField(accessExpirationField, jwtService, 0L);
 
         // when
-        String accessToken = jwtService.createAccessToken(claims, user);
+        String accessToken = jwtService.createAccessToken(claims, userEntity);
         assertThatThrownBy(() -> jwtService.isValidToken(accessToken, email))
                 .isInstanceOf(JwtExpiredException.class);
 

@@ -10,7 +10,7 @@ import com.moemoe.core.service.builder.NaverUrlBuilder;
 import com.moemoe.core.service.builder.UrlBuilder;
 import com.moemoe.core.service.jwt.JwtService;
 import com.moemoe.mongo.constant.UserRole;
-import com.moemoe.mongo.entity.User;
+import com.moemoe.mongo.entity.UserEntity;
 import com.moemoe.mongo.repository.UserEntityRepository;
 import com.moemoe.redis.repository.RefreshTokenEntityRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -43,11 +43,11 @@ public class NaverOAuthService extends OAuthTemplate {
     }
 
     @Override
-    protected User getUserEntity(UserInfoResponse userInfo) {
+    protected UserEntity getUserEntity(UserInfoResponse userInfo) {
         NaverUserInfoResponse naverUserInfo = (NaverUserInfoResponse) userInfo;
         NaverUserInfoResponse.NaverAccount naverAccount = naverUserInfo.naverAccount();
         return userEntityRepository.findByEmail(naverAccount.email())
-                .orElseGet(() -> userEntityRepository.save(User.builder()
+                .orElseGet(() -> userEntityRepository.save(UserEntity.builder()
                         .socialId(naverAccount.id())
                         .email(naverAccount.email())
                         .name(naverAccount.name())

@@ -12,7 +12,7 @@ import org.springframework.data.redis.core.index.Indexed;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @RedisHash(value = "refresh_token")
-public class RefreshToken {
+public class RefreshTokenEntity {
     @Id
     private String email;
     @Indexed
@@ -21,18 +21,18 @@ public class RefreshToken {
     private long expirationInSeconds;
     private static final long DEFAULT_TTL = 2592000L;
 
-    public static RefreshToken of(@NotEmpty String email,
-                                  @NotEmpty String refreshToken) {
-        return new RefreshToken(email, refreshToken, DEFAULT_TTL);
+    public static RefreshTokenEntity of(@NotEmpty String email,
+                                        @NotEmpty String refreshToken) {
+        return new RefreshTokenEntity(email, refreshToken, DEFAULT_TTL);
     }
 
-    public static RefreshToken of(@NotEmpty String email,
-                                  @NotEmpty String refreshToken,
-                                  long expirationInSeconds) {
-        return new RefreshToken(email, refreshToken, expirationInSeconds);
+    public static RefreshTokenEntity of(@NotEmpty String email,
+                                        @NotEmpty String refreshToken,
+                                        long expirationInSeconds) {
+        return new RefreshTokenEntity(email, refreshToken, expirationInSeconds);
     }
 
-    public RefreshToken(String email, String token, long expirationInSeconds) {
+    public RefreshTokenEntity(String email, String token, long expirationInSeconds) {
         this.email = email;
         this.token = token;
         this.expirationInSeconds = expirationInSeconds;

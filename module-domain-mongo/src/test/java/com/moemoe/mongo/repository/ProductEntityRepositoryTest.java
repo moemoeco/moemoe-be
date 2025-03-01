@@ -2,7 +2,7 @@ package com.moemoe.mongo.repository;
 
 import com.moemoe.mongo.AbstractMongoDbTest;
 import com.moemoe.mongo.constant.ProductCondition;
-import com.moemoe.mongo.entity.Product;
+import com.moemoe.mongo.entity.ProductEntity;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,39 +20,39 @@ class ProductEntityRepositoryTest extends AbstractMongoDbTest {
     @DisplayName("정상 케이스: 유효한 데이터를 저장할 수 있다.")
     void createValidProduct() {
         // given
-        Product product = Product.of(
+        ProductEntity productEntity = ProductEntity.of(
                 new ObjectId(),
                 "Valid Product",
                 "This is a valid product.",
-                Product.Location.of(37.5665, 126.9780, "Seoul"),
+                ProductEntity.Location.of(37.5665, 126.9780, "Seoul"),
                 1000,
                 List.of("image1.jpg", "image2.jpg"),
                 List.of("tag1", "tag2"),
                 ProductCondition.NEW);
 
         // when
-        Product savedProduct = productEntityRepository.save(product);
+        ProductEntity savedProductEntity = productEntityRepository.save(productEntity);
 
         // then
-        assertThat(savedProduct)
+        assertThat(savedProductEntity)
                 .isNotNull();
-        assertThat(savedProduct.getId())
+        assertThat(savedProductEntity.getId())
                 .isNotNull();
-        assertThat(savedProduct.getSellerId())
-                .isEqualTo(product.getSellerId());
-        assertThat(savedProduct.getTitle())
-                .isEqualTo(product.getTitle());
-        assertThat(savedProduct.getDescription())
-                .isEqualTo(product.getDescription());
-        assertThat(savedProduct.getLocation())
-                .isEqualTo(product.getLocation());
-        assertThat(savedProduct.getPrice())
-                .isEqualTo(product.getPrice());
-        assertThat(savedProduct.getImageUrlList())
-                .isEqualTo(product.getImageUrlList());
-        assertThat(savedProduct.getTagNameList())
-                .isEqualTo(product.getTagNameList());
-        assertThat(savedProduct.getCondition())
-                .isEqualTo(product.getCondition());
+        assertThat(savedProductEntity.getSellerId())
+                .isEqualTo(productEntity.getSellerId());
+        assertThat(savedProductEntity.getTitle())
+                .isEqualTo(productEntity.getTitle());
+        assertThat(savedProductEntity.getDescription())
+                .isEqualTo(productEntity.getDescription());
+        assertThat(savedProductEntity.getLocation())
+                .isEqualTo(productEntity.getLocation());
+        assertThat(savedProductEntity.getPrice())
+                .isEqualTo(productEntity.getPrice());
+        assertThat(savedProductEntity.getImageUrlList())
+                .isEqualTo(productEntity.getImageUrlList());
+        assertThat(savedProductEntity.getTagNameList())
+                .isEqualTo(productEntity.getTagNameList());
+        assertThat(savedProductEntity.getCondition())
+                .isEqualTo(productEntity.getCondition());
     }
 }

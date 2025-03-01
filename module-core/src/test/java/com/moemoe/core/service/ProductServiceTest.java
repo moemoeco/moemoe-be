@@ -6,8 +6,8 @@ import com.moemoe.core.request.RegisterProductRequest;
 import com.moemoe.core.response.GetProductsResponse;
 import com.moemoe.core.response.IdResponse;
 import com.moemoe.mongo.constant.ProductCondition;
-import com.moemoe.mongo.entity.Product;
-import com.moemoe.mongo.entity.Tag;
+import com.moemoe.mongo.entity.ProductEntity;
+import com.moemoe.mongo.entity.TagEntity;
 import com.moemoe.mongo.repository.ProductEntityRepository;
 import com.moemoe.mongo.repository.TagEntityRepository;
 import com.moemoe.mongo.repository.UserEntityRepository;
@@ -98,14 +98,14 @@ class ProductServiceTest {
         given(tagEntityRepository.findById("tag1"))
                 .willReturn(Optional.empty());
         given(tagEntityRepository.findById("tag2"))
-                .willReturn(Optional.of(Tag.of("tag2")));
+                .willReturn(Optional.of(TagEntity.of("tag2")));
 
         // product entity save
-        Product mockProduct = BDDMockito.mock(Product.class);
+        ProductEntity mockProductEntity = BDDMockito.mock(ProductEntity.class);
         given(productEntityRepository.save(any()))
-                .willReturn(mockProduct);
+                .willReturn(mockProductEntity);
         ObjectId expectedObjectId = new ObjectId();
-        given(mockProduct.getId())
+        given(mockProductEntity.getId())
                 .willReturn(expectedObjectId);
 
         // when
@@ -136,28 +136,28 @@ class ProductServiceTest {
                 .should(times(1))
                 .save(argThat(entity -> entity.getName().equals("tag1")));
 
-        ArgumentCaptor<Product> productCaptor = ArgumentCaptor.forClass(Product.class);
+        ArgumentCaptor<ProductEntity> productCaptor = ArgumentCaptor.forClass(ProductEntity.class);
         then(productEntityRepository)
                 .should(times(1))
                 .save(productCaptor.capture());
-        Product savedProduct = productCaptor.getValue();
-        assertThat(savedProduct.getSellerId())
+        ProductEntity savedProductEntity = productCaptor.getValue();
+        assertThat(savedProductEntity.getSellerId())
                 .isEqualTo(expectedSellerId);
-        assertThat(savedProduct.getTitle())
+        assertThat(savedProductEntity.getTitle())
                 .isEqualTo(expectedTitle);
-        assertThat(savedProduct.getDescription())
+        assertThat(savedProductEntity.getDescription())
                 .isEqualTo(expectedDescription);
-        assertThat(savedProduct.getPrice())
+        assertThat(savedProductEntity.getPrice())
                 .isEqualTo(expectedPrice);
-        assertThat(savedProduct.getTagNameList())
+        assertThat(savedProductEntity.getTagNameList())
                 .containsExactlyInAnyOrderElementsOf(expectedTagName);
-        assertThat(savedProduct.getCondition())
+        assertThat(savedProductEntity.getCondition())
                 .isEqualTo(expectedProductCondition);
-        assertThat(savedProduct.getLocation().getLatitude())
+        assertThat(savedProductEntity.getLocation().getLatitude())
                 .isEqualTo(expectedLatitude);
-        assertThat(savedProduct.getLocation().getLongitude())
+        assertThat(savedProductEntity.getLocation().getLongitude())
                 .isEqualTo(expectedLongitude);
-        assertThat(savedProduct.getLocation().getDetailedAddress())
+        assertThat(savedProductEntity.getLocation().getDetailedAddress())
                 .isEqualTo(expectedDetailedAddress);
     }
 
@@ -297,7 +297,7 @@ class ProductServiceTest {
         // given
         String expectedOldNextId = new ObjectId().toHexString();
         int expectedPageSize = 2;
-        List<Product> expectedProductEntityList = List.of(
+        List<ProductEntity> expectedProductEntityEntityList = List.of(
                 getProductEntity("0", "detailedAddress1", "thumbnail1"),
                 getProductEntity("1", "detailedAddress2", "thumbnail2"),
                 getProductEntity("2", "detailedAddress3", "thumbnail3"));
@@ -305,7 +305,7 @@ class ProductServiceTest {
         ObjectId expectedOldNextObjectId = new ObjectId(expectedOldNextId);
         given(productEntityRepository.existsById(expectedOldNextObjectId)).willReturn(true);
         given(productEntityRepository.findAll(expectedOldNextId, expectedPageSize))
-                .willReturn(expectedProductEntityList);
+                .willReturn(expectedProductEntityEntityList);
 
         // when
         GetProductsResponse actual = productService.findAll(expectedOldNextId, expectedPageSize);
@@ -315,13 +315,13 @@ class ProductServiceTest {
         verify(productEntityRepository, times(1)).findAll(expectedOldNextId, expectedPageSize);
         assertThat(actual)
                 .extracting(GetProductsResponse::getNextId, GetProductsResponse::isHasNext)
-                .containsExactly(expectedProductEntityList.get(1).getId().toHexString(), true);
+                .containsExactly(expectedProductEntityEntityList.get(1).getId().toHexString(), true);
         assertThat(actual.getContents())
                 .hasSize(expectedPageSize)
                 .extracting(GetProductsResponse.Product::getTitle, GetProductsResponse.Product::getDetailedAddress, GetProductsResponse.Product::getThumbnailUrl)
                 .containsExactly(
-                        Tuple.tuple(expectedProductEntityList.get(0).getTitle(), expectedProductEntityList.get(0).getDetailedAddress(), expectedProductEntityList.get(0).getThumbnailUrl()),
-                        Tuple.tuple(expectedProductEntityList.get(1).getTitle(), expectedProductEntityList.get(1).getDetailedAddress(), expectedProductEntityList.get(1).getThumbnailUrl())
+                        Tuple.tuple(expectedProductEntityEntityList.get(0).getTitle(), expectedProductEntityEntityList.get(0).getDetailedAddress(), expectedProductEntityEntityList.get(0).getThumbnailUrl()),
+                        Tuple.tuple(expectedProductEntityEntityList.get(1).getTitle(), expectedProductEntityEntityList.get(1).getDetailedAddress(), expectedProductEntityEntityList.get(1).getThumbnailUrl())
                 );
     }
 
@@ -331,14 +331,14 @@ class ProductServiceTest {
         // given
         String expectedOldNextId = new ObjectId().toHexString();
         int expectedPageSize = 2;
-        List<Product> expectedProductEntityList = List.of(
+        List<ProductEntity> expectedProductEntityEntityList = List.of(
                 getProductEntity("0", "detailedAddress1", "thumbnail1"),
                 getProductEntity("1", "detailedAddress2", "thumbnail2"));
 
         ObjectId expectedOldNextObjectId = new ObjectId(expectedOldNextId);
         given(productEntityRepository.existsById(expectedOldNextObjectId)).willReturn(true);
         given(productEntityRepository.findAll(expectedOldNextId, expectedPageSize))
-                .willReturn(expectedProductEntityList);
+                .willReturn(expectedProductEntityEntityList);
 
         // when
         GetProductsResponse actual = productService.findAll(expectedOldNextId, expectedPageSize);
@@ -353,8 +353,8 @@ class ProductServiceTest {
                 .hasSize(expectedPageSize)
                 .extracting(GetProductsResponse.Product::getTitle, GetProductsResponse.Product::getDetailedAddress, GetProductsResponse.Product::getThumbnailUrl)
                 .containsExactly(
-                        Tuple.tuple(expectedProductEntityList.get(0).getTitle(), expectedProductEntityList.get(0).getDetailedAddress(), expectedProductEntityList.get(0).getThumbnailUrl()),
-                        Tuple.tuple(expectedProductEntityList.get(1).getTitle(), expectedProductEntityList.get(1).getDetailedAddress(), expectedProductEntityList.get(1).getThumbnailUrl())
+                        Tuple.tuple(expectedProductEntityEntityList.get(0).getTitle(), expectedProductEntityEntityList.get(0).getDetailedAddress(), expectedProductEntityEntityList.get(0).getThumbnailUrl()),
+                        Tuple.tuple(expectedProductEntityEntityList.get(1).getTitle(), expectedProductEntityEntityList.get(1).getDetailedAddress(), expectedProductEntityEntityList.get(1).getThumbnailUrl())
                 );
     }
 
@@ -376,11 +376,11 @@ class ProductServiceTest {
         verify(productEntityRepository, times(0)).findAll(expectedOldNextId, expectedPageSize);
     }
 
-    private Product getProductEntity(String title, String detailedAddress, String thumbnailUrl) {
-        Product product = Product.of(new ObjectId(), title, null, Product.Location.of(0, 0, detailedAddress), 1, List.of(thumbnailUrl, "test1", "test2"), null, null);
-        ReflectionTestUtils.setField(product, "id", new ObjectId());
-        ReflectionTestUtils.setField(product, "createdDate", LocalDateTime.now());
-        return product;
+    private ProductEntity getProductEntity(String title, String detailedAddress, String thumbnailUrl) {
+        ProductEntity productEntity = ProductEntity.of(new ObjectId(), title, null, ProductEntity.Location.of(0, 0, detailedAddress), 1, List.of(thumbnailUrl, "test1", "test2"), null, null);
+        ReflectionTestUtils.setField(productEntity, "id", new ObjectId());
+        ReflectionTestUtils.setField(productEntity, "createdDate", LocalDateTime.now());
+        return productEntity;
     }
 
     @Test
@@ -390,11 +390,11 @@ class ProductServiceTest {
         ObjectId productObjectId = new ObjectId();
         List<String> imageUrlList = List.of("imageUrl1", "imageUrl2");
         List<String> tagNameList = List.of("tag1");
-        Product product = Product.of(
+        ProductEntity productEntity = ProductEntity.of(
                 new ObjectId(),
                 "",
                 "",
-                Product.Location.of(10.0, 10.0, ""),
+                ProductEntity.Location.of(10.0, 10.0, ""),
                 1000L,
                 imageUrlList,
                 tagNameList,
@@ -402,11 +402,11 @@ class ProductServiceTest {
         );
 
         given(productEntityRepository.findById(productObjectId))
-                .willReturn(Optional.of(product));
-        Tag tag = Tag.of("tag1", 1L);
-        List<Tag> tagList = List.of(tag);
+                .willReturn(Optional.of(productEntity));
+        TagEntity tagEntity = TagEntity.of("tag1", 1L);
+        List<TagEntity> tagEntityList = List.of(tagEntity);
         given(tagEntityRepository.findAllById(tagNameList))
-                .willReturn(tagList);
+                .willReturn(tagEntityList);
         S3Client s3Client = S3Client.builder()
                 .build();
         given(awsS3Client.getS3Client())
@@ -429,6 +429,6 @@ class ProductServiceTest {
         verify(awsS3Client, times(1))
                 .delete(s3Client, imageUrlList);
         verify(productEntityRepository, times(1))
-                .delete(product);
+                .delete(productEntity);
     }
 }

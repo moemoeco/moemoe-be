@@ -1,7 +1,7 @@
 package com.moemoe.core.service.jwt;
 
 import com.moemoe.mongo.constant.UserRole;
-import com.moemoe.mongo.entity.User;
+import com.moemoe.mongo.entity.UserEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -15,7 +15,7 @@ class ClaimsFactoryTest {
     @DisplayName("성공 케이스 : User Claims 생성")
     void getUserClaims() {
         // given
-        User userEntity = User.builder()
+        UserEntity userEntity = UserEntity.builder()
                 .email("user@moemoe.com")
                 .role(UserRole.USER)
                 .build();

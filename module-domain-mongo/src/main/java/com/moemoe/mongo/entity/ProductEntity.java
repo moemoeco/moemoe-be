@@ -19,7 +19,7 @@ import java.util.List;
 @Getter
 @Document(collection = "products")
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class Product {
+public class ProductEntity {
     @Id
     private ObjectId id;
     private ObjectId sellerId;
@@ -50,25 +50,25 @@ public class Product {
         return this.imageUrlList.getFirst();
     }
 
-    public static Product of(ObjectId sellerId,
-                             String title,
-                             String description,
-                             Location location,
-                             long price,
-                             List<String> imageUrlList,
-                             List<String> tagNameList,
-                             ProductCondition condition) {
-        return new Product(sellerId, title, description, price, location, imageUrlList, tagNameList, condition);
+    public static ProductEntity of(ObjectId sellerId,
+                                   String title,
+                                   String description,
+                                   Location location,
+                                   long price,
+                                   List<String> imageUrlList,
+                                   List<String> tagNameList,
+                                   ProductCondition condition) {
+        return new ProductEntity(sellerId, title, description, price, location, imageUrlList, tagNameList, condition);
     }
 
-    private Product(ObjectId sellerId,
-                    String title,
-                    String description,
-                    long price,
-                    Location location,
-                    List<String> imageUrlList,
-                    List<String> tagNameList,
-                    ProductCondition condition) {
+    private ProductEntity(ObjectId sellerId,
+                          String title,
+                          String description,
+                          long price,
+                          Location location,
+                          List<String> imageUrlList,
+                          List<String> tagNameList,
+                          ProductCondition condition) {
         this.sellerId = sellerId;
         this.title = title;
         this.description = description;

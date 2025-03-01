@@ -14,23 +14,23 @@ import java.time.LocalDateTime;
 @Document(collection = "tags")
 @CompoundIndex(def = "{'productsCount': -1, 'name': 1}")
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class Tag {
+public class TagEntity {
     @Id
     private String name;
     private long productsCount;
     @CreatedDate
     private LocalDateTime createdDate;
 
-    private Tag(String name, long productsCount) {
+    private TagEntity(String name, long productsCount) {
         this.name = name.replace(" ", "_");
         this.productsCount = productsCount;
     }
 
-    public static Tag of(String name) {
-        return new Tag(name, 0L);
+    public static TagEntity of(String name) {
+        return new TagEntity(name, 0L);
     }
 
-    public static Tag of(String name, long productsCount) {
-        return new Tag(name, productsCount);
+    public static TagEntity of(String name, long productsCount) {
+        return new TagEntity(name, productsCount);
     }
 }

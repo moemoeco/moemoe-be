@@ -5,9 +5,9 @@ import com.moemoe.core.request.RefreshAccessTokenRequest;
 import com.moemoe.core.response.LoginTokenResponse;
 import com.moemoe.core.service.jwt.ClaimsFactory;
 import com.moemoe.core.service.jwt.JwtService;
-import com.moemoe.mongo.entity.User;
+import com.moemoe.mongo.entity.UserEntity;
 import com.moemoe.mongo.repository.UserEntityRepository;
-import com.moemoe.redis.entity.RefreshToken;
+import com.moemoe.redis.entity.RefreshTokenEntity;
 import com.moemoe.redis.repository.RefreshTokenEntityRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,9 +27,9 @@ public class UserService {
 
     public LoginTokenResponse refresh(RefreshAccessTokenRequest request) {
         String refreshToken = request.getRefreshToken();
-        RefreshToken refreshTokenEntity = refreshTokenEntityRepository.findByToken(refreshToken)
+        RefreshTokenEntity refreshTokenEntity = refreshTokenEntityRepository.findByToken(refreshToken)
                 .orElseThrow();
-        User userEntity = userEntityRepository.findByEmail(refreshTokenEntity.getEmail())
+        UserEntity userEntity = userEntityRepository.findByEmail(refreshTokenEntity.getEmail())
                 .orElseThrow();
 
         Map<String, String> userClaims = ClaimsFactory.getUserClaims(userEntity);
@@ -49,7 +49,7 @@ public class UserService {
         log.info("User logged out.");
     }
 
-    public User getUser(String email) {
+    public UserEntity getUserEntity(String email) {
         return userEntityRepository.findByEmail(email)
                 .orElseThrow();
     }

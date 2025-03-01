@@ -5,8 +5,8 @@ import com.moemoe.client.exception.ClientRuntimeException;
 import com.moemoe.core.request.RegisterProductRequest;
 import com.moemoe.core.response.GetProductsResponse;
 import com.moemoe.core.response.IdResponse;
-import com.moemoe.mongo.entity.Product;
-import com.moemoe.mongo.entity.Tag;
+import com.moemoe.mongo.entity.ProductEntity;
+import com.moemoe.mongo.entity.TagEntity;
 import com.moemoe.mongo.repository.ProductEntityRepository;
 import com.moemoe.mongo.repository.TagEntityRepository;
 import com.moemoe.mongo.repository.UserEntityRepository;
@@ -42,14 +42,14 @@ public class ProductService {
             throw new IllegalArgumentException("old next id is invalid");
         }
 
-        List<Product> productList = productEntityRepository.findAll(oldNextId, pageSize);
-        List<GetProductsResponse.Product> contents = getProductContents(productList);
+        List<ProductEntity> productEntityList = productEntityRepository.findAll(oldNextId, pageSize);
+        List<GetProductsResponse.Product> contents = getProductContents(productEntityList);
         return new GetProductsResponse(contents, pageSize);
     }
 
-    private List<GetProductsResponse.Product> getProductContents(List<Product> productList) {
+    private List<GetProductsResponse.Product> getProductContents(List<ProductEntity> productEntityList) {
         try (S3Presigner s3Presigner = awsS3Client.getS3Presigner();) {
-            return productList.stream()
+            return productEntityList.stream()
                     .map(product -> GetProductsResponse.Product.builder()
                             .id(product.getStringId())
                             .title(product.getTitle())
@@ -82,17 +82,17 @@ public class ProductService {
         }
 
         incrementTag(request);
-        Product productEntity = createProductEntity(request, imageUrlList);
+        ProductEntity productEntity = createProductEntity(request, imageUrlList);
         return new IdResponse(productEntityRepository.save(productEntity).getId());
     }
 
     private void incrementTag(RegisterProductRequest request) {
         for (String tagName : request.getTagNameList()) {
-            Optional<Tag> optionalTag = tagEntityRepository.findById(tagName);
+            Optional<TagEntity> optionalTag = tagEntityRepository.findById(tagName);
             if (optionalTag.isPresent()) {
                 tagEntityRepository.incrementProductsCount(tagName);
             } else {
-                tagEntityRepository.save(Tag.of(tagName, 1L));
+                tagEntityRepository.save(TagEntity.of(tagName, 1L));
             }
         }
     }
@@ -103,11 +103,11 @@ public class ProductService {
                 .orElseThrow(() -> new IllegalArgumentException("파일 이름이 null 입니다."));
     }
 
-    private Product createProductEntity(RegisterProductRequest request, List<String> imageUrlList) {
-        return Product.of(request.getSellerId(),
+    private ProductEntity createProductEntity(RegisterProductRequest request, List<String> imageUrlList) {
+        return ProductEntity.of(request.getSellerId(),
                 request.getTitle(),
                 request.getDescription(),
-                Product.Location.of(request.getLatitude(), request.getLongitude(), request.getDetailAddress()),
+                ProductEntity.Location.of(request.getLatitude(), request.getLongitude(), request.getDetailAddress()),
                 request.getPrice(),
                 imageUrlList,
                 request.getTagNameList(),
@@ -123,24 +123,24 @@ public class ProductService {
     @Transactional
     public void delete(String productId) {
         ObjectId objectId = new ObjectId(productId);
-        Optional<Product> optionalProduct = productEntityRepository.findById(objectId);
+        Optional<ProductEntity> optionalProduct = productEntityRepository.findById(objectId);
         if (optionalProduct.isEmpty()) {
             return;
         }
 
-        Product product = optionalProduct.get();
-        List<String> tagNameList = product.getTagNameList();
-        List<Tag> tagEntities = tagEntityRepository.findAllById(tagNameList);
+        ProductEntity productEntity = optionalProduct.get();
+        List<String> tagNameList = productEntity.getTagNameList();
+        List<TagEntity> tagEntityEntities = tagEntityRepository.findAllById(tagNameList);
 
-        for (Tag tagEntity : tagEntities) {
+        for (TagEntity tagEntity : tagEntityEntities) {
             if (tagEntity.getProductsCount() > 0) {
                 tagEntityRepository.decrementProductsCount(tagEntity.getName());
             }
         }
-        productEntityRepository.delete(product);
+        productEntityRepository.delete(productEntity);
 
         try (S3Client s3Client = awsS3Client.getS3Client()) {
-            List<String> s3ObjectKeyList = product.getImageUrlList();
+            List<String> s3ObjectKeyList = productEntity.getImageUrlList();
             awsS3Client.delete(s3Client, s3ObjectKeyList);
         } catch (ClientRuntimeException e){
             log.info("Failed to delete product images.");

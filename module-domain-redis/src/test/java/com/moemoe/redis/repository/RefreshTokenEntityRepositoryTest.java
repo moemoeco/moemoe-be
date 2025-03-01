@@ -2,7 +2,7 @@ package com.moemoe.redis.repository;
 
 import com.moemoe.redis.config.EmbeddedRedisConfig;
 import com.moemoe.redis.config.RedisConfig;
-import com.moemoe.redis.entity.RefreshToken;
+import com.moemoe.redis.entity.RefreshTokenEntity;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,15 +32,15 @@ class RefreshTokenEntityRepositoryTest {
         String expectedEmail = "test@example.com";
         String expectedRefreshToken = "expectedRefreshToken";
 
-        refreshTokenEntityRepository.save(RefreshToken.of(expectedEmail, expectedRefreshToken));
+        refreshTokenEntityRepository.save(RefreshTokenEntity.of(expectedEmail, expectedRefreshToken));
 
-        Optional<RefreshToken> actualRefreshToken = refreshTokenEntityRepository.findById(expectedEmail);
+        Optional<RefreshTokenEntity> actualRefreshToken = refreshTokenEntityRepository.findById(expectedEmail);
         assertThat(actualRefreshToken)
                 .isNotEmpty();
         long defaultRefreshExpiration = 2592000L;
-        RefreshToken refreshToken = actualRefreshToken.get();
-        assertThat(refreshToken)
-                .extracting(RefreshToken::getToken, RefreshToken::getEmail, RefreshToken::getExpirationInSeconds)
+        RefreshTokenEntity refreshTokenEntity = actualRefreshToken.get();
+        assertThat(refreshTokenEntity)
+                .extracting(RefreshTokenEntity::getToken, RefreshTokenEntity::getEmail, RefreshTokenEntity::getExpirationInSeconds)
                 .containsExactly(expectedRefreshToken, expectedEmail, defaultRefreshExpiration);
     }
 
@@ -51,13 +51,13 @@ class RefreshTokenEntityRepositoryTest {
         String expectedRefreshToken = "expectedRefreshToken";
         long expectedRefreshExpiration = 1L;
 
-        refreshTokenEntityRepository.save(RefreshToken.of(expectedEmail, expectedRefreshToken, expectedRefreshExpiration));
+        refreshTokenEntityRepository.save(RefreshTokenEntity.of(expectedEmail, expectedRefreshToken, expectedRefreshExpiration));
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
             fail();
         }
-        Optional<RefreshToken> actualRefreshToken = refreshTokenEntityRepository.findById(expectedEmail);
+        Optional<RefreshTokenEntity> actualRefreshToken = refreshTokenEntityRepository.findById(expectedEmail);
         assertThat(actualRefreshToken)
                 .isEmpty();
     }
@@ -69,15 +69,15 @@ class RefreshTokenEntityRepositoryTest {
         refreshTokenEntityRepository.deleteAll();
         String expectedEmail = "test@example.com";
         String expectedRefreshToken = "expectedRefreshToken2";
-        refreshTokenEntityRepository.save(RefreshToken.of(expectedEmail, expectedRefreshToken));
+        refreshTokenEntityRepository.save(RefreshTokenEntity.of(expectedEmail, expectedRefreshToken));
 
         // when
-        RefreshToken byToken = refreshTokenEntityRepository.findByToken(expectedRefreshToken)
+        RefreshTokenEntity byToken = refreshTokenEntityRepository.findByToken(expectedRefreshToken)
                 .orElseThrow();
 
         // then
         assertThat(byToken)
-                .extracting(RefreshToken::getEmail, RefreshToken::getToken)
+                .extracting(RefreshTokenEntity::getEmail, RefreshTokenEntity::getToken)
                 .containsExactly(expectedEmail, expectedRefreshToken);
     }
 
@@ -88,7 +88,7 @@ class RefreshTokenEntityRepositoryTest {
         refreshTokenEntityRepository.deleteAll();
         String expectedEmail = "test@example.com";
         String expectedRefreshToken = "expectedRefreshToken2";
-        RefreshToken save = refreshTokenEntityRepository.save(RefreshToken.of(expectedEmail, expectedRefreshToken));
+        RefreshTokenEntity save = refreshTokenEntityRepository.save(RefreshTokenEntity.of(expectedEmail, expectedRefreshToken));
 
         // when
         refreshTokenEntityRepository.delete(save);

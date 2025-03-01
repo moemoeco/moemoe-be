@@ -2,7 +2,7 @@ package com.moemoe.redis;
 
 import com.moemoe.redis.config.EmbeddedRedisConfig;
 import com.moemoe.redis.config.RedisConfig;
-import com.moemoe.redis.entity.RefreshToken;
+import com.moemoe.redis.entity.RefreshTokenEntity;
 import com.moemoe.redis.repository.RefreshTokenEntityRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,7 +30,7 @@ class RedisSecondaryIndexTest {
         // given
         String secondaryIndex = "refresh_token:token:refreshtoken";
         String tokenIndexKey = "refresh_token:test@example.com:idx";
-        refreshTokenEntityRepository.save(RefreshToken.of("test@example.com", "refreshtoken", 3L));
+        refreshTokenEntityRepository.save(RefreshTokenEntity.of("test@example.com", "refreshtoken", 3L));
         assertThat(redisTemplate.opsForSet().isMember(tokenIndexKey, secondaryIndex))
                 .isTrue();
 

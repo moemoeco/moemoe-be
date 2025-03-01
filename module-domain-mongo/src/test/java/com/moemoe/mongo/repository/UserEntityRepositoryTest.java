@@ -1,7 +1,7 @@
 package com.moemoe.mongo.repository;
 
 import com.moemoe.mongo.AbstractMongoDbTest;
-import com.moemoe.mongo.entity.User;
+import com.moemoe.mongo.entity.UserEntity;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,16 +23,16 @@ class UserEntityRepositoryTest extends AbstractMongoDbTest {
     @Test
     void test() {
         // given
-        User user = User.builder()
+        UserEntity userEntity = UserEntity.builder()
                 .name("test")
                 .email("testemail@naver.com")
                 .build();
 
         // when
-        userEntityRepository.save(user);
+        userEntityRepository.save(userEntity);
 
         // then
-        Optional<User> byEmail = userEntityRepository.findByEmail("testemail@naver.com");
+        Optional<UserEntity> byEmail = userEntityRepository.findByEmail("testemail@naver.com");
         assertThat(byEmail)
                 .isNotEmpty();
     }

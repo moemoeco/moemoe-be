@@ -1,7 +1,7 @@
 package com.moemoe.mongo.repository;
 
 
-import com.moemoe.mongo.entity.Tag;
+import com.moemoe.mongo.entity.TagEntity;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
@@ -9,7 +9,7 @@ import org.springframework.data.mongodb.repository.Update;
 
 import java.util.List;
 
-public interface TagEntityRepository extends MongoRepository<Tag, String> {
+public interface TagEntityRepository extends MongoRepository<TagEntity, String> {
     @Query("{ 'name': ?0 }")
     @Update("{ '$inc': { 'productsCount': 1 } }")
     void incrementProductsCount(String name);
@@ -18,5 +18,5 @@ public interface TagEntityRepository extends MongoRepository<Tag, String> {
     @Update("{ '$inc': { 'productsCount': -1 } }")
     void decrementProductsCount(String name);
 
-    List<Tag> findTop20ByNameStartingWith(String prefix, Sort sort);
+    List<TagEntity> findTop20ByNameStartingWith(String prefix, Sort sort);
 }

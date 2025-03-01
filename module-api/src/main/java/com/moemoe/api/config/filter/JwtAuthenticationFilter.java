@@ -6,7 +6,7 @@ import com.moemoe.core.service.jwt.JwtService;
 import com.moemoe.core.service.jwt.exception.JwtExpiredException;
 import com.moemoe.core.service.jwt.exception.JwtMalformedException;
 import com.moemoe.mongo.constant.UserRole;
-import com.moemoe.mongo.entity.User;
+import com.moemoe.mongo.entity.UserEntity;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -57,7 +57,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String email = jwtService.getEmail(token);
             String role = jwtService.getRole(token);
             if (!ObjectUtils.isEmpty(email) && jwtService.isValidToken(token, email)) {
-                UserDetails userDetails = User.builder()
+                UserDetails userDetails = UserEntity.builder()
                         .email(email)
                         .role(UserRole.valueOf(role))
                         .build();

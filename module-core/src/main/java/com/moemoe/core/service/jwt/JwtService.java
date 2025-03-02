@@ -71,17 +71,19 @@ public class JwtService {
         return extractClaims(token).get("role", String.class);
     }
 
-    public boolean isValidToken(String token, String userName) {
+    public boolean isValidToken(String token, String userId) {
         try {
             Claims claims = extractClaims(token);
             if (!claims.containsKey("role")) {
                 UserRole.valueOf(claims.get("role", String.class));
                 return false;
             }
-            if (!claims.containsKey("email")) return false;
+            if (!claims.containsKey("email")) {
+                return false;
+            }
 
             String subject = claims.getSubject();
-            return userName.equals(subject) && !isExpiredToken(token);
+            return userId.equals(subject) && !isExpiredToken(token);
         } catch (MalformedJwtException e) {
             throw new JwtMalformedException(e.getMessage(), e);
         } catch (ExpiredJwtException e) {

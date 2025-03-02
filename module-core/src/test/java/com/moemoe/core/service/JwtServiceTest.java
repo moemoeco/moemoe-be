@@ -7,6 +7,7 @@ import com.moemoe.mongo.entity.UserEntity;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.bson.types.ObjectId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,15 +16,19 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.util.ReflectionUtils;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import javax.crypto.SecretKey;
-import java.lang.reflect.Field;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Date;
 import java.util.Map;
 
 import static com.nimbusds.jose.JWSAlgorithm.HS256;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 @ExtendWith(SpringExtension.class)
@@ -46,14 +51,16 @@ class JwtServiceTest {
 
     @Test
     @DisplayName("성공 케이스 : Access Token 생성")
-    void createAccessToken() {
+    void createAccessToken() throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         // given
+        ObjectId id = new ObjectId();
         String email = "test@example.com";
-        String role = UserRole.USER.name();
-        Map<String, String> claims = Map.of("email", email, "role", role);
-        UserEntity userEntity = UserEntity.builder().email(email).build();
+        UserRole role = UserRole.USER;
+
+        UserEntity userEntity = getUserEntity(id, role, email);
 
         // when
+        Map<String, String> claims = Map.of("email", email, "role", role.name());
         String accessToken = jwtService.createAccessToken(claims, userEntity);
 
         // then
@@ -71,7 +78,7 @@ class JwtServiceTest {
 
         Claims payload = (Claims) parsedAccessToken.getPayload();
         assertThat(payload.getSubject())
-                .isEqualTo(email);
+                .isEqualTo(id.toHexString());
         assertThat(payload.getIssuer())
                 .isEqualTo("test-issuer");
         assertThat(payload.getExpiration().getTime() - payload.getIssuedAt().getTime())
@@ -79,19 +86,22 @@ class JwtServiceTest {
         assertThat(payload.get("email", String.class))
                 .isEqualTo(email);
         assertThat(payload.get("role", String.class))
-                .isEqualTo(role);
+                .isEqualTo(role.name());
     }
+
 
     @Test
     @DisplayName("성공 케이스 : Refresh Token 생성")
-    void createRefreshToken() {
+    void createRefreshToken() throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         // given
+        ObjectId id = new ObjectId();
         String email = "test@example.com";
-        String role = UserRole.USER.name();
-        Map<String, String> claims = Map.of("email", email, "role", role);
-        UserEntity userEntity = UserEntity.builder().email(email).build();
+        UserRole role = UserRole.USER;
+
+        UserEntity userEntity = getUserEntity(id, role, email);
 
         // when
+        Map<String, String> claims = Map.of("email", email, "role", role.name());
         String refreshToken = jwtService.createRefreshToken(claims, userEntity);
 
         // then
@@ -109,7 +119,7 @@ class JwtServiceTest {
 
         Claims payload = (Claims) parsedRefreshToken.getPayload();
         assertThat(payload.getSubject())
-                .isEqualTo(email);
+                .isEqualTo(id.toHexString());
         assertThat(payload.getIssuer())
                 .isEqualTo("test-issuer");
         assertThat(payload.getExpiration().getTime() - payload.getIssuedAt().getTime())
@@ -117,30 +127,68 @@ class JwtServiceTest {
         assertThat(payload.get("email", String.class))
                 .isEqualTo(email);
         assertThat(payload.get("role", String.class))
-                .isEqualTo(role);
+                .isEqualTo(role.name());
     }
 
     @Test
-    @DisplayName("성공 케이스 : 유효한 토큰 검증")
-    void isValidToken() throws IllegalAccessException {
+    @DisplayName("성공 케이스 : 유효한 토큰")
+    void isValid() {
         // given
+        ObjectId id = new ObjectId();
         String email = "test@example.com";
-        String role = UserRole.USER.name();
-        Map<String, String> claims = Map.of("email", email, "role", role);
-        UserEntity userEntity = UserEntity.builder().email(email).build();
+        UserRole role = UserRole.USER;
+        long now = System.currentTimeMillis();
+        Map<String, String> claims = Map.of("email", email, "role", role.name());
+        String jwtToken = Jwts.builder()
+                .header()
+                .type("jwt")
+                .and()
+                .claims(claims)
+                .subject(id.toHexString())
+                .expiration(new Date(now + accessExpiration))
+                .issuedAt(new Date(now))
+                .issuer("")
+                .signWith(Keys.hmacShaKeyFor(Decoders.BASE64URL.decode(secretKey)))
+                .compact();
 
-        Field accessExpirationField = ReflectionUtils.findField(jwtService.getClass(), "accessExpiration");
-        assert accessExpirationField != null;
-        accessExpirationField.setAccessible(true);
-        long beforeFieldValue = accessExpirationField.getLong(jwtService);
-        ReflectionUtils.setField(accessExpirationField, jwtService, 0L);
+        // when then
+        assertTrue(jwtService.isValidToken(jwtToken, id.toHexString()));
+        assertFalse(jwtService.isValidToken(jwtToken, new ObjectId().toHexString()));
+    }
+
+    @Test
+    @DisplayName("실패 케이스 : 유효한 토큰 검증 시 유효 시간이 다 된 경우")
+    void isValidTokenExpiration() {
+        // given
+        ObjectId id = new ObjectId();
+        String email = "test@example.com";
+        UserRole role = UserRole.USER;
+        long now = System.currentTimeMillis();
+        Map<String, String> claims = Map.of("email", email, "role", role.name());
+        String jwtToken = Jwts.builder()
+                .header()
+                .type("jwt")
+                .and()
+                .claims(claims)
+                .subject(id.toHexString())
+                .expiration(new Date(now))
+                .issuedAt(new Date(now))
+                .issuer("")
+                .signWith(Keys.hmacShaKeyFor(Decoders.BASE64URL.decode(secretKey)))
+                .compact();
 
         // when
-        String accessToken = jwtService.createAccessToken(claims, userEntity);
-        assertThatThrownBy(() -> jwtService.isValidToken(accessToken, email))
+        assertThatThrownBy(() -> jwtService.isValidToken(jwtToken, id.toHexString()))
                 .isInstanceOf(JwtExpiredException.class);
+    }
 
-        ReflectionUtils.setField(accessExpirationField, jwtService, beforeFieldValue);
-        accessExpirationField.setAccessible(false);
+    private UserEntity getUserEntity(ObjectId id, UserRole role, String email) throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+        Constructor<UserEntity> constructor = UserEntity.class.getDeclaredConstructor();
+        constructor.setAccessible(true);  // private 생성자 접근 허용
+        UserEntity userEntity = constructor.newInstance();
+        ReflectionTestUtils.setField(userEntity, "id", id);
+        ReflectionTestUtils.setField(userEntity, "role", role);
+        ReflectionTestUtils.setField(userEntity, "email", email);
+        return userEntity;
     }
 }

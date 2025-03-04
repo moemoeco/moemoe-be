@@ -11,6 +11,7 @@ import com.moemoe.redis.entity.RefreshTokenEntity;
 import com.moemoe.redis.repository.RefreshTokenEntityRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,8 +50,9 @@ public class UserService {
         log.info("User logged out.");
     }
 
-    public UserEntity getUserEntity(String email) {
-        return userEntityRepository.findByEmail(email)
+    public UserEntity getUserEntity(String userId) {
+        ObjectId objectId = new ObjectId(userId);
+        return userEntityRepository.findById(objectId)
                 .orElseThrow();
     }
 }

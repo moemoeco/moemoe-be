@@ -2,11 +2,10 @@ package com.moemoe.api.config.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moemoe.api.config.handler.ErrorResponseBody;
+import com.moemoe.core.service.UserService;
 import com.moemoe.core.service.jwt.JwtService;
 import com.moemoe.core.service.jwt.exception.JwtExpiredException;
 import com.moemoe.core.service.jwt.exception.JwtMalformedException;
-import com.moemoe.mongo.constant.UserRole;
-import com.moemoe.mongo.entity.UserEntity;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,6 +30,7 @@ import static com.moemoe.core.service.jwt.JwtService.AUTHENTICATION_HEADER;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
+    private final UserService userService;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -54,13 +54,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         String token = authHeader.split(" ")[1];
         try {
-            String email = jwtService.getEmail(token);
-            String role = jwtService.getRole(token);
-            if (!ObjectUtils.isEmpty(email) && jwtService.isValidToken(token, email)) {
-                UserDetails userDetails = UserEntity.builder()
-                        .email(email)
-                        .role(UserRole.valueOf(role))
-                        .build();
+            String userId = jwtService.getUserId(token);
+            if (!ObjectUtils.isEmpty(userId) && jwtService.isValidToken(token, userId)) {
+                UserDetails userDetails = userService.getUserEntity(userId);
 
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails,

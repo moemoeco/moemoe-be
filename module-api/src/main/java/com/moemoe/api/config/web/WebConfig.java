@@ -24,11 +24,11 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Bean
     public UserDetailsService userDetailsService() {
-        return (email -> {
+        return (userId -> {
             try {
-                return userService.getUserEntity(email);
+                return userService.getUserEntity(userId);
             } catch (NoSuchElementException e) {
-                throw new UsernameNotFoundException("User(" + email + ") not found.", e);
+                throw new UsernameNotFoundException("User(" + userId + ") not found.", e);
             }
         });
     }

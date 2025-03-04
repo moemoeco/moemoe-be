@@ -63,12 +63,19 @@ public class JwtService {
                 .compact();
     }
 
+    public String getUserId(String token) {
+        return extractClaims(token)
+                .getSubject();
+    }
+
     public String getEmail(String token) {
-        return extractClaims(token).get("email", String.class);
+        return extractClaims(token)
+                .get("email", String.class);
     }
 
     public String getRole(String token) {
-        return extractClaims(token).get("role", String.class);
+        return extractClaims(token)
+                .get("role", String.class);
     }
 
     public boolean isValidToken(String token, String userId) {

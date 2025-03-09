@@ -1,9 +1,7 @@
 package com.moemoe.mongo.constant;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 
-@Getter
 @AllArgsConstructor
 public enum UserRole {
     NOT_USER("Not a registered user"),

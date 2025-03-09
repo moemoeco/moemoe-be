@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moemoe.core.service.jwt.JwtService;
 import com.moemoe.core.service.jwt.exception.JwtExpiredException;
 import com.moemoe.core.service.jwt.exception.JwtMalformedException;
+import com.moemoe.mongo.constant.UserRole;
 import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -40,15 +41,15 @@ class JwtAuthenticationFilterTest {
         SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
         try (MockedStatic<SecurityContextHolder> utilities = Mockito.mockStatic(SecurityContextHolder.class);) {
             // given
-            String mockEmail = "test@example.com";
-            String mockRole = "USER";
+            String mockId = "userId";
+            String mockRole = UserRole.USER.name();
             String validToken = "valid.jwt.token";
 
-            given(jwtService.getEmail(validToken))
-                    .willReturn(mockEmail);
+            given(jwtService.getUserId(validToken))
+                    .willReturn(mockId);
             given(jwtService.getRole(validToken))
                     .willReturn(mockRole);
-            given(jwtService.isValidToken(validToken, mockEmail))
+            given(jwtService.isValidToken(validToken, mockId))
                     .willReturn(true);
             utilities.when(SecurityContextHolder::getContext).thenReturn(securityContext);
 
@@ -65,7 +66,7 @@ class JwtAuthenticationFilterTest {
             assertThat(authentication)
                     .isNotNull()
                     .extracting(Authentication::getName)
-                    .isEqualTo(mockEmail);
+                    .isEqualTo(mockId);
         } catch (Exception e) {
             fail("Exception");
         }
@@ -77,7 +78,7 @@ class JwtAuthenticationFilterTest {
         // given
         String malformedToken = "malformed.jwt.token";
 
-        given(jwtService.getEmail(malformedToken))
+        given(jwtService.getUserId(malformedToken))
                 .willThrow(new JwtMalformedException("Malformed token", new Throwable("Malformed token")));
 
 
@@ -101,7 +102,7 @@ class JwtAuthenticationFilterTest {
         // given
         String expiredToken = "expired.jwt.token";
 
-        given(jwtService.getEmail(expiredToken))
+        given(jwtService.getUserId(expiredToken))
                 .willThrow(new JwtExpiredException("Jwt Token Expired", new Throwable("Expired Token")));
 
         MockHttpServletRequest mockHttpServletRequest = new MockHttpServletRequest();

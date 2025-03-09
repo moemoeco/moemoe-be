@@ -55,7 +55,7 @@ public class UserEntity implements UserDetails {
     // Spring Security UserDetails Area
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("user"));
+        return List.of(new SimpleGrantedAuthority(role.name()));
     }
 
     @Override

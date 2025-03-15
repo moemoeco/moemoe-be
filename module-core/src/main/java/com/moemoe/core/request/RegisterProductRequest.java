@@ -5,18 +5,13 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.AccessLevel;
 import lombok.Getter;
-import org.bson.types.ObjectId;
 
 import java.util.List;
 import java.util.Objects;
 
 @Getter
 public class RegisterProductRequest {
-    @NotEmpty(message = "Seller Id must not be empty")
-    @Getter(AccessLevel.NONE)
-    private String sellerId;
     @NotEmpty(message = "Title must not be empty")
     private String title;
     private String description;
@@ -42,10 +37,6 @@ public class RegisterProductRequest {
         return this.location.getDetailAddress();
     }
 
-    public ObjectId getSellerId() {
-        return new ObjectId(this.sellerId);
-    }
-
     @Getter
     public static class Location {
         private double latitude;
@@ -69,11 +60,11 @@ public class RegisterProductRequest {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         RegisterProductRequest request = (RegisterProductRequest) o;
-        return getPrice() == request.getPrice() && Objects.equals(getSellerId(), request.getSellerId()) && Objects.equals(getTitle(), request.getTitle()) && Objects.equals(getDescription(), request.getDescription()) && Objects.equals(getLocation(), request.getLocation()) && Objects.equals(getTagNameList(), request.getTagNameList()) && getCondition() == request.getCondition();
+        return getPrice() == request.getPrice() && Objects.equals(getTitle(), request.getTitle()) && Objects.equals(getDescription(), request.getDescription()) && Objects.equals(getLocation(), request.getLocation()) && Objects.equals(getTagNameList(), request.getTagNameList()) && getCondition() == request.getCondition();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getSellerId(), getTitle(), getDescription(), getLocation(), getPrice(), getTagNameList(), getCondition());
+        return Objects.hash(getTitle(), getDescription(), getLocation(), getPrice(), getTagNameList(), getCondition());
     }
 }

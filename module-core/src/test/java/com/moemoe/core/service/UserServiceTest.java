@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -51,12 +52,18 @@ class UserServiceTest {
     void refresh() {
         // given
         String expectedRefreshToken = "refreshToken";
+        String expectedUserId = "userId";
         String expectedEmail = "user@moemoe.com";
+        UserRole expectedUserRole = UserRole.USER;
         RefreshTokenEntity refreshTokenEntity = RefreshTokenEntity.of(expectedEmail, expectedRefreshToken);
-        UserEntity userEntity = UserEntity.builder()
-                .email(expectedEmail)
-                .role(UserRole.USER)
-                .build();
+        UserEntity userEntity = Mockito.mock(UserEntity.class);
+        given(userEntity.getId())
+                .willReturn(expectedUserId);
+        given(userEntity.getEmail())
+                .willReturn(expectedEmail);
+        given(userEntity.getRole())
+                .willReturn(expectedUserRole);
+
         given(refreshTokenEntityRepository.findByToken(expectedRefreshToken))
                 .willReturn(Optional.of(refreshTokenEntity));
         given(userEntityRepository.findByEmail(expectedEmail))

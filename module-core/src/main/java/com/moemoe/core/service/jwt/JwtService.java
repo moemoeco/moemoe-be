@@ -10,7 +10,6 @@ import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -33,14 +32,14 @@ public class JwtService {
         this.secretKey = Keys.hmacShaKeyFor(Decoders.BASE64URL.decode(secretKey));
     }
 
-    public String createAccessToken(Map<String, String> claims, UserDetails userDetails) {
+    public String createAccessToken(Map<String, String> claims, String subject) {
         long now = System.currentTimeMillis();
         return Jwts.builder()
                 .header()
                 .type("jwt")
                 .and()
                 .claims(claims)
-                .subject(userDetails.getUsername())
+                .subject(subject)
                 .expiration(new Date(now + accessExpiration))
                 .issuedAt(new Date(now))
                 .issuer(issuer)
@@ -48,14 +47,14 @@ public class JwtService {
                 .compact();
     }
 
-    public String createRefreshToken(Map<String, String> claims, UserDetails userDetails) {
+    public String createRefreshToken(Map<String, String> claims, String subject) {
         long now = System.currentTimeMillis();
         return Jwts.builder()
                 .header()
                 .type("jwt")
                 .and()
                 .claims(claims)
-                .subject(userDetails.getUsername())
+                .subject(subject)
                 .expiration(new Date(now + refreshExpiration))
                 .issuedAt(new Date(now))
                 .issuer(issuer)
@@ -63,25 +62,34 @@ public class JwtService {
                 .compact();
     }
 
+    public String getUserId(String token) {
+        return extractClaims(token)
+                .getSubject();
+    }
+
     public String getEmail(String token) {
-        return extractClaims(token).get("email", String.class);
+        return extractClaims(token)
+                .get("email", String.class);
     }
 
     public String getRole(String token) {
-        return extractClaims(token).get("role", String.class);
+        return extractClaims(token)
+                .get("role", String.class);
     }
 
-    public boolean isValidToken(String token, String userName) {
+    public boolean isValidToken(String token, String userId) {
         try {
             Claims claims = extractClaims(token);
             if (!claims.containsKey("role")) {
                 UserRole.valueOf(claims.get("role", String.class));
                 return false;
             }
-            if (!claims.containsKey("email")) return false;
+            if (!claims.containsKey("email")) {
+                return false;
+            }
 
             String subject = claims.getSubject();
-            return userName.equals(subject) && !isExpiredToken(token);
+            return userId.equals(subject) && !isExpiredToken(token);
         } catch (MalformedJwtException e) {
             throw new JwtMalformedException(e.getMessage(), e);
         } catch (ExpiredJwtException e) {

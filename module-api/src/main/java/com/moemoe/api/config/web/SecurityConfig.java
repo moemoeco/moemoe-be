@@ -1,6 +1,7 @@
 package com.moemoe.api.config.web;
 
 import com.moemoe.api.config.filter.JwtAuthenticationFilter;
+import com.moemoe.mongo.constant.UserRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -62,7 +63,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/oauth/**", "/users/refresh", "/users/logout").permitAll()
                         .requestMatchers("/swagger-ui/**", "/api-docs/**", "/swagger-ui.html/**").permitAll()  // Swagger 관련 경로 모두 허용
-                        .anyRequest().hasAnyAuthority("user")
+                        .anyRequest().hasAnyAuthority(UserRole.USER.name(), UserRole.ADMIN.name())
                 )
                 .formLogin(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable)

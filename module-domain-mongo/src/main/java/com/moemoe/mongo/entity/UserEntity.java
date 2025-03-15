@@ -9,18 +9,13 @@ import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-
-import java.util.Collection;
-import java.util.List;
 
 @Getter
 @Document(collection = "users")
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class UserEntity implements UserDetails {
+public class UserEntity {
     @Id
+    @Getter(AccessLevel.NONE)
     private ObjectId id;
     private UserRole role;
     private String socialId;
@@ -51,20 +46,7 @@ public class UserEntity implements UserDetails {
         this.profileImageUrl = profileImageUrl;
     }
 
-
-    // Spring Security UserDetails Area
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("user"));
-    }
-
-    @Override
-    public String getPassword() {
-        return String.valueOf(socialId);
-    }
-
-    @Override
-    public String getUsername() {
-        return email;
+    public String getId() {
+        return id.toHexString();
     }
 }

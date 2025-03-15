@@ -38,8 +38,8 @@ public abstract class OAuthTemplate {
         UserEntity userEntity = getUserEntity(userInfo);
 
         Map<String, String> userClaims = ClaimsFactory.getUserClaims(userEntity);
-        final String accessToken = jwtService.createAccessToken(userClaims, userEntity);
-        final String refreshToken = jwtService.createRefreshToken(userClaims, userEntity);
+        final String accessToken = jwtService.createAccessToken(userClaims, userEntity.getId());
+        final String refreshToken = jwtService.createRefreshToken(userClaims, userEntity.getId());
 
         refreshTokenEntityRepository.save(RefreshTokenEntity.of(userEntity.getEmail(), refreshToken));
         log.info("OAuth login service done.");

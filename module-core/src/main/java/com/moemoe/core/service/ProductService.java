@@ -5,6 +5,7 @@ import com.moemoe.client.exception.ClientRuntimeException;
 import com.moemoe.core.request.RegisterProductRequest;
 import com.moemoe.core.response.GetProductsResponse;
 import com.moemoe.core.response.IdResponse;
+import com.moemoe.core.security.SecurityContextHolderUtils;
 import com.moemoe.mongo.entity.ProductEntity;
 import com.moemoe.mongo.entity.TagEntity;
 import com.moemoe.mongo.repository.ProductEntityRepository;
@@ -70,11 +71,12 @@ public class ProductService {
     @Transactional
     public IdResponse register(RegisterProductRequest request,
                                List<MultipartFile> imageList) {
-        validateSellerExists(request.getSellerId());
+        ObjectId sellerId = SecurityContextHolderUtils.getUserId();
+        validateSellerExists(sellerId);
         List<String> imageUrlList = new ArrayList<>();
         try (S3Client s3Client = awsS3Client.getS3Client()) {
             for (MultipartFile image : imageList) {
-                String imageUrl = awsS3Client.upload(s3Client, Path.of(request.getSellerId().toHexString(), getFileName(image)).toString(), image);
+                String imageUrl = awsS3Client.upload(s3Client, Path.of(sellerId.toHexString(), getFileName(image)).toString(), image);
                 imageUrlList.add(imageUrl);
             }
         } catch (Exception e) {
@@ -82,7 +84,7 @@ public class ProductService {
         }
 
         incrementTag(request);
-        ProductEntity productEntity = createProductEntity(request, imageUrlList);
+        ProductEntity productEntity = createProductEntity(sellerId, request, imageUrlList);
         return new IdResponse(productEntityRepository.save(productEntity).getId());
     }
 
@@ -103,8 +105,9 @@ public class ProductService {
                 .orElseThrow(() -> new IllegalArgumentException("파일 이름이 null 입니다."));
     }
 
-    private ProductEntity createProductEntity(RegisterProductRequest request, List<String> imageUrlList) {
-        return ProductEntity.of(request.getSellerId(),
+    private ProductEntity createProductEntity(ObjectId sellerId, RegisterProductRequest request, List<String> imageUrlList) {
+        return ProductEntity.of(
+                sellerId,
                 request.getTitle(),
                 request.getDescription(),
                 ProductEntity.Location.of(request.getLatitude(), request.getLongitude(), request.getDetailAddress()),
@@ -142,7 +145,7 @@ public class ProductService {
         try (S3Client s3Client = awsS3Client.getS3Client()) {
             List<String> s3ObjectKeyList = productEntity.getImageUrlList();
             awsS3Client.delete(s3Client, s3ObjectKeyList);
-        } catch (ClientRuntimeException e){
+        } catch (ClientRuntimeException e) {
             log.info("Failed to delete product images.");
         }
     }

@@ -68,12 +68,15 @@ public abstract class AbstractControllerTest {
         if (hasAuth) {
 
             String accessToken = "expectedAccessToken";
-            given(jwtService.isValidToken(accessToken, "user@moemoe.com"))
-                    .willReturn(true);
+            String userId = "userId";
+            given(jwtService.getUserId(accessToken))
+                    .willReturn(userId);
             given(jwtService.getEmail(accessToken))
                     .willReturn("user@moemoe.com");
             given(jwtService.getRole(accessToken))
                     .willReturn("USER");
+            given(jwtService.isValidToken(accessToken, userId))
+                    .willReturn(true);
             builder = builder.header(AUTHENTICATION_HEADER, "Bearer " + accessToken);
         }
         try {

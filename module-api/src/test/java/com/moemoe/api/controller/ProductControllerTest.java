@@ -104,7 +104,6 @@ class ProductControllerTest extends AbstractControllerTest {
             ReflectionTestUtils.setField(expectedLocation, "longitude", expectedLongitude);
             ReflectionTestUtils.setField(expectedLocation, "detailAddress", expectedDetailedAddress);
 
-            ReflectionTestUtils.setField(request, "sellerId", expectedSellerId);
             ReflectionTestUtils.setField(request, "title", expectedTitle);
             ReflectionTestUtils.setField(request, "description", expectedDescription);
             ReflectionTestUtils.setField(request, "price", expectedPrice);
@@ -151,46 +150,6 @@ class ProductControllerTest extends AbstractControllerTest {
             IdResponse actualResponse = convertResponseToClass(invoke, IdResponse.class);
             assertThat(actualResponse)
                     .isEqualTo(response);
-        }
-
-        @Test
-        @DisplayName("실패 케이스 : Seller Id를 입력하지 않은 경우")
-        void registerEmptySellerId() throws Exception {
-            // given
-            RegisterProductRequest request = new RegisterProductRequest();
-            String requestJson = mockRequest(request);
-
-            // empty seller id
-            ObjectNode objectNode = (ObjectNode) objectMapper.readTree(requestJson);
-            objectNode.put("sellerId", "");
-            requestJson = objectMapper.writeValueAsString(objectNode);
-
-            MockMultipartFile requestPart = new MockMultipartFile("request",
-                    "request",
-                    MediaType.APPLICATION_JSON_VALUE,
-                    requestJson.getBytes(StandardCharsets.UTF_8));
-            MockMultipartFile file = new MockMultipartFile(
-                    "imageList",
-                    "test1",
-                    "image/png",
-                    "abcd".getBytes()
-            );
-            MockHttpServletRequestBuilder builder = multipart("/products")
-                    .file(requestPart)
-                    .file(file);
-
-            IdResponse response = new IdResponse();
-            String productId = "productId";
-            ReflectionTestUtils.setField(response, "id", productId);
-            given(productService.register(request, List.of(file)))
-                    .willReturn(response);
-
-            // when then
-            MvcResult invoke = invoke(builder, status().isBadRequest(), true);
-            ErrorResponseBody errorResponseBody = convertResponseToClass(invoke, ErrorResponseBody.class);
-            assertThat(errorResponseBody)
-                    .extracting(ErrorResponseBody::getType)
-                    .isEqualTo(HandlerMethodValidationException.class.getSimpleName());
         }
 
         @Test

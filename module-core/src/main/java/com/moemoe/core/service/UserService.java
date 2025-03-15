@@ -33,7 +33,7 @@ public class UserService {
                 .orElseThrow();
 
         Map<String, String> userClaims = ClaimsFactory.getUserClaims(userEntity);
-        final String accessToken = jwtService.createAccessToken(userClaims, userEntity);
+        final String accessToken = jwtService.createAccessToken(userClaims, userEntity.getId());
 
         return LoginTokenResponse.builder()
                 .accessToken(accessToken)

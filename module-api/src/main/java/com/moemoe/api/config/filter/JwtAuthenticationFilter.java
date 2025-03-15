@@ -2,6 +2,7 @@ package com.moemoe.api.config.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moemoe.api.config.handler.ErrorResponseBody;
+import com.moemoe.core.security.MoeUser;
 import com.moemoe.core.service.jwt.JwtService;
 import com.moemoe.core.service.jwt.exception.JwtExpiredException;
 import com.moemoe.core.service.jwt.exception.JwtMalformedException;
@@ -15,17 +16,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 import static com.moemoe.core.service.jwt.JwtService.AUTHENTICATION_HEADER;
 
@@ -58,9 +55,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = authHeader.split(" ")[1];
         try {
             String userId = jwtService.getUserId(token);
+            String email = jwtService.getEmail(token);
             String role = jwtService.getRole(token);
             if (!ObjectUtils.isEmpty(userId) && jwtService.isValidToken(token, userId)) {
-                UsernamePasswordAuthenticationToken authToken = getUsernamePasswordAuthenticationToken(userId, role);
+                UsernamePasswordAuthenticationToken authToken = getUsernamePasswordAuthenticationToken(userId, email, role);
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         } catch (JwtMalformedException exception) {
@@ -79,18 +77,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private UsernamePasswordAuthenticationToken getUsernamePasswordAuthenticationToken(String userId, String role) {
-        Collection<? extends GrantedAuthority> authorities = new ArrayList<>();
-        if (role.equals(UserRole.USER.name())) {
-            authorities = List.of(new SimpleGrantedAuthority(UserRole.USER.name()));
-        } else if (role.equals(UserRole.ADMIN.name())) {
-            authorities = List.of(new SimpleGrantedAuthority(UserRole.ADMIN.name()));
-        }
+    private UsernamePasswordAuthenticationToken getUsernamePasswordAuthenticationToken(String userId, String email, String role) {
+        UserDetails userDetails = MoeUser.of(
+                userId,
+                email,
+                UserRole.valueOf(role)
+        );
 
         return new UsernamePasswordAuthenticationToken(
-                userId,
+                userDetails,
                 null,
-                authorities
+                userDetails.getAuthorities()
         );
     }
 

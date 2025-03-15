@@ -61,7 +61,7 @@ class JwtServiceTest {
 
         // when
         Map<String, String> claims = Map.of("email", email, "role", role.name());
-        String accessToken = jwtService.createAccessToken(claims, userEntity);
+        String accessToken = jwtService.createAccessToken(claims, userEntity.getId());
 
         // then
         assertThat(accessToken)
@@ -102,7 +102,7 @@ class JwtServiceTest {
 
         // when
         Map<String, String> claims = Map.of("email", email, "role", role.name());
-        String refreshToken = jwtService.createRefreshToken(claims, userEntity);
+        String refreshToken = jwtService.createRefreshToken(claims, userEntity.getId());
 
         // then
         assertThat(refreshToken)

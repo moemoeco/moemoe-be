@@ -10,7 +10,6 @@ import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -33,14 +32,14 @@ public class JwtService {
         this.secretKey = Keys.hmacShaKeyFor(Decoders.BASE64URL.decode(secretKey));
     }
 
-    public String createAccessToken(Map<String, String> claims, UserDetails userDetails) {
+    public String createAccessToken(Map<String, String> claims, String subject) {
         long now = System.currentTimeMillis();
         return Jwts.builder()
                 .header()
                 .type("jwt")
                 .and()
                 .claims(claims)
-                .subject(userDetails.getUsername())
+                .subject(subject)
                 .expiration(new Date(now + accessExpiration))
                 .issuedAt(new Date(now))
                 .issuer(issuer)
@@ -48,14 +47,14 @@ public class JwtService {
                 .compact();
     }
 
-    public String createRefreshToken(Map<String, String> claims, UserDetails userDetails) {
+    public String createRefreshToken(Map<String, String> claims, String subject) {
         long now = System.currentTimeMillis();
         return Jwts.builder()
                 .header()
                 .type("jwt")
                 .and()
                 .claims(claims)
-                .subject(userDetails.getUsername())
+                .subject(subject)
                 .expiration(new Date(now + refreshExpiration))
                 .issuedAt(new Date(now))
                 .issuer(issuer)

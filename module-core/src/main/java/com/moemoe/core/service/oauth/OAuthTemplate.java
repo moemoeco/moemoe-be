@@ -56,6 +56,8 @@ public abstract class OAuthTemplate {
 
     protected abstract TokenResponse getToken(String code, String state);
 
+    protected abstract UserInfoResponse getUserInfo(OAuthLoginRequest request);
+
     protected abstract UserInfoResponse getUserInfo(TokenResponse token);
 
     protected abstract UserEntity getUserEntity(UserInfoResponse userInfo);

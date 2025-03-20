@@ -6,6 +6,7 @@ import com.moemoe.client.http.dto.UserInfoResponse;
 import com.moemoe.client.http.dto.kakao.KakaoUserInfoResponse;
 import com.moemoe.client.http.kakao.KakaoTokenClient;
 import com.moemoe.client.http.kakao.KakaoUserInfoClient;
+import com.moemoe.core.request.OAuthLoginRequest;
 import com.moemoe.core.service.builder.KakaoUrlBuilder;
 import com.moemoe.core.service.builder.UrlBuilder;
 import com.moemoe.core.service.jwt.JwtService;
@@ -65,5 +66,11 @@ public class KakaoOAuthService extends OAuthTemplate {
     protected TokenResponse getToken(String code, String state) {
         String tokenUrl = kakaoUrlBuilder.getTokenUrl(code, state);
         return kakaoTokenClient.getToken(URI.create(tokenUrl));
+    }
+
+    @Override
+    protected UserInfoResponse getUserInfo(OAuthLoginRequest request) {
+        String userInfoUrl = kakaoUrlBuilder.getUserInfoUrl();
+        return kakaoUserInfoClient.getUserInfo(URI.create(userInfoUrl), request.accessToken());
     }
 }

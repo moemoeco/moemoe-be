@@ -5,6 +5,7 @@ import com.moemoe.client.http.dto.UserInfoResponse;
 import com.moemoe.client.http.dto.naver.NaverUserInfoResponse;
 import com.moemoe.client.http.naver.NaverTokenClient;
 import com.moemoe.client.http.naver.NaverUserInfoClient;
+import com.moemoe.core.request.OAuthLoginRequest;
 import com.moemoe.core.service.builder.NaverUrlBuilder;
 import com.moemoe.core.service.builder.UrlBuilder;
 import com.moemoe.core.service.jwt.JwtService;
@@ -64,5 +65,11 @@ public class NaverOAuthService extends OAuthTemplate {
     protected TokenResponse getToken(String code, String state) {
         String tokenUrl = naverUrlBuilder.getTokenUrl(code, state);
         return naverTokenClient.getToken(URI.create(tokenUrl));
+    }
+
+    @Override
+    protected UserInfoResponse getUserInfo(OAuthLoginRequest request) {
+        String userInfoUrl = naverUrlBuilder.getUserInfoUrl();
+        return naverUserInfoClient.getUserInfo(URI.create(userInfoUrl), request.accessToken());
     }
 }

@@ -30,8 +30,9 @@ class OAuthControllerTest extends AbstractControllerTest {
     @DisplayName("성공 케이스 : 카카오 로그인 호출")
     void loginWithKakao() {
         // given
+        String tokenType = "Bearer";
         String kakaoExpectedToken = "kakaoExpectedToken";
-        OAuthLoginRequest request = new OAuthLoginRequest(kakaoExpectedToken);
+        OAuthLoginRequest request = new OAuthLoginRequest(tokenType, kakaoExpectedToken);
         LoginTokenResponse expectedLoginTokenResponse = LoginTokenResponse.builder()
                 .accessToken("accessToken")
                 .refreshToken("refreshToken")
@@ -68,8 +69,9 @@ class OAuthControllerTest extends AbstractControllerTest {
     @DisplayName("성공 케이스 : 네이버 로그인 호출")
     void loginWithNaver() {
         // given
+        String tokenType = "Bearer";
         String naverExpectedToken = "naverExpectedToken";
-        OAuthLoginRequest request = new OAuthLoginRequest(naverExpectedToken);
+        OAuthLoginRequest request = new OAuthLoginRequest(tokenType, naverExpectedToken);
         LoginTokenResponse expectedLoginTokenResponse = LoginTokenResponse.builder()
                 .accessToken("accessToken")
                 .refreshToken("refreshToken")

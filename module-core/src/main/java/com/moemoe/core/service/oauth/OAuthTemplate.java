@@ -2,6 +2,7 @@ package com.moemoe.core.service.oauth;
 
 import com.moemoe.client.http.dto.TokenResponse;
 import com.moemoe.client.http.dto.UserInfoResponse;
+import com.moemoe.core.request.OAuthLoginRequest;
 import com.moemoe.core.response.LoginTokenResponse;
 import com.moemoe.core.service.jwt.ClaimsFactory;
 import com.moemoe.core.service.jwt.JwtService;
@@ -27,6 +28,11 @@ public abstract class OAuthTemplate {
         this.userEntityRepository = userEntityRepository;
         this.refreshTokenEntityRepository = refreshTokenEntityRepository;
         this.jwtService = jwtService;
+    }
+
+    @Transactional
+    public LoginTokenResponse login(OAuthLoginRequest request) {
+        return null;
     }
 
     @Transactional

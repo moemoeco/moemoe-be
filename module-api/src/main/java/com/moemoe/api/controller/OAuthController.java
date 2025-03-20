@@ -2,7 +2,6 @@ package com.moemoe.api.controller;
 
 
 import com.moemoe.api.constant.OAuthPlatform;
-import com.moemoe.core.response.AuthorizationResponse;
 import com.moemoe.core.response.LoginTokenResponse;
 import com.moemoe.core.service.oauth.KakaoOAuthService;
 import com.moemoe.core.service.oauth.NaverOAuthService;
@@ -29,14 +28,6 @@ public class OAuthController {
                 OAuthPlatform.NAVER, naverOAuthService,
                 OAuthPlatform.KAKAO, kakaoOAuthService
         );
-    }
-
-    @GetMapping("/{platformType}/login-page")
-    public AuthorizationResponse loginPage(
-            @PathVariable(value = "platformType") OAuthPlatform platformType) {
-        log.info("Login page");
-        OAuthTemplate oAuthTemplate = getOAuthTemplate(platformType);
-        return oAuthTemplate.authorize("");
     }
 
     @GetMapping("/{platformType}/login")

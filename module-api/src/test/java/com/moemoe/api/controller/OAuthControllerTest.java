@@ -1,7 +1,6 @@
 package com.moemoe.api.controller;
 
 import com.moemoe.api.AbstractControllerTest;
-import com.moemoe.core.response.AuthorizationResponse;
 import com.moemoe.core.response.LoginTokenResponse;
 import com.moemoe.core.service.oauth.KakaoOAuthService;
 import com.moemoe.core.service.oauth.NaverOAuthService;
@@ -27,60 +26,6 @@ class OAuthControllerTest extends AbstractControllerTest {
     private KakaoOAuthService kakaoOAuthService;
     @MockBean
     private NaverOAuthService naverOAuthService;
-
-    @Test
-    @DisplayName("성공 케이스 : 카카오 로그인 페이지 URL 반환")
-    void loginPageWithKakao() {
-        String expectedUrl = "http://example.com";
-
-        // given
-        String expectedKakaoState = "";
-        AuthorizationResponse expectedResponse = new AuthorizationResponse(expectedUrl + "?state=" + expectedKakaoState);
-        given(kakaoOAuthService.authorize(expectedKakaoState))
-                .willReturn(expectedResponse);
-
-        // when
-        MockHttpServletRequestBuilder builder = get("/oauth/kakao/login-page");
-        MvcResult invoke = invoke(builder, status().isOk(), false);
-        AuthorizationResponse actualResponse = convertResponseToClass(invoke, AuthorizationResponse.class);
-
-        // then
-        assertThat(actualResponse)
-                .extracting(AuthorizationResponse::redirectUrl)
-                .isEqualTo(expectedResponse.redirectUrl());
-        verify(kakaoOAuthService, times(1))
-                .authorize(anyString());
-        verify(naverOAuthService, never())
-                .authorize(anyString());
-    }
-
-    @Test
-    @DisplayName("성공 케이스 : 네이버 로그인 페이지 URL 반환")
-    void loginPageWithNaver() {
-        String expectedUrl = "http://example.com";
-
-        // given
-        String expectedNaverState = "";
-        AuthorizationResponse expectedResponse = new AuthorizationResponse(expectedUrl + "?state=" + expectedNaverState);
-        given(naverOAuthService.authorize(expectedNaverState))
-                .willReturn(expectedResponse);
-
-        // when
-        MockHttpServletRequestBuilder builder = get("/oauth/naver/login-page");
-        MvcResult invoke = invoke(builder, status().isOk(), false);
-        AuthorizationResponse actualResponse = convertResponseToClass(invoke, AuthorizationResponse.class);
-
-        // then
-        assertThat(actualResponse)
-                .extracting(AuthorizationResponse::redirectUrl)
-                .isEqualTo(expectedResponse.redirectUrl());
-
-        // then
-        verify(kakaoOAuthService, never())
-                .authorize(anyString());
-        verify(naverOAuthService, times(1))
-                .authorize(anyString());
-    }
 
     @Test
     @DisplayName("성공 케이스 : 카카오 로그인 호출")

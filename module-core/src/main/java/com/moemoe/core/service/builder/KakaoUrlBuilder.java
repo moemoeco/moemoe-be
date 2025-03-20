@@ -10,8 +10,6 @@ import java.util.List;
 
 @Service
 public class KakaoUrlBuilder implements UrlBuilder {
-    @Value("${spring.security.oauth2.client.provider.kakao.authorization-uri}")
-    private String authorizationUri;
     @Value("${spring.security.oauth2.client.provider.kakao.token-uri}")
     private String tokenUri;
     @Value("${spring.security.oauth2.client.provider.kakao.user-info-uri}")
@@ -22,23 +20,6 @@ public class KakaoUrlBuilder implements UrlBuilder {
     private String clientSecret;
     @Value("${spring.security.oauth2.client.registration.kakao.redirect-uri}")
     private String redirectUri;
-    @Value("${spring.security.oauth2.client.registration.kakao.scope}")
-    private String scopes;
-
-    @Override
-    public String getAuthorizeUrl(String state) {
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.put("response_type", List.of("code"));
-        params.put("client_id", List.of(clientId));
-        params.put("redirect_uri", List.of(redirectUri));
-        params.put("state", List.of(state));
-        params.put("scope", List.of(scopes));
-
-        return UriComponentsBuilder.fromHttpUrl(authorizationUri)
-                .queryParams(params)
-                .build()
-                .toString();
-    }
 
     @Override
     public String getTokenUrl(String code, String state) {

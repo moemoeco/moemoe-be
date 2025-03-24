@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
+import java.util.Optional;
 
 
 @Slf4j
@@ -32,7 +33,23 @@ public abstract class OAuthTemplate {
 
     @Transactional
     public LoginTokenResponse login(OAuthLoginRequest request) {
-        return null;
+        log.info("OAuth login service started.");
+        UserInfoResponse userInfo = getUserInfo(request);
+        UserEntity userEntity = getUserEntity(userInfo);
+
+        Map<String, String> userClaims = ClaimsFactory.getUserClaims(userEntity);
+        final String accessToken = jwtService.createAccessToken(userClaims, userEntity.getId());
+        final String refreshToken = jwtService.createRefreshToken(userClaims, userEntity.getId());
+
+        Optional<RefreshTokenEntity> refreshTokenEntity = refreshTokenEntityRepository.findById(userEntity.getEmail());
+        if (refreshTokenEntity.isEmpty()) {
+            refreshTokenEntityRepository.save(RefreshTokenEntity.of(userEntity.getEmail(), refreshToken));
+        }
+        log.info("OAuth login service done.");
+        return LoginTokenResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
     }
 
     @Transactional

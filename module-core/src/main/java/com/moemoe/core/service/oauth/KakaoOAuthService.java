@@ -1,12 +1,10 @@
 package com.moemoe.core.service.oauth;
 
 
-import com.moemoe.client.http.dto.TokenResponse;
 import com.moemoe.client.http.dto.UserInfoResponse;
 import com.moemoe.client.http.dto.kakao.KakaoUserInfoResponse;
-import com.moemoe.client.http.kakao.KakaoTokenClient;
 import com.moemoe.client.http.kakao.KakaoUserInfoClient;
-import com.moemoe.core.response.AuthorizationResponse;
+import com.moemoe.core.request.OAuthLoginRequest;
 import com.moemoe.core.service.builder.KakaoUrlBuilder;
 import com.moemoe.core.service.builder.UrlBuilder;
 import com.moemoe.core.service.jwt.JwtService;
@@ -23,24 +21,16 @@ import java.net.URI;
 @Service
 public class KakaoOAuthService extends OAuthTemplate {
     private final UrlBuilder kakaoUrlBuilder;
-    private final KakaoTokenClient kakaoTokenClient;
     private final KakaoUserInfoClient kakaoUserInfoClient;
 
     protected KakaoOAuthService(RefreshTokenEntityRepository refreshTokenEntityRepository,
                                 UserEntityRepository userEntityRepository,
                                 JwtService jwtService,
                                 KakaoUrlBuilder kakaoUrlBuilder,
-                                KakaoTokenClient kakaoTokenClient,
                                 KakaoUserInfoClient kakaoUserInfoClient) {
         super(userEntityRepository, refreshTokenEntityRepository, jwtService);
         this.kakaoUrlBuilder = kakaoUrlBuilder;
-        this.kakaoTokenClient = kakaoTokenClient;
         this.kakaoUserInfoClient = kakaoUserInfoClient;
-    }
-
-    @Override
-    public AuthorizationResponse authorize(String state) {
-        return new AuthorizationResponse(kakaoUrlBuilder.getAuthorizeUrl(state));
     }
 
     @Override
@@ -62,14 +52,8 @@ public class KakaoOAuthService extends OAuthTemplate {
     }
 
     @Override
-    protected UserInfoResponse getUserInfo(TokenResponse token) {
+    protected UserInfoResponse getUserInfo(OAuthLoginRequest request) {
         String userInfoUrl = kakaoUrlBuilder.getUserInfoUrl();
-        return kakaoUserInfoClient.getUserInfo(URI.create(userInfoUrl), token.authorizationToken());
-    }
-
-    @Override
-    protected TokenResponse getToken(String code, String state) {
-        String tokenUrl = kakaoUrlBuilder.getTokenUrl(code, state);
-        return kakaoTokenClient.getToken(URI.create(tokenUrl));
+        return kakaoUserInfoClient.getUserInfo(URI.create(userInfoUrl), request.accessToken());
     }
 }

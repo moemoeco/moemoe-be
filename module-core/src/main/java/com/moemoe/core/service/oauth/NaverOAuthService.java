@@ -1,11 +1,9 @@
 package com.moemoe.core.service.oauth;
 
-import com.moemoe.client.http.dto.TokenResponse;
 import com.moemoe.client.http.dto.UserInfoResponse;
 import com.moemoe.client.http.dto.naver.NaverUserInfoResponse;
-import com.moemoe.client.http.naver.NaverTokenClient;
 import com.moemoe.client.http.naver.NaverUserInfoClient;
-import com.moemoe.core.response.AuthorizationResponse;
+import com.moemoe.core.request.OAuthLoginRequest;
 import com.moemoe.core.service.builder.NaverUrlBuilder;
 import com.moemoe.core.service.builder.UrlBuilder;
 import com.moemoe.core.service.jwt.JwtService;
@@ -22,25 +20,18 @@ import java.net.URI;
 @Service
 public class NaverOAuthService extends OAuthTemplate {
     private final UrlBuilder naverUrlBuilder;
-    private final NaverTokenClient naverTokenClient;
     private final NaverUserInfoClient naverUserInfoClient;
 
     public NaverOAuthService(RefreshTokenEntityRepository refreshTokenEntityRepository,
                              UserEntityRepository userEntityRepository,
                              JwtService jwtService,
                              NaverUrlBuilder naverUrlBuilder,
-                             NaverTokenClient naverTokenClient,
                              NaverUserInfoClient naverUserInfoClient) {
         super(userEntityRepository, refreshTokenEntityRepository, jwtService);
         this.naverUrlBuilder = naverUrlBuilder;
-        this.naverTokenClient = naverTokenClient;
         this.naverUserInfoClient = naverUserInfoClient;
     }
 
-    @Override
-    public AuthorizationResponse authorize(String state) {
-        return new AuthorizationResponse(naverUrlBuilder.getAuthorizeUrl(state));
-    }
 
     @Override
     protected UserEntity getUserEntity(UserInfoResponse userInfo) {
@@ -60,14 +51,8 @@ public class NaverOAuthService extends OAuthTemplate {
     }
 
     @Override
-    protected UserInfoResponse getUserInfo(TokenResponse token) {
+    protected UserInfoResponse getUserInfo(OAuthLoginRequest request) {
         String userInfoUrl = naverUrlBuilder.getUserInfoUrl();
-        return naverUserInfoClient.getUserInfo(URI.create(userInfoUrl), token.authorizationToken());
-    }
-
-    @Override
-    protected TokenResponse getToken(String code, String state) {
-        String tokenUrl = naverUrlBuilder.getTokenUrl(code, state);
-        return naverTokenClient.getToken(URI.create(tokenUrl));
+        return naverUserInfoClient.getUserInfo(URI.create(userInfoUrl), request.accessToken());
     }
 }

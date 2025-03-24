@@ -1,8 +1,7 @@
 package com.moemoe.core.service.oauth;
 
-import com.moemoe.client.http.dto.TokenResponse;
 import com.moemoe.client.http.dto.UserInfoResponse;
-import com.moemoe.core.response.AuthorizationResponse;
+import com.moemoe.core.request.OAuthLoginRequest;
 import com.moemoe.core.response.LoginTokenResponse;
 import com.moemoe.core.service.jwt.ClaimsFactory;
 import com.moemoe.core.service.jwt.JwtService;
@@ -14,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
+import java.util.Optional;
 
 
 @Slf4j
@@ -31,17 +31,19 @@ public abstract class OAuthTemplate {
     }
 
     @Transactional
-    public LoginTokenResponse login(String code, String state) {
+    public LoginTokenResponse login(OAuthLoginRequest request) {
         log.info("OAuth login service started.");
-        TokenResponse token = getToken(code, state);
-        UserInfoResponse userInfo = getUserInfo(token);
+        UserInfoResponse userInfo = getUserInfo(request);
         UserEntity userEntity = getUserEntity(userInfo);
 
         Map<String, String> userClaims = ClaimsFactory.getUserClaims(userEntity);
         final String accessToken = jwtService.createAccessToken(userClaims, userEntity.getId());
         final String refreshToken = jwtService.createRefreshToken(userClaims, userEntity.getId());
 
-        refreshTokenEntityRepository.save(RefreshTokenEntity.of(userEntity.getEmail(), refreshToken));
+        Optional<RefreshTokenEntity> refreshTokenEntity = refreshTokenEntityRepository.findById(userEntity.getEmail());
+        if (refreshTokenEntity.isEmpty()) {
+            refreshTokenEntityRepository.save(RefreshTokenEntity.of(userEntity.getEmail(), refreshToken));
+        }
         log.info("OAuth login service done.");
         return LoginTokenResponse.builder()
                 .accessToken(accessToken)
@@ -49,11 +51,7 @@ public abstract class OAuthTemplate {
                 .build();
     }
 
-    public abstract AuthorizationResponse authorize(String state);
-
-    protected abstract TokenResponse getToken(String code, String state);
-
-    protected abstract UserInfoResponse getUserInfo(TokenResponse token);
+    protected abstract UserInfoResponse getUserInfo(OAuthLoginRequest request);
 
     protected abstract UserEntity getUserEntity(UserInfoResponse userInfo);
 }

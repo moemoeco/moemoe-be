@@ -2,24 +2,19 @@ package com.moemoe.api.controller;
 
 
 import com.moemoe.api.constant.OAuthPlatform;
-import com.moemoe.core.response.AuthorizationResponse;
+import com.moemoe.core.request.OAuthLoginRequest;
 import com.moemoe.core.response.LoginTokenResponse;
 import com.moemoe.core.service.oauth.KakaoOAuthService;
 import com.moemoe.core.service.oauth.NaverOAuthService;
 import com.moemoe.core.service.oauth.OAuthTemplate;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.util.Map;
 
 @Slf4j
 @RestController
 @RequestMapping("/oauth")
-@CrossOrigin(origins = "*", methods = RequestMethod.GET)
 public class OAuthController {
     private final Map<OAuthPlatform, OAuthTemplate> oAuthTemplateMap;
 
@@ -31,45 +26,13 @@ public class OAuthController {
         );
     }
 
-    @GetMapping("/{platformType}/login-page")
-    public AuthorizationResponse loginPage(
-            @PathVariable(value = "platformType") OAuthPlatform platformType) {
-        log.info("Login page");
-        OAuthTemplate oAuthTemplate = getOAuthTemplate(platformType);
-        return oAuthTemplate.authorize("");
-    }
-
-    @GetMapping("/{platformType}/login")
-    public void login(
+    @PostMapping("/{platformType}/login")
+    public LoginTokenResponse login(
             @PathVariable(value = "platformType") OAuthPlatform platformType,
-            @RequestParam("code") String code,
-            @RequestParam(value = "state") String state,
-            HttpServletResponse response) {
+            @RequestBody OAuthLoginRequest request
+    ) {
         OAuthTemplate oAuthTemplate = getOAuthTemplate(platformType);
-        LoginTokenResponse tokenResponse = oAuthTemplate.login(code, state);
-
-        try {
-            String refreshToken = tokenResponse.refreshToken();
-            String accessToken = tokenResponse.accessToken();
-            Cookie accessTokenCookie = getCookie("accessToken", accessToken, 60 * 60);
-            Cookie refreshTokenCookie = getCookie("refreshToken", refreshToken, 60 * 60 * 24 * 7);
-            response.addCookie(accessTokenCookie);
-            response.addCookie(refreshTokenCookie);
-            response.setStatus(HttpStatus.OK.value());
-            response.sendRedirect("http://localhost:8081?redirectedFromSocialLogin=true");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private Cookie getCookie(String key, String value, int expiry) {
-        Cookie cookie = new Cookie(key, value);
-        cookie.setHttpOnly(true);
-        // todo : 개발을 위해 secure 옵션 제거
-//        cookie.setSecure(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(expiry);
-        return cookie;
+        return oAuthTemplate.login(request);
     }
 
     private OAuthTemplate getOAuthTemplate(OAuthPlatform platformType) {

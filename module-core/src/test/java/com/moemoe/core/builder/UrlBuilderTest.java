@@ -17,15 +17,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ContextConfiguration(classes = {KakaoUrlBuilder.class, NaverUrlBuilder.class})
 @TestPropertySource(properties = {
         // kakao
-        "spring.security.oauth2.client.provider.kakao.authorization-uri=http://authorization-uri",
         "spring.security.oauth2.client.provider.kakao.token-uri=http://token-uri",
         "spring.security.oauth2.client.provider.kakao.user-info-uri=http://user-info-uri",
         "spring.security.oauth2.client.registration.kakao.client-id=client-id",
         "spring.security.oauth2.client.registration.kakao.client-secret=client-secret",
         "spring.security.oauth2.client.registration.kakao.redirect-uri=redirect-uri",
-        "spring.security.oauth2.client.registration.kakao.scope=profile_nickname,name",
         // naver
-        "spring.security.oauth2.client.provider.naver.authorization-uri=http://authorization-uri",
         "spring.security.oauth2.client.provider.naver.token-uri=http://token-uri",
         "spring.security.oauth2.client.provider.naver.user-info-uri=http://user-info-uri",
         "spring.security.oauth2.client.registration.naver.client-id=client-id",
@@ -38,20 +35,6 @@ class UrlBuilderTest {
     class KakaoUrlBuilderTest {
         @Autowired
         UrlBuilder kakaoUrlBuilder;
-
-        @Test
-        void getAuthorizeUrl() {
-            String expectedUrl = "http://authorization-uri" +
-                    "?response_type=code" +
-                    "&client_id=client-id" +
-                    "&redirect_uri=redirect-uri" +
-                    "&state=state" +
-                    "&scope=profile_nickname,name";
-            String actualUrl = kakaoUrlBuilder.getAuthorizeUrl("state");
-
-            assertThat(actualUrl)
-                    .isEqualTo(expectedUrl);
-        }
 
         @Test
         void getTokenUrl() {
@@ -85,21 +68,6 @@ class UrlBuilderTest {
     class NaverUrlBuilderTest {
         @Autowired
         UrlBuilder naverUrlBuilder;
-
-
-        @Test
-        void getAuthorizeUrl() {
-            String expectedState = "test";
-            String expectedUrl = "http://authorization-uri" +
-                    "?response_type=code" +
-                    "&client_id=client-id" +
-                    "&redirect_uri=redirect-uri" +
-                    "&state=" + expectedState;
-            String actualUrl = naverUrlBuilder.getAuthorizeUrl(expectedState);
-
-            assertThat(actualUrl)
-                    .isEqualTo(expectedUrl);
-        }
 
         @Test
         void getTokenUrl() {

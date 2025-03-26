@@ -39,75 +39,96 @@ class AwsS3ClientTest {
     private AwsS3Client awsS3Client;
     @MockBean
     private AwsProperty awsProperty;
+    @MockBean
+    private AwsClientFactory awsClientFactory;
     private static final String BUCKET_NAME = "test";
-    private static S3Client s3Client;
-    private static S3Presigner s3Presigner;
+    private static S3Client testS3Client;
 
     @Container
     static LocalStackContainer container = new LocalStackContainer()
             .withServices(LocalStackContainer.Service.S3);
 
     @BeforeAll
-    static void init() {
+    static void createTestClient() {
         AwsBasicCredentials awsBasicCredentials = AwsBasicCredentials.create(
                 container.getAccessKey(),
                 container.getSecretKey()
         );
         Region region = Region.of(container.getRegion());
         // create s3 client
-        s3Client = S3Client.builder()
+        testS3Client = S3Client.builder()
                 .credentialsProvider(StaticCredentialsProvider.create(awsBasicCredentials))
                 .endpointOverride(container.getEndpoint())
                 .region(region)
                 .build();
+
         CreateBucketRequest createBucketRequest = CreateBucketRequest.builder()
                 .bucket(BUCKET_NAME)
                 .build();
-        s3Client.createBucket(createBucketRequest);
-
-        // create s3 presigner
-        s3Presigner = S3Presigner.builder()
-                .credentialsProvider(StaticCredentialsProvider.create(awsBasicCredentials))
-                .endpointOverride(container.getEndpoint())
-                .region(region)
-                .build();
+        testS3Client.createBucket(createBucketRequest);
     }
 
     @BeforeEach
     void setUp() {
-        given(awsProperty.getAccessKey())
-                .willReturn(container.getAccessKey());
-        given(awsProperty.getSecretKey())
-                .willReturn(container.getSecretKey());
-        given(awsProperty.getRegion())
-                .willReturn(Region.of(container.getRegion()));
+        AwsBasicCredentials awsBasicCredentials = AwsBasicCredentials.create(
+                container.getAccessKey(),
+                container.getSecretKey()
+        );
+        Region region = Region.of(container.getRegion());
+
         given(awsProperty.getBucketName())
                 .willReturn(BUCKET_NAME);
+        given(awsClientFactory.getS3Client())
+                .willReturn(S3Client.builder()
+                        .credentialsProvider(StaticCredentialsProvider.create(awsBasicCredentials))
+                        .endpointOverride(container.getEndpoint())
+                        .region(region)
+                        .build());
+        given(awsClientFactory.getS3Presigner())
+                .willReturn(S3Presigner.builder()
+                        .credentialsProvider(StaticCredentialsProvider.create(awsBasicCredentials))
+                        .endpointOverride(container.getEndpoint())
+                        .region(region)
+                        .build());
     }
 
     @AfterEach
     void cleanup() {
         String continuationToken = null;
+        // create s3 client
 
-        do {
-            ListObjectsV2Request listObjectsRequest = ListObjectsV2Request.builder()
-                    .bucket(BUCKET_NAME)
-                    .continuationToken(continuationToken)
-                    .build();
+        AwsBasicCredentials awsBasicCredentials = AwsBasicCredentials.create(
+                container.getAccessKey(),
+                container.getSecretKey()
+        );
+        Region region = Region.of(container.getRegion());
 
-            ListObjectsV2Response listObjectsResponse = s3Client.listObjectsV2(listObjectsRequest);
+        try(S3Client cleanUpS3Client = S3Client.builder()
+                    .credentialsProvider(StaticCredentialsProvider.create(awsBasicCredentials))
+                    .endpointOverride(container.getEndpoint())
+                    .region(region)
+                    .build()){
 
-            listObjectsResponse.contents().forEach(s3Object -> {
-                DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+            do {
+                ListObjectsV2Request listObjectsRequest = ListObjectsV2Request.builder()
                         .bucket(BUCKET_NAME)
-                        .key(s3Object.key())
+                        .continuationToken(continuationToken)
                         .build();
-                s3Client.deleteObject(deleteObjectRequest);
-            });
 
-            continuationToken = listObjectsResponse.nextContinuationToken();
+                ListObjectsV2Response listObjectsResponse = cleanUpS3Client.listObjectsV2(listObjectsRequest);
 
-        } while (continuationToken != null);
+                listObjectsResponse.contents().forEach(s3Object -> {
+                    DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+                            .bucket(BUCKET_NAME)
+                            .key(s3Object.key())
+                            .build();
+                    cleanUpS3Client.deleteObject(deleteObjectRequest);
+                });
+
+                continuationToken = listObjectsResponse.nextContinuationToken();
+
+            } while (continuationToken != null);
+        }
     }
 
 
@@ -116,8 +137,7 @@ class AwsS3ClientTest {
         DeleteBucketRequest deleteBucketRequest = DeleteBucketRequest.builder()
                 .bucket(BUCKET_NAME)
                 .build();
-        s3Client.deleteBucket(deleteBucketRequest);
-
+        testS3Client.deleteBucket(deleteBucketRequest);
     }
 
     @Test
@@ -135,7 +155,7 @@ class AwsS3ClientTest {
         String s3ObjectKey = "uploads/" + fileName;
 
         // when
-        String returnedKey = awsS3Client.upload(s3Client, s3ObjectKey, mockMultipartFile);
+        String returnedKey = awsS3Client.upload(s3ObjectKey, mockMultipartFile);
         assertThat(returnedKey)
                 .isEqualTo(s3ObjectKey);
 
@@ -144,7 +164,7 @@ class AwsS3ClientTest {
                 .bucket(BUCKET_NAME)
                 .key(s3ObjectKey)
                 .build();
-        HeadObjectResponse headObjectResponse = s3Client.headObject(headObjectRequest);
+        HeadObjectResponse headObjectResponse = testS3Client.headObject(headObjectRequest);
         assertThat(headObjectResponse)
                 .isNotNull();
         assertThat(headObjectResponse.contentLength())
@@ -167,7 +187,7 @@ class AwsS3ClientTest {
         uploadMultipartFile(s3ObjectKey, mockMultipartFile);
 
         // when
-        String preSignedUrl = awsS3Client.getPreSignedUrl(s3Presigner, s3ObjectKey);
+        String preSignedUrl = awsS3Client.getPreSignedUrl(s3ObjectKey);
 
         // then
         assertThat(preSignedUrl)
@@ -193,7 +213,7 @@ class AwsS3ClientTest {
                     .contentType(multipartFile.getContentType())
                     .build();
 
-            PutObjectResponse putObjectResponse = s3Client.putObject(
+            PutObjectResponse putObjectResponse = testS3Client.putObject(
                     putObjectRequest,
                     RequestBody.fromInputStream(inputStream, multipartFile.getSize())
             );
@@ -240,7 +260,7 @@ class AwsS3ClientTest {
                 .isTrue();
 
         // when
-        awsS3Client.delete(s3Client, List.of(s3ObjectKey1, s3ObjectKey2));
+        awsS3Client.delete(List.of(s3ObjectKey1, s3ObjectKey2));
 
         // then
         boolean existsAfterDelete1 = isObjectExist(s3ObjectKey1);
@@ -256,7 +276,7 @@ class AwsS3ClientTest {
      */
     private boolean isObjectExist(String objectKey) {
         try {
-            s3Client.headObject(HeadObjectRequest.builder()
+            testS3Client.headObject(HeadObjectRequest.builder()
                     .bucket(awsProperty.getBucketName())
                     .key(objectKey)
                     .build());

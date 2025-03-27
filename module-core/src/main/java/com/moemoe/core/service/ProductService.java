@@ -1,7 +1,6 @@
 package com.moemoe.core.service;
 
 import com.moemoe.client.aws.AwsS3Client;
-import com.moemoe.client.exception.ClientRuntimeException;
 import com.moemoe.core.request.RegisterProductRequest;
 import com.moemoe.core.response.GetProductsResponse;
 import com.moemoe.core.response.IdResponse;
@@ -17,8 +16,6 @@ import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -49,19 +46,17 @@ public class ProductService {
     }
 
     private List<GetProductsResponse.Product> getProductContents(List<ProductEntity> productEntityList) {
-        try (S3Presigner s3Presigner = awsS3Client.getS3Presigner();) {
-            return productEntityList.stream()
-                    .map(product -> GetProductsResponse.Product.builder()
-                            .id(product.getStringId())
-                            .title(product.getTitle())
-                            .detailedAddress(product.getDetailedAddress())
-                            .price(product.getPrice())
-                            .tagIdList(product.getTagNameList())
-                            .thumbnailUrl(awsS3Client.getPreSignedUrl(s3Presigner, product.getThumbnailUrl()))
-                            .createAt(product.getCreatedDate())
-                            .build())
-                    .toList();
-        }
+        return productEntityList.stream()
+                .map(product -> GetProductsResponse.Product.builder()
+                        .id(product.getStringId())
+                        .title(product.getTitle())
+                        .detailedAddress(product.getDetailedAddress())
+                        .price(product.getPrice())
+                        .tagIdList(product.getTagNameList())
+                        .thumbnailUrl(awsS3Client.getPreSignedUrl(product.getThumbnailUrl()))
+                        .createAt(product.getCreatedDate())
+                        .build())
+                .toList();
     }
 
     private boolean invalidProductId(String oldNextId) {
@@ -74,13 +69,9 @@ public class ProductService {
         ObjectId sellerId = SecurityContextHolderUtils.getUserId();
         validateSellerExists(sellerId);
         List<String> imageUrlList = new ArrayList<>();
-        try (S3Client s3Client = awsS3Client.getS3Client()) {
-            for (MultipartFile image : imageList) {
-                String imageUrl = awsS3Client.upload(s3Client, Path.of(sellerId.toHexString(), getFileName(image)).toString(), image);
-                imageUrlList.add(imageUrl);
-            }
-        } catch (Exception e) {
-            throw new ClientRuntimeException(e.getMessage());
+        for (MultipartFile image : imageList) {
+            String imageUrl = awsS3Client.upload(Path.of(sellerId.toHexString(), getFileName(image)).toString(), image);
+            imageUrlList.add(imageUrl);
         }
 
         incrementTag(request);
@@ -142,11 +133,7 @@ public class ProductService {
         }
         productEntityRepository.delete(productEntity);
 
-        try (S3Client s3Client = awsS3Client.getS3Client()) {
-            List<String> s3ObjectKeyList = productEntity.getImageUrlList();
-            awsS3Client.delete(s3Client, s3ObjectKeyList);
-        } catch (ClientRuntimeException e) {
-            log.info("Failed to delete product images.");
-        }
+        List<String> s3ObjectKeyList = productEntity.getImageUrlList();
+        awsS3Client.delete(s3ObjectKeyList);
     }
 }

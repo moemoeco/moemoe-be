@@ -7,8 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.http.SdkHttpResponse;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -27,20 +25,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AwsS3Client {
     private final AwsProperty awsProperty;
+    private final AwsClientFactory awsClientFactory;
 
-    /**
-     * 이미지 파일을 S3 버킷에 업로드합니다.
-     *
-     * <p>이 메서드는 제공된 {@link S3Client}를 사용하여 주어진 {@link MultipartFile}을 지정된 S3 버킷에 업로드합니다.
-     * S3 객체 키는 버킷 내에서 파일을 식별하는 데 사용됩니다. 파일의 입력 스트림은 try-with-resources 블록을 통해 안전하게 처리됩니다.</p>
-     *
-     * @param s3ObjectKey   S3 버킷 내 업로드된 객체를 식별하기 위한 고유 키
-     * @param multipartFile 업로드할 파일
-     * @return 업로드가 성공하면 S3 객체 키를 반환
-     * @throws IllegalArgumentException 업로드 실패 또는 I/O 오류 발생 시 예외를 발생
-     */
-    public String upload(S3Client s3Client, String s3ObjectKey, MultipartFile multipartFile) {
-        try (InputStream inputStream = multipartFile.getInputStream()) {
+    public String upload(String s3ObjectKey, MultipartFile multipartFile) {
+        try (S3Client s3Client = awsClientFactory.getS3Client();
+             InputStream inputStream = multipartFile.getInputStream()) {
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                     .bucket(awsProperty.getBucketName())
                     .key(s3ObjectKey)
@@ -64,7 +53,7 @@ public class AwsS3Client {
         }
     }
 
-    public void delete(S3Client s3Client, List<String> s3ObjectKeyList) {
+    public void delete(List<String> s3ObjectKeyList) {
         if (ObjectUtils.isEmpty(s3ObjectKeyList)) {
             throw new IllegalArgumentException("삭제할 객체 키 목록이 비어 있습니다.");
         }
@@ -76,7 +65,7 @@ public class AwsS3Client {
                         .toList()))
                 .build();
 
-        try {
+        try (S3Client s3Client = awsClientFactory.getS3Client()) {
             DeleteObjectsResponse response = s3Client.deleteObjects(deleteObjectsRequest);
             log.info("삭제된 객체: {}", response.deleted());
         } catch (S3Exception e) {
@@ -85,38 +74,17 @@ public class AwsS3Client {
         }
     }
 
-    public String getPreSignedUrl(S3Presigner s3Presigner, String s3ObjectKey) {
-        GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
-                .signatureDuration(Duration.ofMinutes(10))
-                .getObjectRequest(builder -> builder
-                        .bucket(awsProperty.getBucketName())
-                        .key(s3ObjectKey))
-                .build();
+    public String getPreSignedUrl(String s3ObjectKey) {
+        try (S3Presigner s3Presigner = awsClientFactory.getS3Presigner()) {
+            GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                    .signatureDuration(Duration.ofMinutes(10))
+                    .getObjectRequest(builder -> builder
+                            .bucket(awsProperty.getBucketName())
+                            .key(s3ObjectKey))
+                    .build();
 
-        PresignedGetObjectRequest presignedRequest = s3Presigner.presignGetObject(presignRequest);
-        return presignedRequest.url().toString();
-    }
-
-    public S3Presigner getS3Presigner() {
-        AwsBasicCredentials awsBasicCredentials = getAwsBasicCredentials();
-        return S3Presigner.builder()
-                .credentialsProvider(StaticCredentialsProvider.create(awsBasicCredentials))
-                .region(awsProperty.getRegion())
-                .build();
-    }
-
-    public S3Client getS3Client() {
-        AwsBasicCredentials awsBasicCredentials = getAwsBasicCredentials();
-        return S3Client.builder()
-                .credentialsProvider(StaticCredentialsProvider.create(awsBasicCredentials))
-                .region(awsProperty.getRegion())
-                .build();
-    }
-
-    private AwsBasicCredentials getAwsBasicCredentials() {
-        return AwsBasicCredentials.create(
-                awsProperty.getAccessKey(),
-                awsProperty.getSecretKey()
-        );
+            PresignedGetObjectRequest presignedRequest = s3Presigner.presignGetObject(presignRequest);
+            return presignedRequest.url().toString();
+        }
     }
 }

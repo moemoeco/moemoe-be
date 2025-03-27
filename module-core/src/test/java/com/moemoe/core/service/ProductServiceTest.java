@@ -73,7 +73,7 @@ class ProductServiceTest {
     @DisplayName("정상 케이스 : 상품 등록이 완료된 경우")
     void register() {
         // given
-        String expectedTitle = "Sample Product";
+        String expectedTitle = "샘플 Product";
         String expectedDescription = "This is a sample product.";
         long expectedPrice = 1000L;
         List<String> expectedTagName = List.of("tag1", "tag2");
@@ -98,8 +98,8 @@ class ProductServiceTest {
 
         // image upload
         List<MultipartFile> expectedImageList = getMultipartFiles();
-        String expectedImageUrl1 = Path.of(expectedSellerId.toHexString(), expectedImageList.get(0).getOriginalFilename()).toString();
-        String expectedImageUrl2 = Path.of(expectedSellerId.toHexString(), expectedImageList.get(1).getOriginalFilename()).toString();
+        String expectedImageUrl1 = Path.of(expectedSellerId.toHexString(), "샘플-product", expectedImageList.get(0).getOriginalFilename()).toString();
+        String expectedImageUrl2 = Path.of(expectedSellerId.toHexString(), "샘플-product", expectedImageList.get(1).getOriginalFilename()).toString();
         given(awsS3Client.upload(expectedImageUrl1, expectedImageList.get(0)))
                 .willReturn(expectedImageUrl1);
         given(awsS3Client.upload(expectedImageUrl2, expectedImageList.get(0)))

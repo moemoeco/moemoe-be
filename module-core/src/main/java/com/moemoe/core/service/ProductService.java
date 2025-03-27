@@ -68,15 +68,30 @@ public class ProductService {
                                List<MultipartFile> imageList) {
         ObjectId sellerId = SecurityContextHolderUtils.getUserId();
         validateSellerExists(sellerId);
+
+        String title = slugifyTitle(request.getTitle());
+
         List<String> imageUrlList = new ArrayList<>();
         for (MultipartFile image : imageList) {
-            String imageUrl = awsS3Client.upload(Path.of(sellerId.toHexString(), getFileName(image)).toString(), image);
+            String imageUrl = awsS3Client.upload(Path.of(sellerId.toHexString(), title, getFileName(image)).toString(), image);
             imageUrlList.add(imageUrl);
         }
 
         incrementTag(request);
         ProductEntity productEntity = createProductEntity(sellerId, request, imageUrlList);
         return new IdResponse(productEntityRepository.save(productEntity).getId());
+    }
+
+    private String slugifyTitle(String title) {
+        if (title == null || title.isEmpty()) {
+            return "untitled";
+        }
+        return title
+                .replaceAll("\\p{InCombiningDiacriticalMarks}", "")
+                .replaceAll("[^\\w\\s-\\uAC00-\\uD7A3]", "")
+                .trim()
+                .replaceAll("\\s+", "-")
+                .toLowerCase();
     }
 
     private void incrementTag(RegisterProductRequest request) {

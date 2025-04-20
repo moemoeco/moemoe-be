@@ -14,13 +14,13 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 public class GlobalExceptionHandler {
     @ExceptionHandler(value = {IllegalArgumentException.class, ClientRuntimeException.class})
     protected ResponseEntity<ErrorResponseBody> handleInternalServerError(Exception exception) {
-        log.error("Handling internal server error.");
+        log.error("Handling internal server error.", exception);
         return new ResponseEntity<>(ErrorResponseBody.of(exception), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(value = {HandlerMethodValidationException.class, MethodArgumentNotValidException.class})
     protected ResponseEntity<ErrorResponseBody> handleBadRequestError(Exception exception) {
-        log.error("Handling bad request error.");
+        log.error("Handling bad request error.", exception);
         return new ResponseEntity<>(ErrorResponseBody.of(exception), HttpStatus.BAD_REQUEST);
     }
 }

@@ -6,20 +6,17 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
-import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.util.ObjectUtils;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Getter
 @Document(collection = "products")
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class ProductEntity {
+public class ProductEntity extends BaseTimeEntity {
     @Id
     private ObjectId id;
     private ObjectId sellerId;
@@ -33,12 +30,7 @@ public class ProductEntity {
     private ProductStatus status;
     private ProductCondition condition;
 
-    @CreatedDate
-    private LocalDateTime createdDate;
-    @LastModifiedDate
-    private LocalDateTime modifiedDate;
-
-    public String getStringId(){
+    public String getStringId() {
         return this.id.toHexString();
     }
 

@@ -3,23 +3,22 @@ package com.moemoe.mongo.entity;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.time.LocalDateTime;
 
 @Getter
 @Document(collection = "tags")
 @CompoundIndex(def = "{'productsCount': -1, 'name': 1}")
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class TagEntity {
+public class TagEntity extends BaseTimeEntity {
     @Id
+    private ObjectId id;
+    @Indexed(unique = true)
     private String name;
     private long productsCount;
-    @CreatedDate
-    private LocalDateTime createdDate;
 
     private TagEntity(String name, long productsCount) {
         this.name = name.replace(" ", "_");

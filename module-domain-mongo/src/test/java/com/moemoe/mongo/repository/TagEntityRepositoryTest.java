@@ -40,7 +40,7 @@ class TagEntityRepositoryTest extends AbstractMongoDbTest {
         tagEntityRepository.incrementProductsCount(name);
 
         // then
-        Optional<TagEntity> byId = tagEntityRepository.findById(name);
+        Optional<TagEntity> byId = tagEntityRepository.findById(tagEntity.getId());
         if (byId.isEmpty()) {
             fail("테스트 실패");
         } else {
@@ -69,7 +69,7 @@ class TagEntityRepositoryTest extends AbstractMongoDbTest {
         tagEntityRepository.decrementProductsCount(name);
 
         // then
-        Optional<TagEntity> byId = tagEntityRepository.findById(name);
+        Optional<TagEntity> byId = tagEntityRepository.findById(tagEntity.getId());
         if (byId.isEmpty()) {
             fail("테스트 실패");
         } else {
@@ -107,5 +107,42 @@ class TagEntityRepositoryTest extends AbstractMongoDbTest {
         assertThat(top20ByNameStartingWith)
                 .hasSize(20)
                 .allMatch(entity -> entity.getName().startsWith(prefix));
+    }
+
+    @Test
+    @DisplayName("성공 케이스 : 이름으로 Tag Entity 조회")
+    void findTagEntityByName() {
+        // given
+        TagEntity tag = TagEntity.of("tag");
+        tagEntityRepository.save(tag);
+
+        // when
+        Optional<TagEntity> actual = tagEntityRepository.findTagEntityByName("tag");
+
+        // then
+        assertThat(actual)
+                .isNotEmpty()
+                .get()
+                .extracting(TagEntity::getName)
+                .isEqualTo("tag");
+    }
+
+    @Test
+    @DisplayName("성공 케이스 : 이름 목록으로 Tag Entity 목록 조회")
+    void findAllByNameIn() {
+        // given
+        TagEntity tag1 = TagEntity.of("tag1");
+        TagEntity tag2 = TagEntity.of("tag2");
+        TagEntity tag3 = TagEntity.of("tag3");
+        tagEntityRepository.saveAll(List.of(tag1, tag2, tag3));
+
+        // when
+        List<TagEntity> allByNameIn = tagEntityRepository.findAllByNameIn(List.of("tag1", "tag2", "tag3"));
+
+        // then
+        assertThat(allByNameIn)
+                .hasSize(3)
+                .extracting(TagEntity::getName)
+                .containsExactlyInAnyOrder("tag1", "tag2", "tag3");
     }
 }

@@ -320,7 +320,7 @@ class ProductServiceTest {
     private ProductEntity getProductEntity(String title, String detailedAddress, String thumbnailUrl) {
         ProductEntity productEntity = ProductEntity.of(new ObjectId(), title, null, ProductEntity.Location.of(0, 0, detailedAddress), 1, List.of(thumbnailUrl, "test1", "test2"), null, null);
         ReflectionTestUtils.setField(productEntity, "id", new ObjectId());
-        ReflectionTestUtils.setField(productEntity, "createdDate", LocalDateTime.now());
+        ReflectionTestUtils.setField(productEntity, "createdAt", LocalDateTime.now());
         return productEntity;
     }
 

@@ -54,7 +54,7 @@ public class ProductService {
                         .price(product.getPrice())
                         .tagIdList(product.getTagNameList())
                         .thumbnailUrl(awsS3Client.getPreSignedUrl(product.getThumbnailUrl()))
-                        .createAt(product.getCreatedDate())
+                        .createAt(product.getCreatedAt())
                         .build())
                 .toList();
     }

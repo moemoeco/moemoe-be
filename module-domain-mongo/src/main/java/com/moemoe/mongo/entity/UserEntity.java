@@ -13,7 +13,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Getter
 @Document(collection = "users")
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class UserEntity {
+public class UserEntity extends BaseTimeEntity {
     @Id
     @Getter(AccessLevel.NONE)
     private ObjectId id;

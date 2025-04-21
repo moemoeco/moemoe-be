@@ -13,14 +13,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "tags")
 @CompoundIndex(def = "{'productsCount': -1, 'name': 1}")
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class TagEntity {
+public class TagEntity extends BaseTimeEntity {
     @Id
     private ObjectId id;
     @Indexed(unique = true)
     private String name;
     private long productsCount;
-    @CreatedDate
-    private LocalDateTime createdDate;
 
     private TagEntity(String name, long productsCount) {
         this.name = name.replace(" ", "_");

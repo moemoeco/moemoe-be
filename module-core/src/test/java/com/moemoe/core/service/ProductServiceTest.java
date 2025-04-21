@@ -106,9 +106,9 @@ class ProductServiceTest {
                 .willReturn(expectedImageUrl2);
 
         // increment tag
-        given(tagEntityRepository.findById("tag1"))
+        given(tagEntityRepository.findTagEntityByName("tag1"))
                 .willReturn(Optional.empty());
-        given(tagEntityRepository.findById("tag2"))
+        given(tagEntityRepository.findTagEntityByName("tag2"))
                 .willReturn(Optional.of(TagEntity.of("tag2")));
 
         // product entity save
@@ -346,7 +346,7 @@ class ProductServiceTest {
                 .willReturn(Optional.of(productEntity));
         TagEntity tagEntity = TagEntity.of("tag1", 1L);
         List<TagEntity> tagEntityList = List.of(tagEntity);
-        given(tagEntityRepository.findAllById(tagNameList))
+        given(tagEntityRepository.findAllByNameIn(tagNameList))
                 .willReturn(tagEntityList);
         willDoNothing()
                 .given(awsS3Client)
@@ -360,7 +360,7 @@ class ProductServiceTest {
         verify(productEntityRepository, times(1))
                 .findById(productObjectId);
         verify(tagEntityRepository, times(1))
-                .findAllById(tagNameList);
+                .findAllByNameIn(tagNameList);
         verify(awsS3Client, times(1))
                 .delete(imageUrlList);
         verify(productEntityRepository, times(1))

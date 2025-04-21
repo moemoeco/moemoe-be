@@ -96,7 +96,7 @@ public class ProductService {
 
     private void incrementTag(RegisterProductRequest request) {
         for (String tagName : request.getTagNameList()) {
-            Optional<TagEntity> optionalTag = tagEntityRepository.findById(tagName);
+            Optional<TagEntity> optionalTag = tagEntityRepository.findTagEntityByName(tagName);
             if (optionalTag.isPresent()) {
                 tagEntityRepository.incrementProductsCount(tagName);
             } else {
@@ -139,7 +139,7 @@ public class ProductService {
 
         ProductEntity productEntity = optionalProduct.get();
         List<String> tagNameList = productEntity.getTagNameList();
-        List<TagEntity> tagEntityEntityList = tagEntityRepository.findAllById(tagNameList);
+        List<TagEntity> tagEntityEntityList = tagEntityRepository.findAllByNameIn(tagNameList);
 
         for (TagEntity tagEntity : tagEntityEntityList) {
             if (tagEntity.getProductsCount() > 0) {

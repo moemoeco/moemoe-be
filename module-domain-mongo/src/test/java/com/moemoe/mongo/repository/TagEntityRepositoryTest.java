@@ -40,7 +40,7 @@ class TagEntityRepositoryTest extends AbstractMongoDbTest {
         tagEntityRepository.incrementProductsCount(name);
 
         // then
-        Optional<TagEntity> byId = tagEntityRepository.findById(name);
+        Optional<TagEntity> byId = tagEntityRepository.findById(tagEntity.getId());
         if (byId.isEmpty()) {
             fail("테스트 실패");
         } else {
@@ -69,7 +69,7 @@ class TagEntityRepositoryTest extends AbstractMongoDbTest {
         tagEntityRepository.decrementProductsCount(name);
 
         // then
-        Optional<TagEntity> byId = tagEntityRepository.findById(name);
+        Optional<TagEntity> byId = tagEntityRepository.findById(tagEntity.getId());
         if (byId.isEmpty()) {
             fail("테스트 실패");
         } else {

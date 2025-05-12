@@ -3,7 +3,7 @@ package com.moemoe.chat;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.moemoe.chat", "com.moemoe.mongo"})
 public class ModuleChatApplication {
 
     public static void main(String[] args) {

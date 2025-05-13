@@ -1,4 +1,4 @@
-package com.moemoe.chat.service;
+package com.moemoe.core.service;
 
 import com.moemoe.mongo.entity.ChatRoomEntity;
 import com.moemoe.mongo.entity.UserEntity;

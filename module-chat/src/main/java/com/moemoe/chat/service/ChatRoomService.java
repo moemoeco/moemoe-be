@@ -50,10 +50,10 @@ public class ChatRoomService {
         try {
             ChatRoomEntity chatRoomEntity = ChatRoomEntity.of(title, participantIds);
             ObjectId chatRoomId = chatRoomEntityRepository.save(chatRoomEntity).getId();
-            log.info("Successfully created chat room with ID: {}", chatRoomId);
+            log.info("Successfully created chat room (roomId={})", chatRoomId);
             return chatRoomId;
         } catch (Exception e) {
-            log.error("Failed to create chat room", e);
+            log.error("Failed to create chat room for participants {}", participantIds, e);
             throw new IllegalStateException("Failed to create chat room", e);
         }
     }

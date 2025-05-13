@@ -29,8 +29,10 @@ class ChatRoomEntityFindingRepositoryTest extends AbstractMongoDbTest {
 
         // when & then
         assertThat(chatRoomEntityFindingRepository.findByParticipantIds(Set.of(participantId1)))
-                .isNull();
+                .isEmpty();
         assertThat(chatRoomEntityFindingRepository.findByParticipantIds(Set.of(participantId1, participantId2)))
+                .isNotEmpty()
+                .get()
                 .extracting(ChatRoomEntity::getId)
                 .isEqualTo(chatRoomEntity.getId());
     }

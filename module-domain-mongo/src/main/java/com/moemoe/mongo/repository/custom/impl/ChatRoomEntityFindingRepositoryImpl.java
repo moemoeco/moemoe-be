@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.Set;
 
 @Repository
@@ -17,12 +18,12 @@ public class ChatRoomEntityFindingRepositoryImpl implements ChatRoomEntityFindin
     private final MongoTemplate mongoTemplate;
 
     @Override
-    public ChatRoomEntity findByParticipantIds(Set<ObjectId> participantIds) {
+    public Optional<ChatRoomEntity> findByParticipantIds(Set<ObjectId> participantIds) {
         Criteria criteria = new Criteria().andOperator(
                 Criteria.where("participantIds").all(participantIds),
                 Criteria.where("participantIds").size(participantIds.size())
         );
         Query query = Query.query(criteria);
-        return mongoTemplate.findOne(query, ChatRoomEntity.class);
+        return Optional.ofNullable(mongoTemplate.findOne(query, ChatRoomEntity.class));
     }
 }

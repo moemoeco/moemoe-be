@@ -1,3 +1,5 @@
 dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation project(":module-domain-mongo")
+    implementation project(":module-domain-redis")
 }

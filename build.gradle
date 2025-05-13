@@ -35,7 +35,8 @@ subprojects {
                     'org.springframework.boot:spring-boot-starter-data-mongodb'
             ],
             'redis': [
-                    'org.springframework.boot:spring-boot-starter-data-redis'
+                    'org.springframework.boot:spring-boot-starter-data-redis',
+                    'org.springframework.session:spring-session-data-redis'
             ],
             'jwt'  : [
                     'io.jsonwebtoken:jjwt-api:0.12.6',

@@ -15,6 +15,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -36,6 +37,10 @@ class ChatRoomServiceTest {
         ObjectId participantId1 = new ObjectId();
         ObjectId participantId2 = new ObjectId();
         Set<ObjectId> participantIds = Set.of(participantId1, participantId2);
+
+        given(chatRoomEntityRepository.findByParticipantIds(participantIds))
+                .willReturn(Optional.empty());
+
         UserEntity user1 = mock(UserEntity.class);
         UserEntity user2 = mock(UserEntity.class);
         given(user1.getName())
@@ -67,6 +72,29 @@ class ChatRoomServiceTest {
     }
 
     @Test
+    @DisplayName("성공 케이스 : 이미 참여자가 모두 존재하는 채팅방이 존재하는 경우")
+    void shouldExistChatRoom(){
+        // given
+        ObjectId participantId1 = new ObjectId();
+        ObjectId participantId2 = new ObjectId();
+        Set<ObjectId> participantIds = Set.of(participantId1, participantId2);
+
+        ObjectId chatRoomId = new ObjectId();
+        ChatRoomEntity chatRoomEntity = mock(ChatRoomEntity.class);
+        given(chatRoomEntity.getId())
+                .willReturn(chatRoomId);
+        given(chatRoomEntityRepository.findByParticipantIds(participantIds))
+                .willReturn(Optional.of(chatRoomEntity));
+
+        // when
+        ObjectId result = chatRoomService.create(participantIds);
+
+        // then
+        assertNotNull(result);
+        assertEquals(chatRoomId, result);
+    }
+
+    @Test
     @DisplayName("실패 케이스 : 참여자 목록이 비어있는 경우 예외 발생")
     void shouldThrowExceptionIfParticipantListIsEmpty() {
         // given
@@ -89,6 +117,8 @@ class ChatRoomServiceTest {
     void shouldThrowExceptionIfSomeParticipantsDoNotExist() {
         // given
         Set<ObjectId> participantIds = Set.of(new ObjectId(), new ObjectId());
+        given(chatRoomEntityRepository.findByParticipantIds(participantIds))
+                .willReturn(Optional.empty());
         UserEntity user = mock(UserEntity.class);
         given(userEntityRepository.findAllById(participantIds))
                 .willReturn(List.of(user));
@@ -103,7 +133,8 @@ class ChatRoomServiceTest {
                 .should(times(1))
                 .findAllById(participantIds);
         then(chatRoomEntityRepository)
-                .shouldHaveNoInteractions();
+                .should(times(1))
+                .findByParticipantIds(participantIds);
     }
 
     @Test
@@ -111,6 +142,8 @@ class ChatRoomServiceTest {
     void shouldThrowExceptionIfChatRoomSavingFails() {
         // given
         Set<ObjectId> participantIds = Set.of(new ObjectId());
+        given(chatRoomEntityRepository.findByParticipantIds(participantIds))
+                .willReturn(Optional.empty());
         UserEntity user = mock(UserEntity.class);
         given(user.getName())
                 .willReturn("Alice");

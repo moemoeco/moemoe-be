@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -26,6 +27,12 @@ public class ChatRoomService {
     public ObjectId create(Set<ObjectId> participantIds) {
         if (ObjectUtils.isEmpty(participantIds)) {
             throw new IllegalArgumentException("Participant list is empty");
+        }
+        Optional<ChatRoomEntity> byParticipantIds = chatRoomEntityRepository.findByParticipantIds(participantIds);
+        if (byParticipantIds.isPresent()) {
+            ChatRoomEntity chatRoomEntity = byParticipantIds.get();
+            log.info("A chat room with the requested participants already exists (roomId={})", chatRoomEntity.getId());
+            return chatRoomEntity.getId();
         }
 
         log.info("Starting to create chat room with {} participants", participantIds.size());

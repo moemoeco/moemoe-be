@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.util.Set;
 
@@ -17,8 +16,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ChatRoomEntityUpdateRepositoryTest extends AbstractMongoDbTest {
     @Autowired
     private ChatRoomEntityUpdateRepositoryImpl chatRoomEntityUpdateRepository;
-    @Autowired
-    private MongoTemplate mongoTemplate;
 
     @Test
     @DisplayName("성공 케이스 : Display Message ID 업데이트")

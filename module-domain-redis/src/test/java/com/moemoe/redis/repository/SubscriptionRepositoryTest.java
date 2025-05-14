@@ -23,11 +23,13 @@ class SubscriptionRepositoryTest {
     private StringRedisTemplate stringRedisTemplate;
     private final String roomId = "roomId";
     private final String userId = "userId";
-    private final String keyPrefix = "chat:subscribers:";
+    private final String subscribersKeyPrefix = "chat:subscribers:";
+    private final String chatRoomsKeyPrefix = "chat:chatRooms:";
 
     @AfterEach
     void deleteAll() {
-        stringRedisTemplate.delete(keyPrefix + roomId);
+        stringRedisTemplate.delete(subscribersKeyPrefix + roomId);
+        stringRedisTemplate.delete(chatRoomsKeyPrefix + userId);
     }
 
     @Test
@@ -37,10 +39,15 @@ class SubscriptionRepositoryTest {
         subscriptionRepository.addSubscriber(roomId, userId);
 
         // then
-        Set<String> members = stringRedisTemplate.opsForSet().members(keyPrefix + roomId);
-        assertThat(members)
+        Set<String> subscribersMembers = stringRedisTemplate.opsForSet().members(subscribersKeyPrefix + roomId);
+        assertThat(subscribersMembers)
                 .hasSize(1)
                 .containsExactly(userId);
+
+        Set<String> chatRoomMembers = stringRedisTemplate.opsForSet().members(chatRoomsKeyPrefix + userId);
+        assertThat(chatRoomMembers)
+                .hasSize(1)
+                .containsExactly(roomId);
     }
 
     @Test
@@ -48,14 +55,20 @@ class SubscriptionRepositoryTest {
     void removeSubscriber() {
         // given
         stringRedisTemplate.opsForSet()
-                .add(keyPrefix + roomId, userId);
+                .add(subscribersKeyPrefix + roomId, userId);
+        stringRedisTemplate.opsForSet()
+                .add(chatRoomsKeyPrefix + userId, roomId);
 
         // when
         subscriptionRepository.removeSubscriber(roomId, userId);
 
         // then
-        Set<String> members = stringRedisTemplate.opsForSet().members(keyPrefix + roomId);
-        assertThat(members)
+        Set<String> subscribersMembers = stringRedisTemplate.opsForSet().members(subscribersKeyPrefix + roomId);
+        assertThat(subscribersMembers)
+                .isEmpty();
+
+        Set<String> chatRoomMembers = stringRedisTemplate.opsForSet().members(chatRoomsKeyPrefix + userId);
+        assertThat(chatRoomMembers)
                 .isEmpty();
     }
 
@@ -67,12 +80,11 @@ class SubscriptionRepositoryTest {
         String user2 = "user2";
         String user3 = "user3";
         stringRedisTemplate.opsForSet()
-                .add(keyPrefix + roomId, user1);
+                .add(subscribersKeyPrefix + roomId, user1);
         stringRedisTemplate.opsForSet()
-                .add(keyPrefix + roomId, user2);
+                .add(subscribersKeyPrefix + roomId, user2);
         stringRedisTemplate.opsForSet()
-                .add(keyPrefix + roomId, user3);
-
+                .add(subscribersKeyPrefix + roomId, user3);
 
         // when
         Set<String> subscribers = subscriptionRepository.getSubscribers(roomId);
@@ -81,5 +93,28 @@ class SubscriptionRepositoryTest {
         assertThat(subscribers)
                 .hasSize(3)
                 .containsExactlyInAnyOrder(user1, user2, user3);
+    }
+
+    @Test
+    @DisplayName("성공 케이스 : 유저가 구독 중인 채팅방 조회")
+    void getChatRooms() {
+        // given
+        String room1 = "room1";
+        String room2 = "room2";
+        String room3 = "room3";
+        stringRedisTemplate.opsForSet()
+                .add(chatRoomsKeyPrefix + userId, room1);
+        stringRedisTemplate.opsForSet()
+                .add(chatRoomsKeyPrefix + userId, room2);
+        stringRedisTemplate.opsForSet()
+                .add(chatRoomsKeyPrefix + userId, room3);
+
+        // when
+        Set<String> chatRooms = subscriptionRepository.getChatRooms(userId);
+
+        // then
+        assertThat(chatRooms)
+                .hasSize(3)
+                .containsExactlyInAnyOrder(room1, room2, room3);
     }
 }

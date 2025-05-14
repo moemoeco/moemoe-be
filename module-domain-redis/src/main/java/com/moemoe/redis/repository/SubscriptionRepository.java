@@ -8,4 +8,6 @@ public interface SubscriptionRepository {
     void removeSubscriber(String roomId, String userId);
 
     Set<String> getSubscribers(String roomId);
+
+    Set<String> getChatRooms(String userId);
 }

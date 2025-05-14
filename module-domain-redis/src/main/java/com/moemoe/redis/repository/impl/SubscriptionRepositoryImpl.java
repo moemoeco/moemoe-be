@@ -12,26 +12,40 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class SubscriptionRepositoryImpl implements SubscriptionRepository {
     private final StringRedisTemplate stringRedisTemplate;
-    private static final String KEY_PREFIX = "chat:subscribers:";
+    private static final String SUBSCRIBERS_KEY_PREFIX = "chat:subscribers:";
+    private static final String CHATROOM_KEY_PREFIX = "chat:chatRooms:";
 
     @Override
     public void addSubscriber(String roomId, String userId) {
-        stringRedisTemplate.opsForSet().add(getKey(roomId), userId);
+        stringRedisTemplate.opsForSet().add(getSubscribersKey(roomId), userId);
+        stringRedisTemplate.opsForSet().add(getChatroomKeyPrefix(userId), roomId);
     }
 
     @Override
     public void removeSubscriber(String roomId, String userId) {
-        stringRedisTemplate.opsForSet().remove(getKey(roomId), userId);
+        stringRedisTemplate.opsForSet().remove(getSubscribersKey(roomId), userId);
+        stringRedisTemplate.opsForSet().remove(getChatroomKeyPrefix(userId), roomId);
     }
 
     @Override
     public Set<String> getSubscribers(String roomId) {
         Set<String> members = stringRedisTemplate.opsForSet()
-                .members(getKey(roomId));
+                .members(getSubscribersKey(roomId));
         return (members != null) ? members : Collections.emptySet();
     }
 
-    private String getKey(String roomId) {
-        return KEY_PREFIX + roomId;
+    @Override
+    public Set<String> getChatRooms(String userId) {
+        Set<String> members = stringRedisTemplate.opsForSet()
+                .members(getChatroomKeyPrefix(userId));
+        return (members != null) ? members : Collections.emptySet();
+    }
+
+    private String getSubscribersKey(String roomId) {
+        return SUBSCRIBERS_KEY_PREFIX + roomId;
+    }
+
+    private String getChatroomKeyPrefix(String userId) {
+        return CHATROOM_KEY_PREFIX + userId;
     }
 }

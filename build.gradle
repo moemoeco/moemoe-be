@@ -60,7 +60,7 @@ subprojects {
 
     // 모듈별 의존성 매핑
     def moduleDependencyGroups = [
-            'module-chat'        : ['mongo'],
+            'module-chat'        : ['mongo', 'oauth'],
             'module-domain-mongo': ['oauth', 'mongo', 'mongoTest'],
             'module-core'        : ['oauth', 'mongo', 'redis', 'jwt'],
             'module-api'         : ['oauth'],

@@ -3,6 +3,7 @@ package com.moemoe.redis.config;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.redis.core.RedisKeyValueAdapter;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import org.springframework.util.StringUtils;
@@ -17,6 +18,7 @@ import java.io.InputStreamReader;
 
 @TestConfiguration
 @EnableRedisRepositories(basePackages = "com.moemoe.redis", enableKeyspaceEvents = RedisKeyValueAdapter.EnableKeyspaceEvents.ON_STARTUP)
+@ComponentScan(basePackages = "com.moemoe.redis.repository")
 public class EmbeddedRedisConfig {
     private static final int REDIS_PORT = 6379;
     private static final String REDIS_BINARY_PATH = "binary/redis-server";

@@ -35,7 +35,8 @@ subprojects {
                     'org.springframework.boot:spring-boot-starter-data-mongodb'
             ],
             'redis': [
-                    'org.springframework.boot:spring-boot-starter-data-redis'
+                    'org.springframework.boot:spring-boot-starter-data-redis',
+                    'org.springframework.session:spring-session-data-redis'
             ],
             'jwt'  : [
                     'io.jsonwebtoken:jjwt-api:0.12.6',
@@ -59,6 +60,7 @@ subprojects {
 
     // 모듈별 의존성 매핑
     def moduleDependencyGroups = [
+            'module-chat'        : ['mongo', 'oauth'],
             'module-domain-mongo': ['oauth', 'mongo', 'mongoTest'],
             'module-core'        : ['oauth', 'mongo', 'redis', 'jwt'],
             'module-api'         : ['oauth'],

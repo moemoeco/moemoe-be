@@ -11,9 +11,11 @@ import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultMongoTypeMapper;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 @Configuration
 @RequiredArgsConstructor
+@EnableMongoRepositories(basePackages = "com.moemoe.mongo")
 @EnableAutoConfiguration
 @EnableMongoAuditing
 public class MongoConfig {

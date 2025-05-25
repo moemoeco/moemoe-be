@@ -1,0 +1,20 @@
+apply plugin: 'war'
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    implementation project(":module-domain-mongo")
+    implementation project(":module-domain-redis")
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+bootJar {
+    enabled = false
+}
+
+bootWar {
+    enabled = true
+    archiveFileName = 'moemoe_chat.war'
+}

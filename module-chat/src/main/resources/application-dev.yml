@@ -1,0 +1,20 @@
+spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
+    mongodb:
+      host: localhost
+      port: 27017
+      database: test
+      #      com.mongodb.MongoCommandException: Command failed with error 18 (AuthenticationFailed): 'Authentication failed.'  에러로 인해 잠시 제거
+      username: root
+      password: example
+      authentication-database: admin
+      auto-index-creation: true
+logging:
+  level:
+    org:
+      springframework:
+        data:
+          mongodb: DEBUG

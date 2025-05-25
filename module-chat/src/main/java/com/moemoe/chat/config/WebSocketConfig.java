@@ -8,13 +8,12 @@ import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.util.ObjectUtils;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
-import java.security.Principal;
 import java.util.Collections;
 
 @Configuration
@@ -40,18 +39,22 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registration.interceptors(new ChannelInterceptor() {
             @Override
             public Message<?> preSend(Message<?> message, MessageChannel channel) {
-                StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
+                StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+
+                // TODO 2025. 5. 22. : JWT 검증으로 변경
                 if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-                    // TODO: JWT 검증 로직으로 교체
                     String userId = accessor.getFirstNativeHeader("userId");
-                    if (ObjectUtils.isEmpty(userId)) {
-                        userId = "anonymous";
+                    accessor.getSessionAttributes().put("userId", userId);
+                    accessor.setUser(new UsernamePasswordAuthenticationToken(
+                            userId, null, Collections.emptyList()));
+                } else if (accessor.getUser() == null) {
+                    String userId = (String) accessor.getSessionAttributes().get("userId");
+                    if (userId != null) {
+                        accessor.setUser(new UsernamePasswordAuthenticationToken(
+                                userId, null, Collections.emptyList()));
                     }
-                    Principal principal = new UsernamePasswordAuthenticationToken(
-                            userId, null, Collections.emptyList()
-                    );
-                    accessor.setUser(principal);
                 }
+                accessor.setLeaveMutable(true);
                 return message;
             }
         });

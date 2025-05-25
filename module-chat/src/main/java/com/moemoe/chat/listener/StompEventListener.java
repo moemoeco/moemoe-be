@@ -31,6 +31,7 @@ public class StompEventListener {
             String userId = user.getName();
             log.info("User '{}' is subscribing to room '{}'", userId, roomId);
             subscriptionRepository.addSubscriber(roomId, userId);
+            // TODO 2025. 5. 22. : 구독한 방의 Chat Message Read By 업데이트
         } else {
             log.warn("Ignored subscribe: invalid destination='{}' or missing user='{}'", destination, user);
         }

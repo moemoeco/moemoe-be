@@ -7,6 +7,8 @@ import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.Set;
+
 @Getter
 @Document(collection = "chat_messages")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -16,14 +18,22 @@ public class ChatMessageEntity extends BaseTimeEntity {
     private ObjectId chatRoomId;
     private ObjectId userId;
     private String message;
+    private Set<ObjectId> readBy;
 
-    private ChatMessageEntity(ObjectId chatRoomId, ObjectId userId, String message) {
+    private ChatMessageEntity(ObjectId chatRoomId,
+                              ObjectId userId,
+                              String message,
+                              Set<ObjectId> readBy) {
         this.chatRoomId = chatRoomId;
         this.userId = userId;
         this.message = message;
+        this.readBy = readBy;
     }
 
-    public static ChatMessageEntity of(ObjectId chatRoomId, ObjectId userId, String message) {
-        return new ChatMessageEntity(chatRoomId, userId, message);
+    public static ChatMessageEntity of(String chatRoomId,
+                                       String userId,
+                                       String message,
+                                       Set<ObjectId> readBy) {
+        return new ChatMessageEntity(new ObjectId(chatRoomId), new ObjectId(userId), message, readBy);
     }
 }

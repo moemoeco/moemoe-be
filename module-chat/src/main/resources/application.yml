@@ -1,0 +1,11 @@
+spring:
+  profiles:
+    active: ${ACTIVE_PROFILE}
+server:
+  port: 10000
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.web.socket.messaging: DEBUG
+    org.springframework.messaging.simp.stomp: DEBUG
+

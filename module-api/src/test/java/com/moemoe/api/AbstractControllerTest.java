@@ -90,7 +90,7 @@ public abstract class AbstractControllerTest {
         }
     }
 
-    protected String convertRequestToJson(Object request) {
+    protected String convertObjectToJson(Object request) {
         try {
             return objectMapper.writeValueAsString(request);
         } catch (JsonProcessingException e) {

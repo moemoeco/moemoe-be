@@ -49,7 +49,7 @@ class UserControllerTest extends AbstractControllerTest {
                 .willReturn(true);
 
         // when
-        String requestToJson = convertRequestToJson(refreshAccessTokenRequest);
+        String requestToJson = convertObjectToJson(refreshAccessTokenRequest);
         MockHttpServletRequestBuilder builder = post("/users/refresh")
                 .content(requestToJson)
                 .contentType(MediaType.APPLICATION_JSON_VALUE);
@@ -67,7 +67,7 @@ class UserControllerTest extends AbstractControllerTest {
         // when
         RefreshAccessTokenRequest refreshAccessTokenRequest = new RefreshAccessTokenRequest();
         ReflectionTestUtils.setField(refreshAccessTokenRequest, "refreshToken", "refreshToken");
-        String requestToJson = convertRequestToJson(refreshAccessTokenRequest);
+        String requestToJson = convertObjectToJson(refreshAccessTokenRequest);
 
         ObjectNode objectNode = (ObjectNode) objectMapper.readTree(requestToJson);
         objectNode.put("refreshToken", "");
@@ -91,7 +91,7 @@ class UserControllerTest extends AbstractControllerTest {
         LogoutRequest logoutRequest = new LogoutRequest();
         ReflectionTestUtils.setField(logoutRequest, "refreshToken", expectedRefreshToken);
 
-        String requestToJson = convertRequestToJson(logoutRequest);
+        String requestToJson = convertObjectToJson(logoutRequest);
 
         // when
         MockHttpServletRequestBuilder builder = post("/users/logout")
@@ -117,7 +117,7 @@ class UserControllerTest extends AbstractControllerTest {
         LogoutRequest logoutRequest = new LogoutRequest();
         ReflectionTestUtils.setField(logoutRequest, "refreshToken", expectedRefreshToken);
 
-        String requestToJson = convertRequestToJson(logoutRequest);
+        String requestToJson = convertObjectToJson(logoutRequest);
 
         ObjectNode objectNode = (ObjectNode) objectMapper.readTree(requestToJson);
         objectNode.put("refreshToken", "");

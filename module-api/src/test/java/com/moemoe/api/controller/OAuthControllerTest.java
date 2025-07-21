@@ -41,7 +41,7 @@ class OAuthControllerTest extends AbstractControllerTest {
                 .willReturn(expectedLoginTokenResponse);
 
         // when
-        String requestToJson = convertRequestToJson(request);
+        String requestToJson = convertObjectToJson(request);
         MockHttpServletRequestBuilder builder = post("/oauth/kakao/login")
                 .content(requestToJson)
                 .contentType(MediaType.APPLICATION_JSON);
@@ -80,7 +80,7 @@ class OAuthControllerTest extends AbstractControllerTest {
                 .willReturn(expectedLoginTokenResponse);
 
         // when
-        String requestToJson = convertRequestToJson(request);
+        String requestToJson = convertObjectToJson(request);
         MockHttpServletRequestBuilder builder = post("/oauth/naver/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestToJson);

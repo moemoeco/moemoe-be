@@ -111,7 +111,7 @@ class ProductControllerTest extends AbstractControllerTest {
             ReflectionTestUtils.setField(request, "condition", expectedCondition);
             ReflectionTestUtils.setField(request, "location", expectedLocation);
 
-            String requestJson = convertRequestToJson(request);
+            String requestJson = convertObjectToJson(request);
 
             ObjectNode objectNode = (ObjectNode) objectMapper.readTree(requestJson);
             objectNode.put("sellerId", expectedSellerId);

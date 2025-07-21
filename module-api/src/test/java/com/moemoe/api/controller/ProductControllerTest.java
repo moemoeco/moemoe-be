@@ -4,10 +4,15 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.moemoe.api.AbstractControllerTest;
 import com.moemoe.api.config.handler.ErrorResponseBody;
+import com.moemoe.api.request.ProductPresignedUrlRequest;
+import com.moemoe.api.response.ProductPresignedUrlResponse;
 import com.moemoe.client.exception.ClientRuntimeException;
+import com.moemoe.core.request.GeneratePresignedUrlServiceRequest;
 import com.moemoe.core.request.RegisterProductRequest;
+import com.moemoe.core.response.GeneratePresignedUrlServiceResponse;
 import com.moemoe.core.response.GetProductsResponse;
 import com.moemoe.core.response.IdResponse;
+import com.moemoe.core.service.PresignedUrlService;
 import com.moemoe.core.service.ProductService;
 import com.moemoe.mongo.constant.ProductCondition;
 import org.junit.jupiter.api.DisplayName;
@@ -35,14 +40,129 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ProductController.class)
 class ProductControllerTest extends AbstractControllerTest {
     @MockBean
     private ProductService productService;
+    @MockBean
+    private PresignedUrlService presignedUrlService;
+
+    @Nested
+    @DisplayName("Presigned Url 생성 API")
+    class GeneratePresignedUrl {
+        private final String url = "/products/presigned-urls";
+
+        @Test
+        @DisplayName("성공 케이스 : 2개의 presigned url 반환")
+        void generatePresignedUrl_success() {
+            // given
+            ProductPresignedUrlRequest request = new ProductPresignedUrlRequest(List.of(
+                    new ProductPresignedUrlRequest.ProductRequest("a.jpg", MediaType.IMAGE_JPEG_VALUE),
+                    new ProductPresignedUrlRequest.ProductRequest("b.jpg", MediaType.IMAGE_JPEG_VALUE)
+            ));
+
+            GeneratePresignedUrlServiceResponse mockServiceResponse = new GeneratePresignedUrlServiceResponse(List.of(
+                    new GeneratePresignedUrlServiceResponse.PresignedFileDto("a.jpg", "https://upload.url/1", "products/images/uuid1_a.jpg"),
+                    new GeneratePresignedUrlServiceResponse.PresignedFileDto("b.png", "https://upload.url/2", "products/images/uuid2_b.png")
+            ));
+            given(presignedUrlService.generatePresignedUrl(any(GeneratePresignedUrlServiceRequest.class)))
+                    .willReturn(mockServiceResponse);
+
+            ProductPresignedUrlResponse response = ProductPresignedUrlResponse.fromServiceResponse(mockServiceResponse);
+
+            invoke(
+                    post(url)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(convertObjectToJson(request)),
+                    status().isOk(),
+                    convertObjectToJson(response),
+                    true
+            );
+        }
+
+        @Test
+        @DisplayName("실패 케이스 : 요청이 1개 미만")
+        void generatePresignedUrl_empty() {
+            ProductPresignedUrlRequest request = new ProductPresignedUrlRequest(List.of());
+
+            MvcResult result = invoke(
+                    post(url)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(convertObjectToJson(request)),
+                    status().isBadRequest(),
+                    true
+            );
+
+            ErrorResponseBody error = convertResponseToClass(result, ErrorResponseBody.class);
+            assertThat(error.getType())
+                    .isEqualTo(HandlerMethodValidationException.class.getSimpleName());
+        }
+
+        @Test
+        @DisplayName("실패 케이스 : 요청이 11개 초과")
+        void generatePresignedUrl_exceedLimit() {
+            List<ProductPresignedUrlRequest.ProductRequest> oversizedList = new java.util.ArrayList<>();
+            for (int i = 0; i < 11; i++) {
+                oversizedList.add(new ProductPresignedUrlRequest.ProductRequest(i + ".jpg", MediaType.IMAGE_JPEG_VALUE));
+            }
+            ProductPresignedUrlRequest request = new ProductPresignedUrlRequest(oversizedList);
+
+            MvcResult result = invoke(
+                    post(url)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(convertObjectToJson(request)),
+                    status().isBadRequest(),
+                    true
+            );
+
+            ErrorResponseBody error = convertResponseToClass(result, ErrorResponseBody.class);
+            assertThat(error.getType())
+                    .isEqualTo(HandlerMethodValidationException.class.getSimpleName());
+        }
+
+        @Test
+        @DisplayName("실패 케이스 : fileName이 blank")
+        void generatePresignedUrl_blankFilename() {
+            ProductPresignedUrlRequest request = new ProductPresignedUrlRequest(List.of(
+                    new ProductPresignedUrlRequest.ProductRequest("", MediaType.IMAGE_JPEG_VALUE)
+            ));
+
+            MvcResult result = invoke(
+                    post(url)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(convertObjectToJson(request)),
+                    status().isBadRequest(),
+                    true
+            );
+
+            ErrorResponseBody error = convertResponseToClass(result, ErrorResponseBody.class);
+            assertThat(error.getType())
+                    .isEqualTo(HandlerMethodValidationException.class.getSimpleName());
+        }
+
+        @Test
+        @DisplayName("실패 케이스 : contentType이 image/*가 아닌 경우")
+        void generatePresignedUrl_invalidContentType() {
+            ProductPresignedUrlRequest request = new ProductPresignedUrlRequest(List.of(
+                    new ProductPresignedUrlRequest.ProductRequest("invalid.txt", MediaType.TEXT_PLAIN_VALUE)
+            ));
+
+            MvcResult result = invoke(
+                    post(url)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(convertObjectToJson(request)),
+                    status().isBadRequest(),
+                    true
+            );
+
+            ErrorResponseBody error = convertResponseToClass(result, ErrorResponseBody.class);
+            assertThat(error.getType())
+                    .isEqualTo(HandlerMethodValidationException.class.getSimpleName());
+        }
+    }
 
     @Nested
     @DisplayName("상품 조회 API")
@@ -509,7 +629,7 @@ class ProductControllerTest extends AbstractControllerTest {
 
         @Test
         @DisplayName("실패 케이스 : 상품 ID를 포함하지 않는 경우")
-        void deleteWithoutId(){
+        void deleteWithoutId() {
             // when
             MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.delete("/products");
             invoke(builder, status().isBadRequest(), true);

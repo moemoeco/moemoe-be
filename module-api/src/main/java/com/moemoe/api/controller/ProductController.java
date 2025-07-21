@@ -1,9 +1,14 @@
 package com.moemoe.api.controller;
 
 
+import com.moemoe.api.request.ProductPresignedUrlRequest;
+import com.moemoe.api.response.ProductPresignedUrlResponse;
+import com.moemoe.core.request.GeneratePresignedUrlServiceRequest;
 import com.moemoe.core.request.RegisterProductRequest;
+import com.moemoe.core.response.GeneratePresignedUrlServiceResponse;
 import com.moemoe.core.response.GetProductsResponse;
 import com.moemoe.core.response.IdResponse;
+import com.moemoe.core.service.PresignedUrlService;
 import com.moemoe.core.service.ProductService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
@@ -21,6 +26,16 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductController {
     private final ProductService productService;
+    private final PresignedUrlService presignedUrlService;
+
+    @PostMapping(value = "/presigned-urls")
+    public ProductPresignedUrlResponse generatePresignedUrl(
+            @Valid @RequestBody ProductPresignedUrlRequest request
+    ) {
+        GeneratePresignedUrlServiceRequest serviceRequest = request.toServiceRequest();
+        GeneratePresignedUrlServiceResponse serviceResponse = presignedUrlService.generatePresignedUrl(serviceRequest);
+        return ProductPresignedUrlResponse.fromServiceResponse(serviceResponse);
+    }
 
     @GetMapping
     public GetProductsResponse findAll(

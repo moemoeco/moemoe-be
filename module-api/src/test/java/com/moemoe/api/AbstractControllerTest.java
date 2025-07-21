@@ -19,13 +19,12 @@ import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
-import java.util.Map;
 
 import static com.moemoe.core.service.jwt.JwtService.AUTHENTICATION_HEADER;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 @Slf4j
 @Disabled
@@ -41,54 +40,44 @@ public abstract class AbstractControllerTest {
     protected MockMvc mockMvc;
     protected final ObjectMapper objectMapper = new ObjectMapper();
 
-    protected Map<String, Object> getRequest(Object... keyValuePairs) {
-        if (keyValuePairs.length % 2 != 0) {
-            throw new IllegalArgumentException("Key-value pairs must be provided in pairs (key, value).");
-        }
-
-        Map<String, Object> requestMap = new HashMap<>();
-        for (int i = 0; i < keyValuePairs.length; i += 2) {
-            String key = (String) keyValuePairs[i];
-            Object value = keyValuePairs[i + 1];
-            requestMap.put(key, value);
-        }
-
-        return requestMap;
+    protected MvcResult invoke(MockHttpServletRequestBuilder builder, ResultMatcher statusMatcher, boolean hasAuth) {
+        return invoke(builder, statusMatcher, null, hasAuth);
     }
 
-    protected String convertRequestToJson(Map<?, ?> request) {
-        try {
-            return objectMapper.writeValueAsString(request);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    protected MvcResult invoke(MockHttpServletRequestBuilder builder, ResultMatcher resultMatcher, boolean hasAuth) {
+    protected MvcResult invoke(MockHttpServletRequestBuilder builder, ResultMatcher statusMatcher, String expectedJson, boolean hasAuth) {
         if (hasAuth) {
-
-            String accessToken = "expectedAccessToken";
-            String userId = "userId";
-            given(jwtService.getUserId(accessToken))
-                    .willReturn(userId);
-            given(jwtService.getEmail(accessToken))
-                    .willReturn("user@moemoe.com");
-            given(jwtService.getRole(accessToken))
-                    .willReturn("USER");
-            given(jwtService.isValidToken(accessToken, userId))
-                    .willReturn(true);
-            builder = builder.header(AUTHENTICATION_HEADER, "Bearer " + accessToken);
+            builder = attachAuthHeader(builder);
         }
+
         try {
-            return mockMvc.perform(builder)
-                    .andExpect(resultMatcher)
-                    .andDo(print())
-                    .andReturn();
+            ResultActions resultActions = mockMvc.perform(builder)
+                    .andExpect(statusMatcher);
+
+            if (expectedJson != null) {
+                resultActions.andExpect(content().json(expectedJson));
+            }
+
+            resultActions.andDo(print());
+            return resultActions.andReturn();
+
         } catch (Exception e) {
-            fail("api invocation failed.", e);
-            throw new IllegalStateException("api invocation failed.");
+            fail("API invocation failed.", e);
+            throw new IllegalStateException("API invocation failed.");
         }
     }
+
+    private MockHttpServletRequestBuilder attachAuthHeader(MockHttpServletRequestBuilder builder) {
+        String accessToken = "expectedAccessToken";
+        String userId = "userId";
+
+        given(jwtService.getUserId(accessToken)).willReturn(userId);
+        given(jwtService.getEmail(accessToken)).willReturn("user@moemoe.com");
+        given(jwtService.getRole(accessToken)).willReturn("USER");
+        given(jwtService.isValidToken(accessToken, userId)).willReturn(true);
+
+        return builder.header(AUTHENTICATION_HEADER, "Bearer " + accessToken);
+    }
+
 
     protected String convertObjectToJson(Object request) {
         try {

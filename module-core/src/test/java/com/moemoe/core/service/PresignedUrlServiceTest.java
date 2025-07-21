@@ -10,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
 
 import java.util.List;
 
@@ -29,14 +30,14 @@ class PresignedUrlServiceTest {
     void generatePresignedUrl() {
         // given
         List<GeneratePresignedUrlServiceRequest.FileRequestDto> fileRequests = List.of(
-                new GeneratePresignedUrlServiceRequest.FileRequestDto("image1.jpg", "image/jpeg"),
-                new GeneratePresignedUrlServiceRequest.FileRequestDto("image2.png", "image/png")
+                new GeneratePresignedUrlServiceRequest.FileRequestDto("image1.jpg", MediaType.IMAGE_JPEG_VALUE),
+                new GeneratePresignedUrlServiceRequest.FileRequestDto("image2.png", MediaType.IMAGE_PNG_VALUE)
         );
         GeneratePresignedUrlServiceRequest request = new GeneratePresignedUrlServiceRequest(fileRequests);
 
-        given(awsS3PresignedClient.generatePresignedUrl("image1.jpg", "image/jpeg"))
+        given(awsS3PresignedClient.generatePresignedUrl("image1.jpg", MediaType.IMAGE_JPEG_VALUE))
                 .willReturn(new PresignedFile("image1.jpg", "https://upload.url/1", "products/images/uuid1_image1.jpg"));
-        given(awsS3PresignedClient.generatePresignedUrl("image2.png", "image/png"))
+        given(awsS3PresignedClient.generatePresignedUrl("image2.png", MediaType.IMAGE_PNG_VALUE))
                 .willReturn(new PresignedFile("image2.png", "https://upload.url/2", "products/images/uuid2_image2.png"));
 
         // when

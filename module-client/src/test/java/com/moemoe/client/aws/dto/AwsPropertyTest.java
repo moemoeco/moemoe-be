@@ -1,38 +1,78 @@
 package com.moemoe.client.aws.dto;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.ConfigurationPropertiesBindException;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import software.amazon.awssdk.regions.Region;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@ExtendWith(SpringExtension.class)
-@TestPropertySource(properties = {
-        "cloud.aws.accessKey=testAccessKey",
-        "cloud.aws.secretKey=testSecretKey",
-        "cloud.aws.bucketName=testBucketName",
-        "cloud.aws.region=ap-northeast-2"
-})
-@EnableConfigurationProperties(AwsProperty.class)
 class AwsPropertyTest {
-    @Autowired
-    private AwsProperty awsProperty;
+    private final ApplicationContextRunner contextRunner =
+            new ApplicationContextRunner()
+                    .withUserConfiguration(Config.class);
 
-    @Test
-    void propertyBinding() {
-        // Then
-        assertThat(awsProperty.getAccessKey())
-                .isEqualTo("testAccessKey");
-        assertThat(awsProperty.getSecretKey())
-                .isEqualTo("testSecretKey");
-        assertThat(awsProperty.getBucketName())
-                .isEqualTo("testBucketName");
-        assertThat(awsProperty.getRegion())
-                .isEqualTo(Region.AP_NORTHEAST_2);
+    @EnableConfigurationProperties(AwsProperty.class)
+    static class Config {
     }
 
+    @Test
+    @DisplayName("성공 케이스 : aws property 바인딩 성공")
+    void testWithS3Properties() {
+        contextRunner
+                .withPropertyValues(
+                        "aws.region=ap-northeast-2",
+                        "aws.credentials.accessKey=key",
+                        "aws.credentials.secretKey=secret",
+                        "aws.s3.bucketName=bucket"
+                )
+                .run(context -> {
+                    AwsProperty aws = context.getBean(AwsProperty.class);
+                    assertEquals("key", aws.getAccessKey());
+                    assertEquals("secret", aws.getSecretKey());
+                    assertEquals("bucket", aws.getBucketName());
+                    assertEquals(Region.AP_NORTHEAST_2, aws.getRegion());
+                });
+    }
+
+    @Test
+    @DisplayName("실패 케이스 : aws s3 property 바인딩 실패")
+    void testWithoutS3Properties() {
+        contextRunner
+                .withPropertyValues("aws.region=ap-northeast-2",
+                        "aws.credentials.accessKey=key",
+                        "aws.credentials.secretKey=secret")
+                .run(context -> {
+                    Throwable failure = context.getStartupFailure();
+                    assertThat(failure)
+                            .isInstanceOf(ConfigurationPropertiesBindException.class);
+                });
+    }
+
+    @Test
+    @DisplayName("실패 케이스 : aws credentials property 바인딩 실패")
+    void testWithoutCredentialsProperties() {
+        contextRunner
+                .withPropertyValues("aws.region=ap-northeast-2",
+                        "aws.s3.bucketName=bucket")
+                .run(context -> {
+                    Throwable failure = context.getStartupFailure();
+                    assertThat(failure)
+                            .isInstanceOf(ConfigurationPropertiesBindException.class);
+                });
+    }
+
+    @Test
+    @DisplayName("실패 케이스 : aws property 바인딩 실패")
+    void testWithoutAwsProperties() {
+        contextRunner
+                .run(context -> {
+                    Throwable failure = context.getStartupFailure();
+                    assertThat(failure)
+                            .isInstanceOf(ConfigurationPropertiesBindException.class);
+                });
+    }
 }

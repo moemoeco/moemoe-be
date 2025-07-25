@@ -1,4 +1,4 @@
-package com.moemoe.client.aws.dto;
+package com.moemoe.client.aws.property;
 
 import com.moemoe.client.config.PropertyConfiguration;
 import org.junit.jupiter.api.DisplayName;

@@ -1,4 +1,4 @@
-package com.moemoe.client.aws.dto;
+package com.moemoe.client.aws.property;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

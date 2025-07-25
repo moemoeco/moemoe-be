@@ -1,6 +1,6 @@
 package com.moemoe.client.aws;
 
-import com.moemoe.client.aws.dto.AwsProperty;
+import com.moemoe.client.aws.property.AwsProperty;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;

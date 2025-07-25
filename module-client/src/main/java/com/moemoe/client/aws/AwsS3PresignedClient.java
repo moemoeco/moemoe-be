@@ -1,7 +1,7 @@
 package com.moemoe.client.aws;
 
 import com.fasterxml.uuid.Generators;
-import com.moemoe.client.aws.dto.AwsProperty;
+import com.moemoe.client.aws.property.AwsProperty;
 import com.moemoe.client.aws.dto.PresignedFile;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

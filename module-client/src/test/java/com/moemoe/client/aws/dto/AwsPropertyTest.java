@@ -1,9 +1,9 @@
 package com.moemoe.client.aws.dto;
 
+import com.moemoe.client.config.PropertyConfiguration;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBindException;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import software.amazon.awssdk.regions.Region;
 
@@ -13,11 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class AwsPropertyTest {
     private final ApplicationContextRunner contextRunner =
             new ApplicationContextRunner()
-                    .withUserConfiguration(Config.class);
-
-    @EnableConfigurationProperties(AwsProperty.class)
-    static class Config {
-    }
+                    .withUserConfiguration(PropertyConfiguration.class);
 
     @Test
     @DisplayName("성공 케이스 : aws property 바인딩 성공")

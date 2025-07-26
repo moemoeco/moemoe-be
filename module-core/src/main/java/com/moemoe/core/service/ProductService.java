@@ -52,7 +52,7 @@ public class ProductService {
                         .title(product.getTitle())
                         .detailedAddress(product.getDetailedAddress())
                         .price(product.getPrice())
-                        .tagIdList(product.getTagNameList())
+                        .tagIdList(product.getTagNames())
                         .thumbnailUrl(awsS3Client.getPreSignedUrl(product.getThumbnailUrl()))
                         .createAt(product.getCreatedAt())
                         .build())
@@ -138,7 +138,7 @@ public class ProductService {
         }
 
         ProductEntity productEntity = optionalProduct.get();
-        List<String> tagNameList = productEntity.getTagNameList();
+        List<String> tagNameList = productEntity.getTagNames();
         List<TagEntity> tagEntityEntityList = tagEntityRepository.findAllByNameIn(tagNameList);
 
         for (TagEntity tagEntity : tagEntityEntityList) {
@@ -148,7 +148,7 @@ public class ProductService {
         }
         productEntityRepository.delete(productEntity);
 
-        List<String> s3ObjectKeyList = productEntity.getImageUrlList();
+        List<String> s3ObjectKeyList = productEntity.getImageKeys();
         awsS3Client.delete(s3ObjectKeyList);
     }
 }

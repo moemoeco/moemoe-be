@@ -157,7 +157,7 @@ class ProductServiceTest {
                 .isEqualTo(expectedDescription);
         assertThat(savedProductEntity.getPrice())
                 .isEqualTo(expectedPrice);
-        assertThat(savedProductEntity.getTagNameList())
+        assertThat(savedProductEntity.getTagNames())
                 .containsExactlyInAnyOrderElementsOf(expectedTagName);
         assertThat(savedProductEntity.getCondition())
                 .isEqualTo(expectedProductCondition);

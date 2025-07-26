@@ -2,6 +2,7 @@ package com.moemoe.core.service;
 
 import com.moemoe.client.aws.AwsS3Client;
 import com.moemoe.core.request.RegisterProductRequest;
+import com.moemoe.core.request.RegisterProductServiceRequest;
 import com.moemoe.core.response.GetProductsResponse;
 import com.moemoe.core.response.IdResponse;
 import com.moemoe.core.security.SecurityContextHolderUtils;
@@ -29,6 +30,7 @@ public class ProductService {
     private final UserEntityRepository userEntityRepository;
     private final ProductEntityRepository productEntityRepository;
     private final TagEntityRepository tagEntityRepository;
+    private final TagService tagService;
     private final AwsS3Client awsS3Client;
 
     @Transactional(readOnly = true)
@@ -64,6 +66,34 @@ public class ProductService {
     }
 
     @Transactional
+    public IdResponse register(RegisterProductServiceRequest request) {
+        ObjectId sellerId = SecurityContextHolderUtils.getUserId();
+        log.info("Product registration started: sellerId={}, title={}",
+                sellerId, request.title());
+        try {
+            validateSellerExists(sellerId);
+            tagService.incrementProductsCount(request.tagNames());
+
+            ProductEntity productEntity = request.toEntity(sellerId);
+            ProductEntity savedEntity = productEntityRepository.save(productEntity);
+
+            log.info("Product registration completed: productId={}", savedEntity.getId());
+            return new IdResponse(savedEntity.getId());
+        } catch (Exception ex) {
+            log.error("Product registration failed: sellerId={}, title={}",
+                    sellerId, request.title(), ex);
+            throw ex;
+        }
+    }
+
+    private void validateSellerExists(ObjectId sellerId) {
+        if (!userEntityRepository.existsById(sellerId)) {
+            throw new IllegalArgumentException("Seller with ID " + sellerId + " does not exist");
+        }
+    }
+
+    @Transactional
+    @Deprecated(forRemoval = true)
     public IdResponse register(RegisterProductRequest request,
                                List<MultipartFile> imageList) {
         ObjectId sellerId = SecurityContextHolderUtils.getUserId();
@@ -82,6 +112,7 @@ public class ProductService {
         return new IdResponse(productEntityRepository.save(productEntity).getId());
     }
 
+    @Deprecated(forRemoval = true)
     private String slugifyTitle(String title) {
         if (title == null || title.isEmpty()) {
             return "untitled";
@@ -94,6 +125,7 @@ public class ProductService {
                 .toLowerCase();
     }
 
+    @Deprecated(forRemoval = true)
     private void incrementTag(RegisterProductRequest request) {
         for (String tagName : request.getTagNameList()) {
             Optional<TagEntity> optionalTag = tagEntityRepository.findTagEntityByName(tagName);
@@ -111,6 +143,7 @@ public class ProductService {
                 .orElseThrow(() -> new IllegalArgumentException("파일 이름이 null 입니다."));
     }
 
+    @Deprecated(forRemoval = true)
     private ProductEntity createProductEntity(ObjectId sellerId, RegisterProductRequest request, List<String> imageUrlList) {
         return ProductEntity.of(
                 sellerId,
@@ -121,12 +154,6 @@ public class ProductService {
                 imageUrlList,
                 request.getTagNameList(),
                 request.getCondition());
-    }
-
-    private void validateSellerExists(ObjectId sellerId) {
-        if (!userEntityRepository.existsById(sellerId)) {
-            throw new IllegalArgumentException("Seller with ID " + sellerId + " does not exist");
-        }
     }
 
     @Transactional

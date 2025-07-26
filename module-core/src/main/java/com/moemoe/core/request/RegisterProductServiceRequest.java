@@ -11,7 +11,7 @@ public record RegisterProductServiceRequest(
         String description,
         long price,
         List<String> tagNames,
-        List<String> fileKeys,
+        List<String> imageKeys,
         LocationDto location,
         ProductCondition productCondition
 ) {
@@ -22,7 +22,7 @@ public record RegisterProductServiceRequest(
                 description,
                 ProductEntity.Location.of(location.latitude, location.longitude, location.detailAddress),
                 price,
-                fileKeys,
+                imageKeys,
                 tagNames,
                 productCondition);
     }

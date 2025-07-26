@@ -5,17 +5,22 @@ import com.moemoe.mongo.entity.TagEntity;
 import com.moemoe.mongo.repository.TagEntityRepository;
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Sort;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
 class TagServiceTest {
@@ -54,4 +59,55 @@ class TagServiceTest {
                         Tuple.tuple("tag5", 4L)
                 );
     }
+
+    @Nested
+    @DisplayName("Manipulating productsCount of tags")
+    class ProductCount {
+        @Test
+        @DisplayName("increments productsCount when tag already exists")
+        void incrementProductsCount_existing() {
+            // given
+            String tagName = "tag";
+            List<String> expectedTagNames = List.of(tagName);
+            given(tagEntityRepository.findTagEntityByName(tagName))
+                    .willReturn(Optional.of(TagEntity.of(tagName)));
+
+            // when
+            tagService.incrementProductsCount(expectedTagNames);
+
+            // then
+            then(tagEntityRepository)
+                    .should(times(1))
+                    .findTagEntityByName(tagName);
+            then(tagEntityRepository)
+                    .should(times(1))
+                    .incrementProductsCount(tagName);
+        }
+
+        @Test
+        @DisplayName("creates new tag and sets productsCount to 1 when not exists")
+        void incrementProductsCount_new() {
+            // given
+            String tagName = "tag";
+            List<String> expectedTagNames = List.of(tagName);
+            given(tagEntityRepository.findTagEntityByName(tagName))
+                    .willReturn(Optional.empty());
+
+            // when
+            tagService.incrementProductsCount(expectedTagNames);
+
+            // then
+            then(tagEntityRepository)
+                    .should(times(1))
+                    .findTagEntityByName(tagName);
+            ArgumentCaptor<TagEntity> captor = ArgumentCaptor.forClass(TagEntity.class);
+            then(tagEntityRepository)
+                    .should(times(1))
+                    .save(captor.capture());
+            assertThat(captor.getValue())
+                    .extracting(TagEntity::getName, TagEntity::getProductsCount)
+                    .containsExactly(tagName, 1L);
+        }
+    }
+
 }

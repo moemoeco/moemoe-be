@@ -2,6 +2,7 @@ package com.moemoe.core.service;
 
 import com.moemoe.client.aws.AwsS3Client;
 import com.moemoe.core.request.RegisterProductRequest;
+import com.moemoe.core.request.RegisterProductServiceRequest;
 import com.moemoe.core.response.GetProductsResponse;
 import com.moemoe.core.response.IdResponse;
 import com.moemoe.core.security.MoeUser;
@@ -16,6 +17,7 @@ import org.assertj.core.groups.Tuple;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -54,6 +56,8 @@ class ProductServiceTest {
     @Mock
     private TagEntityRepository tagEntityRepository;
     @Mock
+    private TagService tagService;
+    @Mock
     private AwsS3Client awsS3Client;
     private ObjectId expectedSellerId;
 
@@ -68,6 +72,120 @@ class ProductServiceTest {
         SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
         expectedSellerId = new ObjectId("64a9ef6a8ed14e3b1c8eb29a");
     }
+
+    @Nested
+    @DisplayName("Register product")
+    class Register {
+        @Test
+        @DisplayName("Should register product successfully when seller exists and request is valid")
+        void registerProduct_success() {
+            // given
+            RegisterProductServiceRequest request = new RegisterProductServiceRequest(
+                    "상품 제목",
+                    "상품 설명",
+                    10000,
+                    List.of("tag1", "tag2"),
+                    List.of("fileKey1", "fileKey2"),
+                    new RegisterProductServiceRequest.LocationDto(10.0, 11.0, "detail address"),
+                    ProductCondition.NEW
+            );
+            // validateSellerExists
+            given(userEntityRepository.existsById(expectedSellerId))
+                    .willReturn(true);
+
+            // save
+            ProductEntity entity = request.toEntity(expectedSellerId);
+            ProductEntity savedEntity = BDDMockito.mock(ProductEntity.class);
+            ObjectId expectedId = new ObjectId();
+            given(savedEntity.getId())
+                    .willReturn(expectedId);
+            given(productEntityRepository.save(entity))
+                    .willReturn(savedEntity);
+
+            // when
+            IdResponse response = productService.register(request);
+
+            // then
+            then(userEntityRepository)
+                    .should()
+                    .existsById(expectedSellerId);
+            then(tagService)
+                    .should()
+                    .incrementProductsCount(request.tagNames());
+            then(productEntityRepository)
+                    .should()
+                    .save(entity);
+
+            assertThat(response.getId())
+                    .isEqualTo(expectedId.toHexString());
+        }
+
+        @Test
+        @DisplayName("Should throw exception when seller ID does not exist")
+        void registerProduct_invalidSellerId() {
+            // given
+            RegisterProductServiceRequest request = new RegisterProductServiceRequest(
+                    "상품 제목",
+                    "상품 설명",
+                    10000,
+                    List.of("tag1", "tag2"),
+                    List.of("fileKey1", "fileKey2"),
+                    new RegisterProductServiceRequest.LocationDto(10.0, 11.0, "detail address"),
+                    ProductCondition.NEW
+            );
+            given(userEntityRepository.existsById(expectedSellerId))
+                    .willReturn(false);
+
+            // when & then
+            assertThatThrownBy(() -> productService.register(request))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Seller with ID");
+
+            then(userEntityRepository)
+                    .should()
+                    .existsById(expectedSellerId);
+            then(tagService)
+                    .shouldHaveNoInteractions();
+            then(productEntityRepository)
+                    .shouldHaveNoInteractions();
+        }
+
+        @Test
+        @DisplayName("Should throw exception when saving product entity fails")
+        void registerProduct_dbSaveFails() {
+            // given
+            RegisterProductServiceRequest request = new RegisterProductServiceRequest(
+                    "상품 제목",
+                    "상품 설명",
+                    10000,
+                    List.of("tag1", "tag2"),
+                    List.of("fileKey1", "fileKey2"),
+                    new RegisterProductServiceRequest.LocationDto(10.0, 11.0, "detail address"),
+                    ProductCondition.NEW
+            );
+            given(userEntityRepository.existsById(expectedSellerId))
+                    .willReturn(true);
+            willThrow(new RuntimeException("DB error"))
+                    .given(productEntityRepository)
+                    .save(any(ProductEntity.class));
+
+            // when & then
+            assertThatThrownBy(() -> productService.register(request))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessageContaining("DB error");
+
+            then(userEntityRepository)
+                    .should()
+                    .existsById(expectedSellerId);
+            then(tagService)
+                    .should()
+                    .incrementProductsCount(request.tagNames());
+            then(productEntityRepository)
+                    .should()
+                    .save(any(ProductEntity.class));
+        }
+    }
+
 
     @Test
     @DisplayName("정상 케이스 : 상품 등록이 완료된 경우")

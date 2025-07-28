@@ -1,6 +1,6 @@
 package com.moemoe.client.aws;
 
-import com.moemoe.client.aws.dto.AwsProperty;
+import com.moemoe.client.aws.property.AwsProperty;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;

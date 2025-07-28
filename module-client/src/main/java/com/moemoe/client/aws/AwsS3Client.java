@@ -1,6 +1,6 @@
 package com.moemoe.client.aws;
 
-import com.moemoe.client.aws.dto.AwsProperty;
+import com.moemoe.client.aws.property.AwsProperty;
 import com.moemoe.client.exception.ClientRuntimeException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

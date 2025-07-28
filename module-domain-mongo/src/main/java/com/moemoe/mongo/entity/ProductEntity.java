@@ -12,6 +12,7 @@ import org.springframework.util.ObjectUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Getter
 @Document(collection = "products")
@@ -25,8 +26,8 @@ public class ProductEntity extends BaseTimeEntity {
     private long price;
     private long viewCount;
     private Location location;
-    private List<String> imageUrlList;
-    private List<String> tagNameList;
+    private List<String> imageKeys;
+    private List<String> tagNames;
     private ProductStatus status;
     private ProductCondition condition;
 
@@ -39,7 +40,7 @@ public class ProductEntity extends BaseTimeEntity {
     }
 
     public String getThumbnailUrl() {
-        return this.imageUrlList.getFirst();
+        return this.imageKeys.getFirst();
     }
 
     public static ProductEntity of(ObjectId sellerId,
@@ -58,8 +59,8 @@ public class ProductEntity extends BaseTimeEntity {
                           String description,
                           long price,
                           Location location,
-                          List<String> imageUrlList,
-                          List<String> tagNameList,
+                          List<String> imageKeys,
+                          List<String> tagNames,
                           ProductCondition condition) {
         this.sellerId = sellerId;
         this.title = title;
@@ -67,8 +68,8 @@ public class ProductEntity extends BaseTimeEntity {
         this.price = price;
         this.viewCount = 0;
         this.location = location;
-        this.imageUrlList = ObjectUtils.isEmpty(imageUrlList) ? new ArrayList<>() : imageUrlList;
-        this.tagNameList = ObjectUtils.isEmpty(tagNameList) ? new ArrayList<>() : tagNameList;
+        this.imageKeys = ObjectUtils.isEmpty(imageKeys) ? new ArrayList<>() : imageKeys;
+        this.tagNames = ObjectUtils.isEmpty(tagNames) ? new ArrayList<>() : tagNames;
         this.condition = condition;
         this.status = ProductStatus.ON_SALE;
     }
@@ -89,5 +90,16 @@ public class ProductEntity extends BaseTimeEntity {
         public static Location of(double latitude, double longitude, String detailedAddress) {
             return new Location(latitude, longitude, detailedAddress);
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof ProductEntity that)) return false;
+        return Objects.equals(getId(), that.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(getId());
     }
 }

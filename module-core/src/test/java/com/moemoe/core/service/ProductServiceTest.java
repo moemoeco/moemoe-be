@@ -1,7 +1,7 @@
 package com.moemoe.core.service;
 
 import com.moemoe.client.aws.AwsS3Client;
-import com.moemoe.core.request.RegisterProductRequest;
+import com.moemoe.core.request.RegisterProductServiceRequest;
 import com.moemoe.core.response.GetProductsResponse;
 import com.moemoe.core.response.IdResponse;
 import com.moemoe.core.security.MoeUser;
@@ -16,21 +16,17 @@ import org.assertj.core.groups.Tuple;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -38,7 +34,6 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -53,6 +48,8 @@ class ProductServiceTest {
     private ProductEntityRepository productEntityRepository;
     @Mock
     private TagEntityRepository tagEntityRepository;
+    @Mock
+    private TagService tagService;
     @Mock
     private AwsS3Client awsS3Client;
     private ObjectId expectedSellerId;
@@ -69,143 +66,118 @@ class ProductServiceTest {
         expectedSellerId = new ObjectId("64a9ef6a8ed14e3b1c8eb29a");
     }
 
-    @Test
-    @DisplayName("정상 케이스 : 상품 등록이 완료된 경우")
-    void register() {
-        // given
-        String expectedTitle = "샘플 Product";
-        String expectedDescription = "This is a sample product.";
-        long expectedPrice = 1000L;
-        List<String> expectedTagName = List.of("tag1", "tag2");
-        ProductCondition expectedProductCondition = ProductCondition.DAMAGED;
-        double expectedLatitude = 37.7749;
-        double expectedLongitude = -122.4194;
-        String expectedDetailedAddress = "123 Sample St, City, Country";
+    @Nested
+    @DisplayName("Register product")
+    class Register {
+        @Test
+        @DisplayName("Should register product successfully when seller exists and request is valid")
+        void registerProduct_success() {
+            // given
+            RegisterProductServiceRequest request = new RegisterProductServiceRequest(
+                    "상품 제목",
+                    "상품 설명",
+                    10000,
+                    List.of("tag1", "tag2"),
+                    List.of("fileKey1", "fileKey2"),
+                    new RegisterProductServiceRequest.LocationDto(10.0, 11.0, "detail address"),
+                    ProductCondition.NEW
+            );
+            // validateSellerExists
+            given(userEntityRepository.existsById(expectedSellerId))
+                    .willReturn(true);
 
-        RegisterProductRequest expectedRequest = getMockRegisterProductRequest(
-                expectedTitle,
-                expectedDescription,
-                expectedPrice,
-                expectedTagName,
-                expectedProductCondition,
-                expectedLatitude,
-                expectedLongitude,
-                expectedDetailedAddress);
+            // save
+            ProductEntity entity = request.toEntity(expectedSellerId);
+            ProductEntity savedEntity = BDDMockito.mock(ProductEntity.class);
+            ObjectId expectedId = new ObjectId();
+            given(savedEntity.getId())
+                    .willReturn(expectedId);
+            given(productEntityRepository.save(entity))
+                    .willReturn(savedEntity);
 
-        // validate seller exists
-        given(userEntityRepository.existsById(expectedSellerId))
-                .willReturn(true);
+            // when
+            IdResponse response = productService.register(request);
 
-        // image upload
-        List<MultipartFile> expectedImageList = getMultipartFiles();
-        String expectedImageUrl1 = Path.of(expectedSellerId.toHexString(), "샘플-product", expectedImageList.get(0).getOriginalFilename()).toString();
-        String expectedImageUrl2 = Path.of(expectedSellerId.toHexString(), "샘플-product", expectedImageList.get(1).getOriginalFilename()).toString();
-        given(awsS3Client.upload(expectedImageUrl1, expectedImageList.get(0)))
-                .willReturn(expectedImageUrl1);
-        given(awsS3Client.upload(expectedImageUrl2, expectedImageList.get(0)))
-                .willReturn(expectedImageUrl2);
+            // then
+            then(userEntityRepository)
+                    .should()
+                    .existsById(expectedSellerId);
+            then(tagService)
+                    .should()
+                    .incrementProductsCount(request.tagNames());
+            then(productEntityRepository)
+                    .should()
+                    .save(entity);
 
-        // increment tag
-        given(tagEntityRepository.findTagEntityByName("tag1"))
-                .willReturn(Optional.empty());
-        given(tagEntityRepository.findTagEntityByName("tag2"))
-                .willReturn(Optional.of(TagEntity.of("tag2")));
+            assertThat(response.getId())
+                    .isEqualTo(expectedId.toHexString());
+        }
 
-        // product entity save
-        ProductEntity mockProductEntity = BDDMockito.mock(ProductEntity.class);
-        given(productEntityRepository.save(any()))
-                .willReturn(mockProductEntity);
-        ObjectId expectedObjectId = new ObjectId();
-        given(mockProductEntity.getId())
-                .willReturn(expectedObjectId);
+        @Test
+        @DisplayName("Should throw exception when seller ID does not exist")
+        void registerProduct_invalidSellerId() {
+            // given
+            RegisterProductServiceRequest request = new RegisterProductServiceRequest(
+                    "상품 제목",
+                    "상품 설명",
+                    10000,
+                    List.of("tag1", "tag2"),
+                    List.of("fileKey1", "fileKey2"),
+                    new RegisterProductServiceRequest.LocationDto(10.0, 11.0, "detail address"),
+                    ProductCondition.NEW
+            );
+            given(userEntityRepository.existsById(expectedSellerId))
+                    .willReturn(false);
 
-        // when
-        IdResponse response = productService.register(expectedRequest, expectedImageList);
+            // when & then
+            assertThatThrownBy(() -> productService.register(request))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Seller with ID");
 
-        // then
-        assertThat(response.getId())
-                .isEqualTo(expectedObjectId.toHexString());
+            then(userEntityRepository)
+                    .should()
+                    .existsById(expectedSellerId);
+            then(tagService)
+                    .shouldHaveNoInteractions();
+            then(productEntityRepository)
+                    .shouldHaveNoInteractions();
+        }
 
-        then(userEntityRepository)
-                .should(times(1))
-                .existsById(expectedSellerId);
+        @Test
+        @DisplayName("Should throw exception when saving product entity fails")
+        void registerProduct_dbSaveFails() {
+            // given
+            RegisterProductServiceRequest request = new RegisterProductServiceRequest(
+                    "상품 제목",
+                    "상품 설명",
+                    10000,
+                    List.of("tag1", "tag2"),
+                    List.of("fileKey1", "fileKey2"),
+                    new RegisterProductServiceRequest.LocationDto(10.0, 11.0, "detail address"),
+                    ProductCondition.NEW
+            );
+            given(userEntityRepository.existsById(expectedSellerId))
+                    .willReturn(true);
+            willThrow(new RuntimeException("DB error"))
+                    .given(productEntityRepository)
+                    .save(any(ProductEntity.class));
 
-        then(awsS3Client)
-                .should(times(1))
-                .upload(expectedImageUrl1, expectedImageList.get(0));
-        then(awsS3Client)
-                .should(times(1))
-                .upload(expectedImageUrl2, expectedImageList.get(1));
+            // when & then
+            assertThatThrownBy(() -> productService.register(request))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessageContaining("DB error");
 
-        then(tagEntityRepository)
-                .should(times(1))
-                .incrementProductsCount("tag2");
-        then(tagEntityRepository)
-                .should(times(1))
-                .save(argThat(entity -> entity.getName().equals("tag1")));
-
-        ArgumentCaptor<ProductEntity> productCaptor = ArgumentCaptor.forClass(ProductEntity.class);
-        then(productEntityRepository)
-                .should(times(1))
-                .save(productCaptor.capture());
-        ProductEntity savedProductEntity = productCaptor.getValue();
-        assertThat(savedProductEntity.getSellerId())
-                .isEqualTo(expectedSellerId);
-        assertThat(savedProductEntity.getTitle())
-                .isEqualTo(expectedTitle);
-        assertThat(savedProductEntity.getDescription())
-                .isEqualTo(expectedDescription);
-        assertThat(savedProductEntity.getPrice())
-                .isEqualTo(expectedPrice);
-        assertThat(savedProductEntity.getTagNameList())
-                .containsExactlyInAnyOrderElementsOf(expectedTagName);
-        assertThat(savedProductEntity.getCondition())
-                .isEqualTo(expectedProductCondition);
-        assertThat(savedProductEntity.getLocation().getLatitude())
-                .isEqualTo(expectedLatitude);
-        assertThat(savedProductEntity.getLocation().getLongitude())
-                .isEqualTo(expectedLongitude);
-        assertThat(savedProductEntity.getLocation().getDetailedAddress())
-                .isEqualTo(expectedDetailedAddress);
+            then(userEntityRepository)
+                    .should()
+                    .existsById(expectedSellerId);
+            then(tagService)
+                    .should()
+                    .incrementProductsCount(request.tagNames());
+            then(productEntityRepository)
+                    .should()
+                    .save(any(ProductEntity.class));
+        }
     }
-
-    private RegisterProductRequest getMockRegisterProductRequest(String expectedTitle, String expectedDescription, long expectedPrice, List<String> expectedTagName, ProductCondition expectedProductCondition, double expectedLatitude, double expectedLongitude, String expectedDetailedAddress) {
-        RegisterProductRequest expectedRequest = BDDMockito.mock(RegisterProductRequest.class);
-        given(expectedRequest.getTitle())
-                .willReturn(expectedTitle);
-        given(expectedRequest.getDescription())
-                .willReturn(expectedDescription);
-        given(expectedRequest.getPrice())
-                .willReturn(expectedPrice);
-        given(expectedRequest.getTagNameList())
-                .willReturn(expectedTagName);
-        given(expectedRequest.getCondition())
-                .willReturn(expectedProductCondition);
-        given(expectedRequest.getLatitude())
-                .willReturn(expectedLatitude);
-        given(expectedRequest.getLongitude())
-                .willReturn(expectedLongitude);
-        given(expectedRequest.getDetailAddress())
-                .willReturn(expectedDetailedAddress);
-        return expectedRequest;
-    }
-
-    private List<MultipartFile> getMultipartFiles() {
-        MockMultipartFile file1 = new MockMultipartFile(
-                "imageList",
-                "test1.jpg",
-                MediaType.IMAGE_JPEG_VALUE,
-                "".getBytes()
-        );
-        MockMultipartFile file2 = new MockMultipartFile(
-                "imageList",
-                "test1.jpg",
-                MediaType.IMAGE_JPEG_VALUE,
-                "".getBytes()
-        );
-        return List.of(file1, file2);
-    }
-
 
     @Test
     @DisplayName("정상 케이스 : 다음 페이지가 존재하는 경우")

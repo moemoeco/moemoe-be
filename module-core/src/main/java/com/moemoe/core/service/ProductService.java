@@ -10,6 +10,7 @@ import com.moemoe.mongo.entity.TagEntity;
 import com.moemoe.mongo.repository.ProductEntityRepository;
 import com.moemoe.mongo.repository.TagEntityRepository;
 import com.moemoe.mongo.repository.UserEntityRepository;
+import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
@@ -21,44 +22,75 @@ import java.util.Optional;
 
 @Slf4j
 @Service
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class ProductService {
+    private static final int DEFAULT_SIZE = 20;
+    private static final int MAX_SIZE = 50;
+
     private final UserEntityRepository userEntityRepository;
     private final ProductEntityRepository productEntityRepository;
     private final TagEntityRepository tagEntityRepository;
     private final TagService tagService;
     private final AwsS3Client awsS3Client;
 
-    @Transactional(readOnly = true)
-    public GetProductsResponse findAll(
-            String oldNextId,
-            int pageSize
-    ) {
-        if (invalidProductId(oldNextId)) {
-            throw new IllegalArgumentException("old next id is invalid");
+    public GetProductsResponse findAll(String nextId, int requestedPageSize) {
+        log.debug("findAll called: nextId='{}', requestedPageSize={}", nextId, requestedPageSize);
+
+        int pageSize = normalizePageSize(requestedPageSize);
+        log.debug("Normalized pageSize={}", pageSize);
+
+        if (StringUtils.isNotBlank(nextId) && !ObjectId.isValid(nextId)) {
+            log.warn("Rejecting request: invalid nextId format (not hex ObjectId), nextId='{}'", nextId);
+            throw new IllegalArgumentException("nextId is invalid hex ObjectId");
         }
 
-        List<ProductEntity> productEntityList = productEntityRepository.findAll(oldNextId, pageSize);
-        List<GetProductsResponse.Product> contents = getProductContents(productEntityList);
-        return new GetProductsResponse(contents, pageSize);
-    }
+        log.debug("Querying repository: findPage(nextId='{}', pageSize={})", nextId, pageSize);
+        List<ProductEntity> entities = productEntityRepository.findPage(nextId, pageSize);
+        log.debug("Repository returned {} entities", entities.size());
 
-    private List<GetProductsResponse.Product> getProductContents(List<ProductEntity> productEntityList) {
-        return productEntityList.stream()
-                .map(product -> GetProductsResponse.Product.builder()
-                        .id(product.getStringId())
-                        .title(product.getTitle())
-                        .detailedAddress(product.getDetailedAddress())
-                        .price(product.getPrice())
-                        .tagIdList(product.getTagNames())
-                        .thumbnailUrl(awsS3Client.getPreSignedUrl(product.getThumbnailUrl()))
-                        .createAt(product.getCreatedAt())
-                        .build())
+        // 로깅용 페이지 메타(실제 계산은 GetProductsResponse가 하더라도 참고용으로 남김)
+        boolean hasNextCandidate = entities.size() > pageSize;
+        String nextIdCandidate = hasNextCandidate ? entities.get(pageSize - 1).getStringId() : "";
+        log.debug("Computed meta (for log): hasNextCandidate={}, nextIdCandidate='{}'",
+                hasNextCandidate, nextIdCandidate);
+
+        List<GetProductsResponse.Product> contents = entities.stream()
+                .map(this::toDto)
                 .toList();
+
+        GetProductsResponse response = new GetProductsResponse(contents, pageSize);
+        log.debug("Returning response: contents.size={}, hasNext={}, nextId='{}'",
+                response.getContents().size(), response.isHasNext(), response.getNextId());
+        return response;
     }
 
-    private boolean invalidProductId(String oldNextId) {
-        return !productEntityRepository.existsById(new ObjectId(oldNextId));
+    private int normalizePageSize(int size) {
+        if (size <= 0) {
+            log.debug("Requested pageSize {} is non-positive. Using DEFAULT_SIZE={}", size, DEFAULT_SIZE);
+            return DEFAULT_SIZE;
+        }
+        int normalized = Math.min(size, MAX_SIZE);
+        if (normalized != size) {
+            log.debug("Requested pageSize {} exceeds MAX_SIZE={}. Using normalized={}", size, MAX_SIZE, normalized);
+        }
+        return normalized;
+    }
+
+    private GetProductsResponse.Product toDto(ProductEntity e) {
+        GetProductsResponse.Product dto = new GetProductsResponse.Product(
+                e.getStringId(),
+                e.getTitle(),
+                e.getTagNames(),
+                // TODO 2025-09-15: 썸네일 매핑 로직 교체 예정
+                "",
+                e.getDetailedAddress(),
+                e.getPrice(),
+                e.getCreatedAt(),
+                e.getUpdatedAt()
+        );
+        log.trace("Mapped entity to dto: id='{}', title='{}'", e.getStringId(), e.getTitle());
+        return dto;
     }
 
     @Transactional

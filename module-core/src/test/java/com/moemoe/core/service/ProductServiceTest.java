@@ -12,27 +12,29 @@ import com.moemoe.mongo.entity.TagEntity;
 import com.moemoe.mongo.repository.ProductEntityRepository;
 import com.moemoe.mongo.repository.TagEntityRepository;
 import com.moemoe.mongo.repository.UserEntityRepository;
-import org.assertj.core.groups.Tuple;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.BDDAssertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.times;
@@ -179,121 +181,217 @@ class ProductServiceTest {
         }
     }
 
-    @Test
-    @DisplayName("정상 케이스 : 다음 페이지가 존재하는 경우")
-    void findAll() {
-        // given
-        String expectedOldNextId = new ObjectId().toHexString();
-        int expectedPageSize = 2;
-        String thumbnailUrl1 = "thumbnail1";
-        String thumbnailUrl2 = "thumbnail2";
-        String thumbnailUrl3 = "thumbnail3";
-        List<ProductEntity> expectedProductEntityEntityList = List.of(
-                getProductEntity("0", "detailedAddress1", thumbnailUrl1),
-                getProductEntity("1", "detailedAddress2", thumbnailUrl2),
-                getProductEntity("2", "detailedAddress3", thumbnailUrl3));
+    @Nested
+    @DisplayName("Find All by Paging")
+    class FindAllByPaging {
+        @Test
+        @DisplayName("Should return first page and hasNext=true when repository returns more than pageSize items")
+        void shouldReturnFirstPageAndHasNextTrueWhenMoreThanPageSize() {
+            // given
+            List<ProductEntity> productEntities = List.of(
+                    getProductEntity(new ObjectId().toHexString(), "title1", List.of("tag1"), "detail1", 100L, LocalDateTime.now(), LocalDateTime.now()),
+                    getProductEntity(new ObjectId().toHexString(), "title2", List.of("tag1", " tag2"), "detail2", 200L, LocalDateTime.now(), LocalDateTime.now()),
+                    getProductEntity(new ObjectId().toHexString(), "title3", List.of("tag3"), "detail3", 300L, LocalDateTime.now(), LocalDateTime.now())
+            );
 
-        ObjectId expectedOldNextObjectId = new ObjectId(expectedOldNextId);
-        given(productEntityRepository.existsById(expectedOldNextObjectId))
-                .willReturn(true);
-        given(productEntityRepository.findAll(expectedOldNextId, expectedPageSize))
-                .willReturn(expectedProductEntityEntityList);
+            String expectedOldNextId = new ObjectId().toHexString();
+            int expectedPageSize = 2;
+            given(productEntityRepository.findPage(expectedOldNextId, expectedPageSize))
+                    .willReturn(productEntities);
 
-        given(awsS3Client.getPreSignedUrl(thumbnailUrl1))
-                .willReturn(thumbnailUrl1);
-        given(awsS3Client.getPreSignedUrl(thumbnailUrl2))
-                .willReturn(thumbnailUrl2);
-        given(awsS3Client.getPreSignedUrl(thumbnailUrl3))
-                .willReturn(thumbnailUrl3);
+            // when
+            GetProductsResponse actual = productService.findAll(expectedOldNextId, expectedPageSize);
 
-        // when
-        GetProductsResponse actual = productService.findAll(expectedOldNextId, expectedPageSize);
+            // then
+            assertThat(actual)
+                    .extracting(GetProductsResponse::getNextId, GetProductsResponse::isHasNext)
+                    .containsExactly(productEntities.get(expectedPageSize - 1).getStringId(), true);
+            List<ProductEntity> expectedPage = productEntities.subList(0, expectedPageSize);
+            assertThat(actual.getContents())
+                    .hasSize(expectedPageSize)
+                    .extracting(
+                            GetProductsResponse.Product::id,
+                            GetProductsResponse.Product::title,
+                            GetProductsResponse.Product::tagNames,
+                            GetProductsResponse.Product::detailedAddress,
+                            GetProductsResponse.Product::price,
+                            GetProductsResponse.Product::createdAt,
+                            GetProductsResponse.Product::updatedAt
+                    )
+                    .containsExactlyElementsOf(
+                            expectedPage.stream()
+                                    .map(e -> tuple(
+                                            e.getStringId(),
+                                            e.getTitle(),
+                                            e.getTagNames(),
+                                            e.getDetailedAddress(),
+                                            e.getPrice(),
+                                            e.getCreatedAt(),
+                                            e.getUpdatedAt()
+                                    ))
+                                    .toList()
+                    );
 
-        // then
-        verify(productEntityRepository, times(1))
-                .existsById(expectedOldNextObjectId);
-        verify(productEntityRepository, times(1))
-                .findAll(expectedOldNextId, expectedPageSize);
-        assertThat(actual)
-                .extracting(GetProductsResponse::getNextId, GetProductsResponse::isHasNext)
-                .containsExactly(expectedProductEntityEntityList.get(1).getId().toHexString(), true);
-        assertThat(actual.getContents())
-                .hasSize(expectedPageSize)
-                .extracting(GetProductsResponse.Product::getTitle, GetProductsResponse.Product::getDetailedAddress, GetProductsResponse.Product::getThumbnailUrl)
-                .containsExactly(
-                        Tuple.tuple(expectedProductEntityEntityList.get(0).getTitle(), expectedProductEntityEntityList.get(0).getDetailedAddress(), expectedProductEntityEntityList.get(0).getThumbnailUrl()),
-                        Tuple.tuple(expectedProductEntityEntityList.get(1).getTitle(), expectedProductEntityEntityList.get(1).getDetailedAddress(), expectedProductEntityEntityList.get(1).getThumbnailUrl())
-                );
-    }
+            then(productEntityRepository)
+                    .should()
+                    .findPage(expectedOldNextId, expectedPageSize);
+        }
 
-    @Test
-    @DisplayName("정상 케이스2 : 다음 페이지가 존재하지 않는 경우")
-    void findAllLastPage() {
-        // given
-        String expectedOldNextId = new ObjectId().toHexString();
-        int expectedPageSize = 2;
-        String thumbnailUrl1 = "thumbnail1";
-        String thumbnailUrl2 = "thumbnail2";
-        List<ProductEntity> expectedProductEntityEntityList = List.of(
-                getProductEntity("0", "detailedAddress1", thumbnailUrl1),
-                getProductEntity("1", "detailedAddress2", thumbnailUrl2));
+        @Test
+        @DisplayName("Should return last page and hasNext=false when repository returns exactly pageSize items and nextId is blank")
+        void shouldReturnLastPageAndHasNextFalseWhenExactlyPageSizeAndBlankNextId() {
+            // given
+            int expectedPageSize = 2;
+            List<ProductEntity> productEntities = List.of(
+                    getProductEntity(new ObjectId().toHexString(), "title1", List.of("tag1"), "detail1", 100L, LocalDateTime.now(), LocalDateTime.now()),
+                    getProductEntity(new ObjectId().toHexString(), "title2", List.of("tag1", " tag2"), "detail2", 200L, LocalDateTime.now(), LocalDateTime.now())
+            );
 
-        ObjectId expectedOldNextObjectId = new ObjectId(expectedOldNextId);
-        given(productEntityRepository.existsById(expectedOldNextObjectId))
-                .willReturn(true);
-        given(productEntityRepository.findAll(expectedOldNextId, expectedPageSize))
-                .willReturn(expectedProductEntityEntityList);
+            given(productEntityRepository.findPage("", expectedPageSize))
+                    .willReturn(productEntities);
+
+            // when
+            GetProductsResponse actual = productService.findAll("", expectedPageSize);
+
+            // then
+            assertThat(actual)
+                    .extracting(GetProductsResponse::getNextId, GetProductsResponse::isHasNext)
+                    .containsExactly("", false);
+            List<ProductEntity> expectedPage = productEntities.subList(0, expectedPageSize);
+            assertThat(actual.getContents())
+                    .hasSize(expectedPageSize)
+                    .extracting(
+                            GetProductsResponse.Product::id,
+                            GetProductsResponse.Product::title,
+                            GetProductsResponse.Product::tagNames,
+                            GetProductsResponse.Product::detailedAddress,
+                            GetProductsResponse.Product::price,
+                            GetProductsResponse.Product::createdAt,
+                            GetProductsResponse.Product::updatedAt
+                    )
+                    .containsExactlyElementsOf(
+                            expectedPage.stream()
+                                    .map(e -> tuple(
+                                            e.getStringId(),
+                                            e.getTitle(),
+                                            e.getTagNames(),
+                                            e.getDetailedAddress(),
+                                            e.getPrice(),
+                                            e.getCreatedAt(),
+                                            e.getUpdatedAt()
+                                    ))
+                                    .toList()
+                    );
+            then(productEntityRepository)
+                    .should()
+                    .findPage("", expectedPageSize);
+        }
+
+        @Test
+        @DisplayName("Should throw IllegalArgumentException when nextId is invalid hex string")
+        void shouldThrowWhenNextIdIsInvalidHex() {
+            // given
+            String invalidNextId = "not-a-hex";
+
+            // when / then
+            assertThatThrownBy(() -> productService.findAll(invalidNextId, 10))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("invalid hex ObjectId");
+
+            then(productEntityRepository)
+                    .shouldHaveNoInteractions();
+        }
+
+        @Test
+        @DisplayName("Should use default pageSize when requestedPageSize is non-positive")
+        void shouldUseDefaultPageSizeWhenRequestedSizeIsNonPositive() {
+            // given
+            given(productEntityRepository.findPage(any(), anyInt()))
+                    .willAnswer(inv -> {
+                        int ps = inv.getArgument(1, Integer.class);
+                        return buildEntities(ps);
+                    });
+
+            // when
+            GetProductsResponse actual = productService.findAll("", 0);
+
+            // then
+            assertThat(actual.isHasNext())
+                    .isFalse();
+            ArgumentCaptor<Integer> captor = ArgumentCaptor.forClass(Integer.class);
+            then(productEntityRepository)
+                    .should()
+                    .findPage(eq(""), captor.capture());
+            Integer normalized = captor.getValue();
+            assertThat(normalized)
+                    .isNotNull()
+                    .isPositive();
+            assertThat(actual.getContents())
+                    .hasSize(normalized);
+        }
+
+        @Test
+        @DisplayName("Should cap pageSize to max when requestedPageSize exceeds limit")
+        void shouldCapPageSizeWhenRequestedSizeExceedsLimit() {
+            // given
+            given(productEntityRepository.findPage(any(), anyInt()))
+                    .willAnswer(inv -> {
+                        int ps = inv.getArgument(1, Integer.class);
+                        return buildEntities(ps + 1);
+                    });
+
+            int huge = Integer.MAX_VALUE;
+
+            // when
+            GetProductsResponse actual = productService.findAll("", huge);
+
+            // then
+            ArgumentCaptor<Integer> captor = ArgumentCaptor.forClass(Integer.class);
+            then(productEntityRepository).should().findPage(eq(""), captor.capture());
+            Integer normalized = captor.getValue();
+
+            assertThat(normalized)
+                    .isNotNull()
+                    .isPositive()
+                    .isLessThan(huge);
+            assertThat(actual.isHasNext()).isTrue();
+            assertThat(actual.getContents()).hasSize(normalized);
+        }
 
 
-        given(awsS3Client.getPreSignedUrl(thumbnailUrl1))
-                .willReturn(thumbnailUrl1);
-        given(awsS3Client.getPreSignedUrl(thumbnailUrl2))
-                .willReturn(thumbnailUrl2);
+        private List<ProductEntity> buildEntities(int count) {
+            List<ProductEntity> list = new ArrayList<>();
+            LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS);
+            for (int i = 0; i < count; i++) {
+                list.add(getProductEntity(new ObjectId().toHexString(),
+                        "title" + i,
+                        List.of("tag" + i),
+                        "detail" + i,
+                        100L + i,
+                        now,
+                        now));
+            }
+            return list;
+        }
 
-        // when
-        GetProductsResponse actual = productService.findAll(expectedOldNextId, expectedPageSize);
-
-        // then
-        verify(productEntityRepository, times(1)).existsById(expectedOldNextObjectId);
-        verify(productEntityRepository, times(1)).findAll(expectedOldNextId, expectedPageSize);
-        assertThat(actual)
-                .extracting(GetProductsResponse::getNextId, GetProductsResponse::isHasNext)
-                .containsExactly("", false);
-        assertThat(actual.getContents())
-                .hasSize(expectedPageSize)
-                .extracting(GetProductsResponse.Product::getTitle, GetProductsResponse.Product::getDetailedAddress, GetProductsResponse.Product::getThumbnailUrl)
-                .containsExactly(
-                        Tuple.tuple(expectedProductEntityEntityList.get(0).getTitle(), expectedProductEntityEntityList.get(0).getDetailedAddress(), expectedProductEntityEntityList.get(0).getThumbnailUrl()),
-                        Tuple.tuple(expectedProductEntityEntityList.get(1).getTitle(), expectedProductEntityEntityList.get(1).getDetailedAddress(), expectedProductEntityEntityList.get(1).getThumbnailUrl())
-                );
-    }
-
-    @Test
-    @DisplayName("실패 케이스 : ID를 가진 데이터가 존재하지 않는 경우")
-    void findAllInvalidOldId() {
-        // given
-        String expectedOldNextId = new ObjectId().toHexString();
-        int expectedPageSize = 2;
-        ObjectId expectedOldNextObjectId = new ObjectId(expectedOldNextId);
-        given(productEntityRepository.existsById(expectedOldNextObjectId))
-                .willReturn(false);
-
-        // when
-        assertThatThrownBy(() -> productService.findAll(expectedOldNextId, expectedPageSize))
-                .isInstanceOf(IllegalArgumentException.class);
-
-        // then
-        verify(productEntityRepository, times(1))
-                .existsById(expectedOldNextObjectId);
-        verify(productEntityRepository, times(0))
-                .findAll(expectedOldNextId, expectedPageSize);
-    }
-
-    private ProductEntity getProductEntity(String title, String detailedAddress, String thumbnailUrl) {
-        ProductEntity productEntity = ProductEntity.of(new ObjectId(), title, null, ProductEntity.Location.of(0, 0, detailedAddress), 1, List.of(thumbnailUrl, "test1", "test2"), null, null);
-        ReflectionTestUtils.setField(productEntity, "id", new ObjectId());
-        ReflectionTestUtils.setField(productEntity, "createdAt", LocalDateTime.now());
-        return productEntity;
+        private ProductEntity getProductEntity(String id, String title, List<String> tagNames, String detailedAddress, Long price, LocalDateTime createdAt, LocalDateTime updatedAt) {
+            ProductEntity mock = BDDMockito.mock(ProductEntity.class);
+            given(mock.getStringId())
+                    .willReturn(id);
+            given(mock.getTitle())
+                    .willReturn(title);
+            given(mock.getTagNames())
+                    .willReturn(tagNames);
+            given(mock.getDetailedAddress())
+                    .willReturn(detailedAddress);
+            given(mock.getPrice())
+                    .willReturn(price);
+            given(mock.getCreatedAt())
+                    .willReturn(createdAt);
+            given(mock.getUpdatedAt())
+                    .willReturn(updatedAt);
+            return mock;
+        }
     }
 
     @Test

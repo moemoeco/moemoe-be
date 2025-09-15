@@ -40,7 +40,8 @@ public class ProductService {
         int pageSize = normalizePageSize(requestedPageSize);
         log.debug("Normalized pageSize={}", pageSize);
 
-        if (StringUtils.isNotBlank(nextId) && !ObjectId.isValid(nextId)) {
+        if (StringUtils.isNotBlank(nextId)
+                && !ObjectId.isValid(nextId)) {
             log.warn("Rejecting request: invalid nextId format (not hex ObjectId), nextId='{}'", nextId);
             throw new IllegalArgumentException("nextId is invalid hex ObjectId");
         }
@@ -49,16 +50,9 @@ public class ProductService {
         List<ProductEntity> entities = productEntityRepository.findPage(nextId, pageSize);
         log.debug("Repository returned {} entities", entities.size());
 
-        // 로깅용 페이지 메타(실제 계산은 GetProductsResponse가 하더라도 참고용으로 남김)
-        boolean hasNextCandidate = entities.size() > pageSize;
-        String nextIdCandidate = hasNextCandidate ? entities.get(pageSize - 1).getStringId() : "";
-        log.debug("Computed meta (for log): hasNextCandidate={}, nextIdCandidate='{}'",
-                hasNextCandidate, nextIdCandidate);
-
         List<GetProductsResponse.Product> contents = entities.stream()
                 .map(this::toDto)
                 .toList();
-
         GetProductsResponse response = new GetProductsResponse(contents, pageSize);
         log.debug("Returning response: contents.size={}, hasNext={}, nextId='{}'",
                 response.getContents().size(), response.isHasNext(), response.getNextId());

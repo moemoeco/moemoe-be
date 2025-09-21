@@ -37,6 +37,8 @@ aws:
     secret-key: ${AWS_SECRET_KEY}
 server:
   port: 9000
+cdn:
+  proxy: ${CDN_PROXY:http://localhost:9000/cdn}
 service:
   jwt:
     issuer: ${JWT_ISSUER}

@@ -5,6 +5,7 @@ import com.moemoe.core.request.RegisterProductServiceRequest;
 import com.moemoe.core.response.GetProductsResponse;
 import com.moemoe.core.response.IdResponse;
 import com.moemoe.core.security.MoeUser;
+import com.moemoe.core.service.resolver.ProductImageKeyResolver;
 import com.moemoe.mongo.constant.ProductCondition;
 import com.moemoe.mongo.constant.UserRole;
 import com.moemoe.mongo.entity.ProductEntity;
@@ -54,6 +55,8 @@ class ProductServiceTest {
     private TagService tagService;
     @Mock
     private AwsS3Client awsS3Client;
+    @Mock
+    private ProductImageKeyResolver imageKeyResolver;
     private ObjectId expectedSellerId;
 
     @BeforeEach
@@ -188,11 +191,17 @@ class ProductServiceTest {
         @DisplayName("Should return first page and hasNext=true when repository returns more than pageSize items")
         void shouldReturnFirstPageAndHasNextTrueWhenMoreThanPageSize() {
             // given
-            List<ProductEntity> productEntities = List.of(
-                    getProductEntity(new ObjectId().toHexString(), "title1", List.of("tag1"), "detail1", 100L, LocalDateTime.now(), LocalDateTime.now()),
-                    getProductEntity(new ObjectId().toHexString(), "title2", List.of("tag1", " tag2"), "detail2", 200L, LocalDateTime.now(), LocalDateTime.now()),
-                    getProductEntity(new ObjectId().toHexString(), "title3", List.of("tag3"), "detail3", 300L, LocalDateTime.now(), LocalDateTime.now())
-            );
+            ProductEntity e1 = getProductEntity(new ObjectId().toHexString(), "title1", List.of("tag1"),
+                    "thumb/1.jpg", "detail1", 100L, now(), now());
+            ProductEntity e2 = getProductEntity(new ObjectId().toHexString(), "title2", List.of("tag1", " tag2"),
+                    "thumb/2.jpg", "detail2", 200L, now(), now());
+            ProductEntity e3 = getProductEntity(new ObjectId().toHexString(), "title3", List.of("tag3"),
+                    "thumb/3.jpg", "detail3", 300L, now(), now());
+            List<ProductEntity> productEntities = List.of(e1, e2, e3);
+
+            given(imageKeyResolver.resolve("thumb/1.jpg")).willReturn("http://cdn/thumbnail/thumb/1.jpg");
+            given(imageKeyResolver.resolve("thumb/2.jpg")).willReturn("http://cdn/thumbnail/thumb/2.jpg");
+            given(imageKeyResolver.resolve("thumb/3.jpg")).willReturn("http://cdn/thumbnail/thumb/3.jpg");
 
             String expectedOldNextId = new ObjectId().toHexString();
             int expectedPageSize = 2;
@@ -206,35 +215,29 @@ class ProductServiceTest {
             assertThat(actual)
                     .extracting(GetProductsResponse::getNextId, GetProductsResponse::isHasNext)
                     .containsExactly(productEntities.get(expectedPageSize - 1).getStringId(), true);
-            List<ProductEntity> expectedPage = productEntities.subList(0, expectedPageSize);
             assertThat(actual.getContents())
                     .hasSize(expectedPageSize)
                     .extracting(
                             GetProductsResponse.Product::id,
                             GetProductsResponse.Product::title,
                             GetProductsResponse.Product::tagNames,
+                            GetProductsResponse.Product::thumbnailUrl,
                             GetProductsResponse.Product::detailedAddress,
                             GetProductsResponse.Product::price,
                             GetProductsResponse.Product::createdAt,
                             GetProductsResponse.Product::updatedAt
                     )
-                    .containsExactlyElementsOf(
-                            expectedPage.stream()
-                                    .map(e -> tuple(
-                                            e.getStringId(),
-                                            e.getTitle(),
-                                            e.getTagNames(),
-                                            e.getDetailedAddress(),
-                                            e.getPrice(),
-                                            e.getCreatedAt(),
-                                            e.getUpdatedAt()
-                                    ))
-                                    .toList()
+                    .containsExactly(
+                            tuple(e1.getStringId(), e1.getTitle(), e1.getTagNames(),
+                                    "http://cdn/thumbnail/thumb/1.jpg", e1.getDetailedAddress(), e1.getPrice(), e1.getCreatedAt(), e1.getUpdatedAt()),
+                            tuple(e2.getStringId(), e2.getTitle(), e2.getTagNames(),
+                                    "http://cdn/thumbnail/thumb/2.jpg", e2.getDetailedAddress(), e2.getPrice(), e2.getCreatedAt(), e2.getUpdatedAt())
                     );
 
-            then(productEntityRepository)
-                    .should()
+            then(productEntityRepository).should()
                     .findPage(expectedOldNextId, expectedPageSize);
+            then(imageKeyResolver).should(times(expectedPageSize + 1))
+                    .resolve(anyString());
         }
 
         @Test
@@ -242,10 +245,14 @@ class ProductServiceTest {
         void shouldReturnLastPageAndHasNextFalseWhenExactlyPageSizeAndBlankNextId() {
             // given
             int expectedPageSize = 2;
-            List<ProductEntity> productEntities = List.of(
-                    getProductEntity(new ObjectId().toHexString(), "title1", List.of("tag1"), "detail1", 100L, LocalDateTime.now(), LocalDateTime.now()),
-                    getProductEntity(new ObjectId().toHexString(), "title2", List.of("tag1", " tag2"), "detail2", 200L, LocalDateTime.now(), LocalDateTime.now())
-            );
+            ProductEntity e1 = getProductEntity(new ObjectId().toHexString(), "title1", List.of("tag1"),
+                    "thumb/A.jpg", "detail1", 100L, now(), now());
+            ProductEntity e2 = getProductEntity(new ObjectId().toHexString(), "title2", List.of("tag1", " tag2"),
+                    "thumb/B.jpg", "detail2", 200L, now(), now());
+            List<ProductEntity> productEntities = List.of(e1, e2);
+
+            given(imageKeyResolver.resolve("thumb/A.jpg")).willReturn("http://cdn/thumbnail/thumb/A.jpg");
+            given(imageKeyResolver.resolve("thumb/B.jpg")).willReturn("http://cdn/thumbnail/thumb/B.jpg");
 
             given(productEntityRepository.findPage("", expectedPageSize))
                     .willReturn(productEntities);
@@ -257,34 +264,28 @@ class ProductServiceTest {
             assertThat(actual)
                     .extracting(GetProductsResponse::getNextId, GetProductsResponse::isHasNext)
                     .containsExactly("", false);
-            List<ProductEntity> expectedPage = productEntities.subList(0, expectedPageSize);
+
             assertThat(actual.getContents())
                     .hasSize(expectedPageSize)
                     .extracting(
                             GetProductsResponse.Product::id,
                             GetProductsResponse.Product::title,
                             GetProductsResponse.Product::tagNames,
+                            GetProductsResponse.Product::thumbnailUrl,
                             GetProductsResponse.Product::detailedAddress,
                             GetProductsResponse.Product::price,
                             GetProductsResponse.Product::createdAt,
                             GetProductsResponse.Product::updatedAt
                     )
-                    .containsExactlyElementsOf(
-                            expectedPage.stream()
-                                    .map(e -> tuple(
-                                            e.getStringId(),
-                                            e.getTitle(),
-                                            e.getTagNames(),
-                                            e.getDetailedAddress(),
-                                            e.getPrice(),
-                                            e.getCreatedAt(),
-                                            e.getUpdatedAt()
-                                    ))
-                                    .toList()
+                    .containsExactly(
+                            tuple(e1.getStringId(), e1.getTitle(), e1.getTagNames(),
+                                    "http://cdn/thumbnail/thumb/A.jpg", e1.getDetailedAddress(), e1.getPrice(), e1.getCreatedAt(), e1.getUpdatedAt()),
+                            tuple(e2.getStringId(), e2.getTitle(), e2.getTagNames(),
+                                    "http://cdn/thumbnail/thumb/B.jpg", e2.getDetailedAddress(), e2.getPrice(), e2.getCreatedAt(), e2.getUpdatedAt())
                     );
-            then(productEntityRepository)
-                    .should()
-                    .findPage("", expectedPageSize);
+
+            then(productEntityRepository).should().findPage("", expectedPageSize);
+            then(imageKeyResolver).should(times(expectedPageSize)).resolve(anyString());
         }
 
         @Test
@@ -298,8 +299,8 @@ class ProductServiceTest {
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("invalid hex ObjectId");
 
-            then(productEntityRepository)
-                    .shouldHaveNoInteractions();
+            then(productEntityRepository).shouldHaveNoInteractions();
+            then(imageKeyResolver).shouldHaveNoInteractions();
         }
 
         @Test
@@ -309,25 +310,26 @@ class ProductServiceTest {
             given(productEntityRepository.findPage(any(), anyInt()))
                     .willAnswer(inv -> {
                         int ps = inv.getArgument(1, Integer.class);
-                        return buildEntities(ps);
+                        return buildEntities(ps); // 🔹 각 엔티티에 서로 다른 thumbnail 키를 심어줌
                     });
+
+            // 각 key에 대한 resolver 스텁(간단히 anyString → prefix 붙이기)
+            willAnswer(inv -> "http://cdn/thumbnail/" + inv.getArgument(0))
+                    .given(imageKeyResolver).resolve(anyString());
 
             // when
             GetProductsResponse actual = productService.findAll("", 0);
 
             // then
-            assertThat(actual.isHasNext())
-                    .isFalse();
+            assertThat(actual.isHasNext()).isFalse();
+
             ArgumentCaptor<Integer> captor = ArgumentCaptor.forClass(Integer.class);
-            then(productEntityRepository)
-                    .should()
-                    .findPage(eq(""), captor.capture());
+            then(productEntityRepository).should().findPage(eq(""), captor.capture());
             Integer normalized = captor.getValue();
-            assertThat(normalized)
-                    .isNotNull()
-                    .isPositive();
-            assertThat(actual.getContents())
-                    .hasSize(normalized);
+
+            assertThat(normalized).isNotNull().isPositive();
+            assertThat(actual.getContents()).hasSize(normalized);
+            then(imageKeyResolver).should(times(normalized)).resolve(anyString());
         }
 
         @Test
@@ -337,8 +339,10 @@ class ProductServiceTest {
             given(productEntityRepository.findPage(any(), anyInt()))
                     .willAnswer(inv -> {
                         int ps = inv.getArgument(1, Integer.class);
-                        return buildEntities(ps + 1);
+                        return buildEntities(ps + 1); // hasNext=true 유도
                     });
+            willAnswer(inv -> "http://cdn/thumbnail/" + inv.getArgument(0))
+                    .given(imageKeyResolver).resolve(anyString());
 
             int huge = Integer.MAX_VALUE;
 
@@ -350,46 +354,46 @@ class ProductServiceTest {
             then(productEntityRepository).should().findPage(eq(""), captor.capture());
             Integer normalized = captor.getValue();
 
-            assertThat(normalized)
-                    .isNotNull()
-                    .isPositive()
-                    .isLessThan(huge);
+            assertThat(normalized).isNotNull().isPositive().isLessThan(huge);
             assertThat(actual.isHasNext()).isTrue();
             assertThat(actual.getContents()).hasSize(normalized);
+            then(imageKeyResolver).should(times(normalized + 1)).resolve(anyString());
         }
 
+        // ===== helpers =====
 
         private List<ProductEntity> buildEntities(int count) {
             List<ProductEntity> list = new ArrayList<>();
-            LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS);
+            LocalDateTime now = now();
             for (int i = 0; i < count; i++) {
                 list.add(getProductEntity(new ObjectId().toHexString(),
                         "title" + i,
                         List.of("tag" + i),
+                        "thumb/" + i + ".jpg",   // 🔹 서로 다른 썸네일 키
                         "detail" + i,
                         100L + i,
-                        now,
-                        now));
+                        now, now));
             }
             return list;
         }
 
-        private ProductEntity getProductEntity(String id, String title, List<String> tagNames, String detailedAddress, Long price, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        private LocalDateTime now() {
+            return LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS);
+        }
+
+        private ProductEntity getProductEntity(String id, String title, List<String> tagNames,
+                                               String thumbnailKey, String detailedAddress, Long price,
+                                               LocalDateTime createdAt, LocalDateTime updatedAt) {
             ProductEntity mock = BDDMockito.mock(ProductEntity.class);
-            given(mock.getStringId())
-                    .willReturn(id);
-            given(mock.getTitle())
-                    .willReturn(title);
-            given(mock.getTagNames())
-                    .willReturn(tagNames);
-            given(mock.getDetailedAddress())
-                    .willReturn(detailedAddress);
-            given(mock.getPrice())
-                    .willReturn(price);
-            given(mock.getCreatedAt())
-                    .willReturn(createdAt);
-            given(mock.getUpdatedAt())
-                    .willReturn(updatedAt);
+            given(mock.getStringId()).willReturn(id);
+            given(mock.getTitle()).willReturn(title);
+            given(mock.getTagNames()).willReturn(tagNames);
+            // 🔹 썸네일 키
+            given(mock.getThumbnailUrl()).willReturn(thumbnailKey);
+            given(mock.getDetailedAddress()).willReturn(detailedAddress);
+            given(mock.getPrice()).willReturn(price);
+            given(mock.getCreatedAt()).willReturn(createdAt);
+            given(mock.getUpdatedAt()).willReturn(updatedAt);
             return mock;
         }
     }

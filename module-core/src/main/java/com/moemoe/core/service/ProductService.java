@@ -5,6 +5,7 @@ import com.moemoe.core.request.RegisterProductServiceRequest;
 import com.moemoe.core.response.GetProductsResponse;
 import com.moemoe.core.response.IdResponse;
 import com.moemoe.core.security.SecurityContextHolderUtils;
+import com.moemoe.core.service.resolver.ProductImageKeyResolver;
 import com.moemoe.mongo.entity.ProductEntity;
 import com.moemoe.mongo.entity.TagEntity;
 import com.moemoe.mongo.repository.ProductEntityRepository;
@@ -31,6 +32,7 @@ public class ProductService {
     private final UserEntityRepository userEntityRepository;
     private final ProductEntityRepository productEntityRepository;
     private final TagEntityRepository tagEntityRepository;
+    private final ProductImageKeyResolver imageKeyResolver;
     private final TagService tagService;
     private final AwsS3Client awsS3Client;
 
@@ -76,8 +78,7 @@ public class ProductService {
                 e.getStringId(),
                 e.getTitle(),
                 e.getTagNames(),
-                // TODO 2025-09-15: 썸네일 매핑 로직 교체 예정
-                "",
+                imageKeyResolver.resolve(e.getThumbnailUrl()),
                 e.getDetailedAddress(),
                 e.getPrice(),
                 e.getCreatedAt(),

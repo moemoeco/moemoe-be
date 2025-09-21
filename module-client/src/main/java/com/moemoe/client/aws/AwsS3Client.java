@@ -1,5 +1,6 @@
 package com.moemoe.client.aws;
 
+import com.moemoe.client.aws.dto.S3ObjectStream;
 import com.moemoe.client.aws.property.AwsProperty;
 import com.moemoe.client.exception.ClientRuntimeException;
 import lombok.RequiredArgsConstructor;
@@ -7,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.http.SdkHttpResponse;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -19,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -26,6 +29,33 @@ import java.util.List;
 public class AwsS3Client {
     private final AwsProperty awsProperty;
     private final AwsClientFactory awsClientFactory;
+
+    public S3ObjectStream getObjectStream(String key) {
+        if (key == null || key.isBlank()) {
+            throw new ClientRuntimeException("key must not be null/blank");
+        }
+
+        try (S3Client s3Client = awsClientFactory.getS3Client()) {
+            GetObjectRequest request = GetObjectRequest.builder()
+                    .bucket(awsProperty.getBucketName())
+                    .key(key)
+                    .build();
+
+            ResponseInputStream<GetObjectResponse> inputStream = s3Client.getObject(request);
+            GetObjectResponse response = inputStream.response();
+
+            String contentType = Optional.ofNullable(response.contentType())
+                    .orElse("application/octet-stream");
+            Long contentLength = response.contentLength();
+            return new S3ObjectStream(inputStream, contentType, contentLength);
+        } catch (S3Exception e) {
+            log.error("Failed to get object stream: {}", e.awsErrorDetails().errorMessage());
+            throw new ClientRuntimeException(e.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error on getObjectStream", e);
+            throw new ClientRuntimeException(e.getMessage());
+        }
+    }
 
     public String upload(String s3ObjectKey, MultipartFile multipartFile) {
         try (S3Client s3Client = awsClientFactory.getS3Client();

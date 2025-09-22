@@ -16,7 +16,7 @@ public record ProductPresignedUrlResponse(
     }
 
     public record ProductResponse(
-            String filename,
+            String fileName,
             String uploadUrl,
             String fileKey
     ) {

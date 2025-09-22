@@ -10,7 +10,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -21,16 +21,30 @@ public class ProductEntityPagingRepositoryImpl implements ProductEntityPagingRep
     private final MongoTemplate mongoTemplate;
 
     @Override
-    public List<ProductEntity> findAll(String nextId, int pageSize) {
+    public List<ProductEntity> findPage(String nextId, int pageSize) {
         Query query = new Query();
 
-        if (!ObjectUtils.isEmpty(nextId)) {
-            ObjectId nextObjectId = new ObjectId(nextId);
-            query.addCriteria(Criteria.where("_id").lt(nextObjectId));
+        if (StringUtils.hasText(nextId)) {
+            String trimmed = nextId.trim();
+            if (!ObjectId.isValid(trimmed)) {
+                throw new IllegalArgumentException("Invalid ObjectId: " + nextId);
+            }
+            query.addCriteria(Criteria.where("_id").lt(new ObjectId(trimmed)));
         }
-        query
-                .limit(pageSize + 1)
-                .with(Sort.by(Sort.Direction.DESC, "_id"));
+
+        query.fields()
+                .include("_id")
+                .include("title")
+                .include("location.detailedAddress")
+                .include("price")
+                .include("imageKeys")
+                .include("tagNames")
+                .include("createdAt")
+                .include("updatedAt");
+
+        query.with(Sort.by(Sort.Direction.DESC, "_id"))
+                .limit(pageSize + 1);
+
         return mongoTemplate.find(query, ProductEntity.class);
     }
 }

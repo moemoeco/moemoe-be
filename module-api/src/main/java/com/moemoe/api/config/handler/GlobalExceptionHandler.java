@@ -1,6 +1,7 @@
 package com.moemoe.api.config.handler;
 
 import com.moemoe.client.exception.ClientRuntimeException;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +19,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(ErrorResponseBody.of(exception), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @ExceptionHandler(value = {HandlerMethodValidationException.class, MethodArgumentNotValidException.class})
+    @ExceptionHandler(value = {HandlerMethodValidationException.class, MethodArgumentNotValidException.class, ConstraintViolationException.class})
     protected ResponseEntity<ErrorResponseBody> handleBadRequestError(Exception exception) {
         log.error("Handling bad request error.", exception);
         return new ResponseEntity<>(ErrorResponseBody.of(exception), HttpStatus.BAD_REQUEST);

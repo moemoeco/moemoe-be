@@ -38,7 +38,8 @@ public abstract class AbstractControllerTest {
     protected UserService userService;
     @Autowired
     protected MockMvc mockMvc;
-    protected final ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired
+    protected ObjectMapper objectMapper;
 
     protected MvcResult invoke(MockHttpServletRequestBuilder builder, ResultMatcher statusMatcher, boolean hasAuth) {
         return invoke(builder, statusMatcher, null, hasAuth);

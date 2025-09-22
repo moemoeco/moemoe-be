@@ -167,43 +167,223 @@ class ProductControllerTest extends AbstractControllerTest {
     @DisplayName("상품 조회 API")
     class ProductsFindAll {
         @Test
-        @DisplayName("성공 케이스 : 상품 목록 조회")
-        void findAll() {
+        @DisplayName("Should return products with default pageSize when no params are provided")
+        void shouldReturnProductsWithDefaultPageSizeWhenNoParamsProvided() {
             // given
-            String expectedOldNextId = "nextId";
-            int pageSize = 5;
-            List<GetProductsResponse.Product> contents = new ArrayList<>();
+            int defaultPageSize = 20;
             LocalDateTime now = LocalDateTime.now();
-            for (int i = 0; i < pageSize; i++) {
-                contents.add(GetProductsResponse.Product.builder()
-                        .title("title" + i)
-                        .price(i)
-                        .id("id" + i)
-                        .thumbnailUrl("thumbnailUrl" + i)
-                        .tagIdList(List.of())
-                        .detailedAddress("detailedAddress" + i)
-                        .createAt(now)
-                        .build());
-            }
-            GetProductsResponse expectedResponse = new GetProductsResponse(contents, 5);
-            given(productService.findAll(expectedOldNextId, pageSize))
-                    .willReturn(expectedResponse);
+            List<GetProductsResponse.Product> contents = buildProducts(defaultPageSize, now);
+            GetProductsResponse expected = new GetProductsResponse(contents, defaultPageSize);
 
-            // when then
-            MockHttpServletRequestBuilder mockHttpServletRequestBuilder = get("/products")
-                    .param("nextId", expectedOldNextId)
-                    .param("pageSize", String.valueOf(pageSize));
-            MvcResult invoke = invoke(mockHttpServletRequestBuilder, status().isOk(), true);
-            GetProductsResponse actualResponse = convertResponseToClass(invoke, GetProductsResponse.class);
-            assertThat(actualResponse)
+            given(productService.findAll(null, defaultPageSize))
+                    .willReturn(expected);
+
+            // when
+            MockHttpServletRequestBuilder req = get("/products");
+            MvcResult result = invoke(req, status().isOk(), true);
+
+            // then
+            GetProductsResponse actual = convertResponseToClass(result, GetProductsResponse.class);
+            assertThat(actual)
                     .extracting(GetProductsResponse::getNextId, GetProductsResponse::isHasNext)
-                    .containsExactly(expectedResponse.getNextId(), expectedResponse.isHasNext());
-            assertThat(actualResponse.getContents())
-                    .hasSize(5)
+                    .containsExactly(expected.getNextId(), expected.isHasNext());
+            assertThat(actual.getContents())
+                    .hasSize(defaultPageSize)
                     .usingRecursiveFieldByFieldElementComparator()
-                    .isEqualTo(expectedResponse.getContents());
+                    .isEqualTo(expected.getContents());
+
+            then(productService).should().findAll(isNull(), eq(defaultPageSize));
+        }
+
+        @Test
+        @DisplayName("Should return products when valid nextId and pageSize are provided")
+        void shouldReturnProductsWhenValidNextIdAndPageSizeProvided() {
+            // given
+            String nextId = "64b7c7b1a4d6f1e2c3b4a5f6";
+            int pageSize = 5;
+            LocalDateTime now = LocalDateTime.now();
+            List<GetProductsResponse.Product> contents = buildProducts(pageSize, now);
+            GetProductsResponse expected = new GetProductsResponse(contents, pageSize);
+
+            given(productService.findAll(nextId, pageSize)).willReturn(expected);
+
+            // when
+            MockHttpServletRequestBuilder req = get("/products")
+                    .param("nextId", nextId)
+                    .param("pageSize", String.valueOf(pageSize));
+            MvcResult result = invoke(req, status().isOk(), true);
+
+            // then
+            GetProductsResponse actual = convertResponseToClass(result, GetProductsResponse.class);
+            assertThat(actual)
+                    .extracting(GetProductsResponse::getNextId, GetProductsResponse::isHasNext)
+                    .containsExactly(expected.getNextId(), expected.isHasNext());
+            assertThat(actual.getContents())
+                    .hasSize(pageSize)
+                    .usingRecursiveFieldByFieldElementComparator()
+                    .isEqualTo(expected.getContents());
+
+            then(productService).should().findAll(eq(nextId), eq(pageSize));
+        }
+
+        @Test
+        @DisplayName("Should return products when nextId is empty string")
+        void shouldReturnProductsWhenNextIdIsEmptyString() {
+            // given
+            String nextId = ""; // 빈 문자열
+            int pageSize = 7;
+            LocalDateTime now = LocalDateTime.now();
+            List<GetProductsResponse.Product> contents = buildProducts(pageSize, now);
+            GetProductsResponse expected = new GetProductsResponse(contents, pageSize);
+
+            given(productService.findAll(nextId, pageSize)).willReturn(expected);
+
+            // when
+            MockHttpServletRequestBuilder req = get("/products")
+                    .param("nextId", nextId)
+                    .param("pageSize", String.valueOf(pageSize));
+            MvcResult result = invoke(req, status().isOk(), true);
+
+            // then
+            GetProductsResponse actual = convertResponseToClass(result, GetProductsResponse.class);
+            assertThat(actual.getContents())
+                    .hasSize(pageSize)
+                    .usingRecursiveFieldByFieldElementComparator()
+                    .isEqualTo(expected.getContents());
+
+            then(productService).should().findAll(eq(""), eq(pageSize));
+        }
+
+        @Test
+        @DisplayName("Should return products when pageSize is at lower bound (1)")
+        void shouldReturnProductsWhenPageSizeAtLowerBound() {
+            // given
+            int pageSize = 1;
+            LocalDateTime now = LocalDateTime.now();
+            List<GetProductsResponse.Product> contents = buildProducts(pageSize, now);
+            GetProductsResponse expected = new GetProductsResponse(contents, pageSize);
+
+            given(productService.findAll(null, pageSize)).willReturn(expected);
+
+            // when
+            MockHttpServletRequestBuilder req = get("/products")
+                    .param("pageSize", String.valueOf(pageSize));
+            MvcResult result = invoke(req, status().isOk(), true);
+
+            // then
+            GetProductsResponse actual = convertResponseToClass(result, GetProductsResponse.class);
+            assertThat(actual.getContents())
+                    .hasSize(pageSize)
+                    .usingRecursiveFieldByFieldElementComparator()
+                    .isEqualTo(expected.getContents());
+
+            then(productService).should().findAll(isNull(), eq(pageSize));
+        }
+
+        @Test
+        @DisplayName("Should return products when pageSize is at upper bound (50)")
+        void shouldReturnProductsWhenPageSizeAtUpperBound() {
+            // given
+            int pageSize = 50;
+            LocalDateTime now = LocalDateTime.now();
+            List<GetProductsResponse.Product> contents = buildProducts(pageSize, now);
+            GetProductsResponse expected = new GetProductsResponse(contents, pageSize);
+
+            given(productService.findAll(null, pageSize)).willReturn(expected);
+
+            // when
+            MockHttpServletRequestBuilder req = get("/products")
+                    .param("pageSize", String.valueOf(pageSize));
+            MvcResult result = invoke(req, status().isOk(), true);
+
+            // then
+            GetProductsResponse actual = convertResponseToClass(result, GetProductsResponse.class);
+            assertThat(actual.getContents())
+                    .hasSize(pageSize)
+                    .usingRecursiveFieldByFieldElementComparator()
+                    .isEqualTo(expected.getContents());
+
+            then(productService).should().findAll(isNull(), eq(pageSize));
+        }
+
+        @Test
+        @DisplayName("Should return 400 when pageSize is zero")
+        void shouldReturn400WhenPageSizeIsZero() {
+            // given
+            MockHttpServletRequestBuilder req = get("/products")
+                    .param("pageSize", "0");
+
+            // when
+            MvcResult result = invoke(req, status().isBadRequest(), true);
+
+            // then
+            then(productService).shouldHaveNoInteractions();
+
+            ErrorResponseBody error = convertResponseToClass(result, ErrorResponseBody.class);
+            assertThat(error.getType()).isEqualTo("ConstraintViolationException");
+            assertThat(error.getMessage()).contains("pageSize");
+        }
+
+        @Test
+        @DisplayName("Should return 400 when pageSize is greater than max (51)")
+        void shouldReturn400WhenPageSizeGreaterThanMax() {
+            // given
+            MockHttpServletRequestBuilder req = get("/products")
+                    .param("pageSize", "51");
+
+            // when
+            MvcResult result = invoke(req, status().isBadRequest(), true);
+
+            // then
+            then(productService).shouldHaveNoInteractions();
+
+            ErrorResponseBody error = convertResponseToClass(result, ErrorResponseBody.class);
+            assertThat(error.getType()).isEqualTo("ConstraintViolationException");
+            assertThat(error.getMessage()).contains("pageSize");
+        }
+
+        @Test
+        @DisplayName("Should return 500 when nextId is invalid hex string")
+        void shouldReturn500WhenNextIdIsInvalidHexString() {
+            // given
+            String invalidNextId = "not-a-hex";
+            int pageSize = 10;
+
+            given(productService.findAll(invalidNextId, pageSize))
+                    .willThrow(new IllegalArgumentException("nextId is invalid hex ObjectId"));
+
+            // when
+            MockHttpServletRequestBuilder req = get("/products")
+                    .param("nextId", invalidNextId)
+                    .param("pageSize", String.valueOf(pageSize));
+            MvcResult result = invoke(req, status().isInternalServerError(), true);
+
+            // then
+            then(productService).should().findAll(eq(invalidNextId), eq(pageSize));
+
+            ErrorResponseBody error = convertResponseToClass(result, ErrorResponseBody.class);
+            assertThat(error.getType()).isEqualTo("IllegalArgumentException");
+            assertThat(error.getMessage()).contains("nextId");
+        }
+
+        private List<GetProductsResponse.Product> buildProducts(int count, LocalDateTime base) {
+            List<GetProductsResponse.Product> list = new ArrayList<>();
+            for (int i = 0; i < count; i++) {
+                list.add(new GetProductsResponse.Product(
+                        "id-" + i,
+                        "title-" + i,
+                        List.of("tagA", "tagB"),
+                        "https://cdn.example.com/thumb-" + i + ".jpg",
+                        "Seoul City Address " + i,
+                        1000L + i,
+                        base,
+                        base
+                ));
+            }
+            return list;
         }
     }
+
 
     @Nested
     @DisplayName("POST /products - register products")

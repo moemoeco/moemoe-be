@@ -12,14 +12,18 @@ import com.moemoe.core.response.IdResponse;
 import com.moemoe.core.service.PresignedUrlService;
 import com.moemoe.core.service.ProductService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
 @RequestMapping("/products")
 @RequiredArgsConstructor
+@Validated
 public class ProductController {
     private final ProductService productService;
     private final PresignedUrlService presignedUrlService;
@@ -35,8 +39,8 @@ public class ProductController {
 
     @GetMapping
     public GetProductsResponse findAll(
-            @RequestParam("nextId") String nextId,
-            @RequestParam("pageSize") int pageSize
+            @RequestParam(value = "nextId", required = false) String nextId,
+            @RequestParam(value = "pageSize", required = false, defaultValue = "20") @Min(1) @Max(50) Integer pageSize
     ) {
         return productService.findAll(nextId, pageSize);
     }
